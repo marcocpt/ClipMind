@@ -1,4 +1,4 @@
-> 最后更新：2026-07-12 | 版本：v1.0
+> 最后更新：2026-07-12 | 版本：v1.1
 
 # ClipMind 初赛 MVP 设计规范
 
@@ -221,7 +221,7 @@ flowchart TD
     G -- 是 --> H[自动忽略 不提示 不入库]
     G -- 否 --> I{敏感内容识别}
     
-    I -- 是敏感 --> J[标记 isSensitive=true 不入库]
+    I -- 是敏感 --> J[返回 isSensitive=true 不入库]
     J --> K[弹出通知: 已忽略敏感内容]
     I -- 非敏感 --> L[生成嵌入向量]
     
@@ -352,8 +352,8 @@ flowchart TD
     B5 --> C
     B6 --> C
     
-    C -- 是 --> D[标记 isSensitive=true]
-    D --> E[不入库 加密存储]
+    C -- 是 --> D[返回 isSensitive=true]
+    D --> E[不入库（不写入数据库）]
     D --> F[弹出通知: 已忽略敏感内容]
     
     C -- 否 --> G[继续分类入库流程]
@@ -466,7 +466,7 @@ stateDiagram-v2
     身份证号 --> 已识别_敏感
     敏感关键词 --> 已识别_敏感
     
-    已识别_敏感 --> 不入库: isSensitive=true
+    已识别_敏感 --> 不入库: SensitiveDetector 返回 true
     不入库 --> 通知用户: 弹出通知"已忽略敏感内容"
     通知用户 --> [*]
     
@@ -543,7 +543,7 @@ stateDiagram-v2
 struct ClipItem: Identifiable, Codable {
     let id: UUID                    // 唯一标识
     let content: ClipContent       // 内容（文本/图片/文件路径）
-    var contentType: ContentType   // 12 种分类类型
+    var contentType: ContentType   // 11 种入库分类类型
     let sourceApp: String          // 来源 App bundleId
     let sourceAppName: String      // 来源 App 显示名
     let timestamp: Date            // 捕获时间戳
@@ -551,11 +551,7 @@ struct ClipItem: Identifiable, Codable {
     var translation: String?       // 翻译结果
     var rewrite: String?           // 改写结果
     var todos: [TodoItem]?          // 提取的待办列表
-    var isSensitive: Bool          // 是否敏感（已忽略的标记）
-    var tags: [String]             // 用户标签（初赛仅自动标签）
     var embeddings: [Float]?        // 本地嵌入向量（用于语义搜索）
-    var isProcessed: Bool          // 是否已处理
-    var processedAt: Date?         // 处理时间
 }
 
 enum ClipContent: Codable {
@@ -571,7 +567,6 @@ enum ContentType: String, Codable, CaseIterable {
     case article = "article"
     case todo = "todo"
     case meeting = "meeting"
-    case sensitive = "sensitive"
     case translation = "translation"
     case requirement = "requirement"
     case apiDoc = "api_doc"
@@ -579,12 +574,14 @@ enum ContentType: String, Codable, CaseIterable {
     case other = "other"
 }
 
+// 说明：sensitive 分类仅用于触发忽略流程（SensitiveDetector 返回 isSensitive=true），
+// 不入库，不计入以上 11 种入库类型。12 种分类类型的说法涵盖上述 11 种 + sensitive。
+
 struct TodoItem: Identifiable, Codable {
     let id: UUID
     var task: String               // 任务项
     var assignee: String?          // 负责人
     var dueDate: String?           // 截止时间（自然语言解析）
-    var isCompleted: Bool           // 是否完成
 }
 ```
 
@@ -600,7 +597,6 @@ struct AppSettings: Codable {
     var cleanupDays: Int            // 清理周期天数，默认 30
     var launchAtLogin: Bool         // 开机启动，默认 true
     var hotkey: String              // 全局快捷键，默认 "cmd+shift+v"
-    var privacyMode: Bool          // 隐私模式（全部不入库），默认 false
 }
 
 enum APIProvider: String, Codable, CaseIterable {
@@ -678,8 +674,8 @@ protocol EmbeddingService {
 
 class LocalEmbeddingService: EmbeddingService {
     // 使用 Core ML 模型 或 MLX 框架
-    // 模型选择：MiniLM-L6-v2 或 all-MiniLM-L12-v1（多语言）
-    // 向量维度：384 或 768
+    // 模型选择：all-MiniLM-L6-v2（多语言）
+    // 向量维度：384
     // 推理方式：本地 CPU/GPU
     
     func embed(text: String) async throws -> [Float] {
@@ -694,7 +690,7 @@ class LocalEmbeddingService: EmbeddingService {
 ```
 
 **模型选择**：
-- 嵌入模型：`all-MiniLM-L6-v2`（多语言，384 维，模型大小 ~22MB）
+- 嵌入模型：拟采用 `all-MiniLM-L6-v2`（多语言，384 维，模型大小 ~22MB）（Phase 1 开始前最终确认）
 - 转换格式：Core ML `.mlmodelc`（通过 `coremltools` 从 ONNX 转换）
 - 推理性能：单次推理 < 100ms（M1 芯片）
 
@@ -741,7 +737,6 @@ class MultiProviderLLMService: LLMService {
 | 清理周期 | Int | 30 | UserDefaults | 否 |
 | 开机启动 | Bool | true | UserDefaults | 否 |
 | 全局快捷键 | String | "cmd+shift+v" | UserDefaults | 否 |
-| 隐私模式 | Bool | false | UserDefaults | 否 |
 
 ### 5.4 持久化方案
 
@@ -749,7 +744,7 @@ class MultiProviderLLMService: LLMService {
 
 ```swift
 class EncryptedStore {
-    // 使用 SQLCipher 或 CryptoKit + SQLite.swift
+    // 使用 CryptoKit + SQLite.swift 手动加密（避免 SQLCipher 依赖）
     // 数据库文件路径：~/Library/Application Support/ClipMind/clipmind.db
     // 加密算法：AES-256-GCM
     // 密钥派生：PBKDF2（设备唯一标识 + 固定 salt）
@@ -794,7 +789,6 @@ CREATE TABLE clips (
     content_type TEXT NOT NULL,           -- ContentType rawValue（用于索引）
     timestamp REAL NOT NULL,              -- Date.timeIntervalSince1970
     source_app TEXT,                      -- bundleId（用于过滤）
-    is_sensitive INTEGER DEFAULT 0,       -- Bool
     embeddings_blob BLOB                  -- 加密的向量数据
 );
 
@@ -825,7 +819,7 @@ CREATE TABLE blacklist (
 | API Key | Keychain（kSecAttrAccessibleWhenUnlocked） | 系统管理 |
 | 其他设置 | UserDefaults | 不加密 |
 
-**验证要求**（AC-05）：
+**验证要求**（AC-18）：
 - 数据库文件 `clipmind.db` 无法被 SQLite Browser 直接打开（加密）
 - 使用十六进制查看器查看文件内容为乱码
 - 仅 ClipMind 进程能解密读取
@@ -860,8 +854,8 @@ CREATE TABLE blacklist (
 
 | 权限 | 用途 | 必需性 | Info.plist 键 |
 |------|------|--------|---------------|
-| 辅助功能（Accessibility） | 获取前台 App bundleId | 必需 | `NSAppleEventsUsageDescription` |
-| 通知（Notifications） | 敏感内容忽略提示 | 可选 | `NSUserNotificationsUsageDescription` |
+| 辅助功能（Accessibility） | 获取前台 App bundleId | 必需 | 无需 Info.plist 键，通过 TCC 授权（`AXIsProcessTrusted()`） |
+| 通知（Notifications） | 敏感内容忽略提示 | 可选 | 无需 Info.plist 键，通过 `UNUserNotificationCenter` 请求（macOS 10.14+） |
 
 ### 6.2 迁移策略
 
@@ -878,19 +872,12 @@ CREATE TABLE blacklist (
 | 场景 | 回滚方式 |
 |------|---------|
 | 新版本崩溃无法启动 | 用户手动删除 `~/Library/Application Support/ClipMind/`，重新启动 |
-| 数据库损坏 | 自动备份机制：每周一次全量备份到 `clipmind.db.bak`，损坏时恢复 |
+| 数据库损坏 | 提示用户删除 `~/Library/Application Support/ClipMind/clipmind.db` 后重启重建 |
 | 配置错误 | 设置面板"重置为默认"按钮 |
 
 #### 6.3.2 数据备份
 
-```swift
-class BackupService {
-    // 每周一次全量备份
-    // 备份位置：~/Library/Application Support/ClipMind/backup/clipmind_yyyyMMdd.db
-    // 保留最近 4 个备份
-    // 损坏时自动恢复最近一次有效备份
-}
-```
+不实现自动备份机制。初赛数据量小，数据库损坏时提示用户删除 `clipmind.db` 后重启重建即可。后续版本再考虑自动备份。
 
 #### 6.3.3 紧急回滚
 
@@ -981,7 +968,7 @@ class MetricsRecorder {
 |------|------|-----------|
 | 剪贴板捕获延迟 | < 3s（AC-01） | 日志 warning |
 | 分类延迟 | < 500ms | 日志 warning |
-| 搜索延迟 | < 500ms（AC-03） | 日志 warning |
+| 搜索延迟 | < 500ms（AC-09） | 日志 warning |
 | LLM API 响应 | < 30s | 超时重试或报错 |
 
 #### 7.2.2 使用统计（本地，不上报）
@@ -1021,24 +1008,13 @@ struct DebugConfig {
 
 ### 7.4 错误上报
 
-#### 7.4.1 本地错误收集
+依赖 7.1 节的 `os.Logger` 即可，不额外实现文件级错误收集。所有运行时错误通过 `Logger.error()` 输出到系统日志（Console.app 可查看），无需维护独立的 error.log 文件。
 
-```swift
-class ErrorCollector {
-    // 收集运行时错误到本地文件
-    // 文件位置：~/Library/Application Support/ClipMind/logs/error.log
-    // 滚动策略：单文件最大 5MB，保留最近 3 个文件
-    // 格式：[timestamp] [category] [level] [message] [stacktrace?]
-    
-    static func report(_ error: Error, category: LogCategory, context: [String: Any] = [:])
-}
-```
-
-#### 7.4.2 错误分类
+#### 7.4.1 错误分类
 
 | 错误类型 | 处理方式 | 用户感知 |
 |---------|---------|---------|
-| 数据库错误 | 记录 + 尝试备份恢复 | 弹窗"数据库异常，已尝试恢复" |
+| 数据库错误 | 记录 + 提示用户删除重建 | 弹窗"数据库异常，请删除数据库文件后重启" |
 | LLM API 失败 | 记录 + 重试 + 提示 | 弹窗"AI 处理失败，请检查 API Key 或网络" |
 | 嵌入模型加载失败 | 记录 + 降级为关键词搜索 | 日志 warning，功能降级提示 |
 | 权限缺失 | 记录 + 引导授权 | 弹窗"需要辅助功能权限" |
@@ -1094,6 +1070,7 @@ class ErrorCollector {
 - **验证方式**：
   - 自动化：XCTest `testClassificationAccuracy()`，加载测试集，调用 `LocalEmbeddingService.classify()`，统计准确率，断言 ≥ 0.80
   - 测试集位置：`ClipMindTests/Fixtures/classification_samples.json`
+  - 测试集准备：测试集（240 条，每种类型 20 条）由开发者创建，Phase 1 开始前完成，标注方式为人工标注正确类型，标注质量通过双人交叉抽查 10% 样本
 
 **AC-06：代码片段被识别为 code 类型**
 
@@ -1109,12 +1086,12 @@ class ErrorCollector {
 - **验证方式**：
   - 自动化：XCTest 调用 `classify()`，断言结果为 `.error`
 
-**AC-08：密码 Token 被识别为 sensitive 类型且不入库**
+**AC-08：密码 Token 被识别为敏感内容且不入库**
 
 - **场景**：用户复制 `sk-proj-abcdef1234567890abcdef1234567890abcdef`
-- **预期**：分类为 `ContentType.sensitive`，isSensitive=true，不入库，弹出通知"已忽略敏感内容"
+- **预期**：识别为敏感内容后不入库，弹出通知提示"已忽略敏感内容"
 - **验证方式**：
-  - 自动化：XCTest 调用 `SensitiveDetector.detect("sk-proj-...")`，断言 `isSensitive == true`；调用 `EncryptedStore.save()`，断言数据库无新增记录
+  - 自动化：XCTest 调用 `SensitiveDetector.detect("sk-proj-...")`，断言返回 `isSensitive == true`；调用 `EncryptedStore.save()`，断言数据库无新增记录
   - 手动：复制 Token，观察通知弹出
 
 #### F1.3 自然语言语义搜索
@@ -1133,6 +1110,7 @@ class ErrorCollector {
 - **验证方式**：
   - 自动化：XCTest `testSearchHitRate()`，加载测试集，计算命中率，断言 ≥ 0.70
   - 测试集位置：`ClipMindTests/Fixtures/search_queries.json`
+  - 测试集准备：查询测试集（50 个）由开发者创建，Phase 1 开始前完成，标注方式为人工标注期望返回的 Top-5 条目
 
 **AC-11：跨语言搜索（中文查询匹配英文内容）**
 
@@ -1155,30 +1133,36 @@ class ErrorCollector {
 - **场景**：用户选中一条长文本（>500字），点击"智能总结"按钮，API Key 已配置且有效
 - **预期**：30 秒内返回 3-5 句总结，写入 ClipItem.summary，详情面板展示
 - **验证方式**：
-  - 自动化：XCTest 使用 `mockLLM=true`，调用 `LLMService.summarize(longText)`，断言返回字符串按句号分割后为 3-5 句
-  - 手动：配置真实 API Key，点击总结按钮，观察结果
+  - mock 测试验证解析逻辑（XCTest）：使用 `mockLLM=true`，调用 `LLMService.summarize(longText)`，断言返回字符串按句号分割后为 3-5 句
+  - 真实 API 集成测试（手动，配置真实 API Key 后调用，人工验证输出质量符合 AC 要求）：点击总结按钮，观察结果
+- **测试框架**：XCTest（mock）+ 手动（真实 API）
 
 **AC-14：即时翻译生成中英对照且保留技术术语原文**
 
 - **场景**：用户选中英文 ClipItem "The NSWindowController manages window lifecycle"，点击"即时翻译"
 - **预期**：返回中文翻译 + 原文对照，"NSWindowController"保留原文不翻译
 - **验证方式**：
-  - 自动化：XCTest 使用 mock LLM，调用 `translate()`，断言结果包含"NSWindowController"原文
+  - mock 测试验证解析逻辑（XCTest）：使用 mock LLM，调用 `translate()`，断言结果包含"NSWindowController"原文
+  - 真实 API 集成测试（手动，配置真实 API Key 后调用，人工验证输出质量符合 AC 要求）：点击翻译按钮，观察中英对照与技术术语保留
+- **测试框架**：XCTest（mock）+ 手动（真实 API）
 
 **AC-15：智能改写提供 3 种模式**
 
 - **场景**：用户选中一段文本，点击"智能改写"
 - **预期**：弹出选项"调整语气/精简/扩写"，用户选择后返回改写结果
 - **验证方式**：
-  - 自动化：XCTest 遍历 3 种 `RewriteMode`，调用 `rewrite()`，断言均返回非空字符串
-  - 手动：点击改写，选择模式，观察结果
+  - mock 测试验证解析逻辑（XCTest）：遍历 3 种 `RewriteMode`，调用 `rewrite()`，断言均返回非空字符串
+  - 真实 API 集成测试（手动，配置真实 API Key 后调用，人工验证输出质量符合 AC 要求）：点击改写，选择模式，观察结果
+- **测试框架**：XCTest（mock）+ 手动（真实 API）
 
 **AC-16：提取待办返回结构化任务列表**
 
 - **场景**：用户选中会议纪要"张三负责登录模块 06.25 前完成"，点击"提取待办"
 - **预期**：返回 `[TodoItem(task: "登录模块完成", assignee: "张三", dueDate: "06.25")]`
 - **验证方式**：
-  - 自动化：XCTest 使用 mock LLM，调用 `extractTodos()`，断言返回数组包含正确字段
+  - mock 测试验证解析逻辑（XCTest）：使用 mock LLM，调用 `extractTodos()`，断言返回数组包含正确字段
+  - 真实 API 集成测试（手动，配置真实 API Key 后调用，人工验证输出质量符合 AC 要求）：点击提取待办，观察结构化输出
+- **测试框架**：XCTest（mock）+ 手动（真实 API）
 
 **AC-17：未配置 API Key 时处理按钮置灰并提示**
 
@@ -1203,7 +1187,7 @@ class ErrorCollector {
 - **场景**：用户复制内容、搜索、本地分类全流程
 - **预期**：除用户主动点击"一键处理"调用云端 LLM 外，所有数据停留在本机
 - **验证方式**：
-  - 自动化：XCTest 模拟全流程，监控网络请求，断言除 LLM API 外无其他网络请求
+  - 自动化：在 XCTest 中通过自定义 URLProtocol 拦截所有出站请求，断言请求 URL 仅命中 LLM API 域名白名单（openai.com / zhipu.ai / tongyi.aliyun.com / deepseek.com）
   - 手动：用 Charles/Proxyman 抓包验证
 
 #### F1.6 隐私保护
@@ -1225,9 +1209,9 @@ class ErrorCollector {
 **AC-22：敏感识别开关可关闭**
 
 - **场景**：用户在设置中关闭"敏感识别"开关，复制一段 Token
-- **预期**：Token 被正常入库（不标记敏感）
+- **预期**：Token 被正常入库
 - **验证方式**：
-  - 自动化：XCTest 设置 `sensitiveDetectionEnabled=false`，调用捕获流程，断言 ClipItem 入库且 `isSensitive == false`
+  - 自动化：XCTest 设置 `sensitiveDetectionEnabled=false`，调用捕获流程，断言 ClipItem 入库
 
 #### F1.7 主界面与交互
 
@@ -1249,11 +1233,12 @@ class ErrorCollector {
 
 **AC-25：Web 交互预览页可访问且模拟核心流程**
 
-- **场景**：用户访问 GitHub Pages 部署的 Web 预览页
+- **场景**：用户访问 GitHub Pages 部署的 Web 预览页（URL：`https://<github-username>.github.io/ClipMind/`，Phase 4 部署时确定实际用户名）
 - **预期**：页面可访问，包含产品介绍 + 交互式模拟（复制演示内容→自动分类→搜索→一键处理），4 个核心流程可点击体验
 - **验证方式**：
-  - 自动化：XCTest（URL 测试）请求 Web 页面 URL，断言 HTTP 200 且包含核心元素
-  - 手动：浏览器打开 URL，点击 4 个交互流程
+  - 手动验证（浏览器打开 URL，点击 4 个核心流程按钮，确认交互响应）
+  - curl：`curl -I <URL>` 检查 URL 可访问性（HTTP 200）
+- **测试框架**：手动 + curl
 
 ### 8.2 AC 覆盖矩阵
 
@@ -1271,10 +1256,10 @@ class ErrorCollector {
 | AC-10 | F1.3 | XCTest | 是 | 否 |
 | AC-11 | F1.3 | XCTest | 是 | 否 |
 | AC-12 | F1.3 | XCTest | 是 | 否 |
-| AC-13 | F1.4 | XCTest | 是 | 是 |
-| AC-14 | F1.4 | XCTest | 是 | 是 |
-| AC-15 | F1.4 | XCTest | 是 | 是 |
-| AC-16 | F1.4 | XCTest | 是 | 否 |
+| AC-13 | F1.4 | XCTest（mock）+ 手动（真实 API） | 是 | 是 |
+| AC-14 | F1.4 | XCTest（mock）+ 手动（真实 API） | 是 | 是 |
+| AC-15 | F1.4 | XCTest（mock）+ 手动（真实 API） | 是 | 是 |
+| AC-16 | F1.4 | XCTest（mock）+ 手动（真实 API） | 是 | 是 |
 | AC-17 | F1.4 | XCUITest | 是 | 是 |
 | AC-18 | F1.5 | XCTest | 是 | 是 |
 | AC-19 | F1.5 | XCTest | 是 | 是 |
@@ -1283,7 +1268,7 @@ class ErrorCollector {
 | AC-22 | F1.6 | XCTest | 是 | 否 |
 | AC-23 | F1.7 | XCUITest | 是 | 是 |
 | AC-24 | F1.7 | XCUITest | 是 | 是 |
-| AC-25 | F1.7/Web | XCTest | 是 | 是 |
+| AC-25 | F1.7/Web | 手动 + curl | 否 | 是 |
 
 ---
 
@@ -1307,7 +1292,7 @@ class ErrorCollector {
 | SensitiveDetector | 95% | 6 种敏感模式正则、边界用例 |
 | BlacklistService | 90% | bundleId 匹配、增删查 |
 | LocalEmbeddingService | 80% | 向量生成、分类准确率、模型加载失败处理 |
-| EncryptedStore | 90% | 加密读写、搜索、清理、备份恢复 |
+| EncryptedStore | 90% | 加密读写、搜索、清理 |
 | SearchService | 85% | 余弦相似度、Top-N、跨语言、来源过滤 |
 | LLMService | 80% | 4 种处理、mock 模式、错误处理、超时重试 |
 | CleanupService | 90% | 30 天清理、定时触发 |
@@ -1338,12 +1323,10 @@ ClipMindTests/
 ├── StorageTests/
 │   ├── EncryptedStoreTests.swift
 │   ├── EncryptionTests.swift
-│   ├── BackupServiceTests.swift
 │   └── CleanupServiceTests.swift
 ├── PrivacyTests/
 │   ├── SensitiveDetectorTests.swift
-│   ├── BlacklistServiceTests.swift
-│   └── PrivacyModeTests.swift
+│   └── BlacklistServiceTests.swift
 ├── Fixtures/
 │   ├── classification_samples.json      # 240 条分类测试样本
 │   ├── search_queries.json              # 50 个搜索查询+标注答案
@@ -1402,6 +1385,17 @@ ClipMindTests/
   ]
 }
 ```
+
+#### 9.2.4 测试数据集准备
+
+| 测试集 | 数量 | 创建时机 | 标注方式 | 质量保证 |
+|--------|------|---------|---------|---------|
+| 分类测试集（`classification_samples.json`） | 240 条（每种类型 20 条） | Phase 1 开始前 | 人工标注正确类型（ContentType） | 双人交叉抽查 10% 样本，分歧协商解决 |
+| 搜索测试集（`search_queries.json`） | 50 个查询 | Phase 1 开始前 | 人工标注期望返回的 Top-5 条目 | 双人交叉抽查 10% 查询，验证标注一致性 |
+| 敏感内容样本（`sensitive_samples.json`） | 6 种模式各 5 条 | Phase 3 开始前 | 人工标注敏感类型 | 覆盖正则边界用例 |
+| LLM mock 响应（`llm_mock_responses.json`） | 4 种处理各 3 条 | Phase 2 开始前 | 人工编写预期响应 | 与 AC 预期输出格式一致 |
+
+**测试集存放**：`ClipMindTests/Fixtures/`，随代码仓库版本管理。
 
 ### 9.3 UI 测试（XCUITest）
 
@@ -1551,6 +1545,8 @@ swiftlint lint --strict
 | UI-AC-18 自动清理周期配置 | AC-21 | 设置 → 隐私 → 清理 | 修改天数 | 设置保存，旧条目被清理 | XCUITest |
 | UI-AC-19 分类标签展示 | AC-06 | popover / 主窗口 | 查看任意条目 | 条目左侧显示类型标签（CODE/LINK/ERROR 等） | 截图 |
 | UI-AC-20 Web 交互预览页 | AC-25 | 浏览器 | 访问 GitHub Pages URL | 页面加载，4 个交互流程可点击 | 浏览器截图 |
+| UI-AC-21 图片缩略图展示 | AC-02 | 复制图片后打开 popover/主窗口 | 查看历史列表 | 显示 64x64 缩略图 | XCUITest + 截图 |
+| UI-AC-22 文件路径展示 | AC-03 | 复制文件后打开 popover/主窗口 | 查看历史列表与详情 | popover 显示路径文本，详情面板展示完整路径列表 | XCUITest + 截图 |
 
 ### 10.2 证据收集规范
 
@@ -1602,7 +1598,7 @@ swiftlint lint --strict
 - 单元测试：PasteboardWatcher 去重测试通过
 - 手动：复制文本后，popover 出现条目（无分类标签）
 - 手动：数据库文件加密验证（DB Browser 无法打开）
-- AC 覆盖：AC-01（部分）、AC-04、AC-18
+- AC 覆盖：AC-01（仅文本捕获，无分类标签展示）、AC-04、AC-18
 
 **完成标志**：
 - .app 能启动，菜单栏图标常驻
@@ -1699,7 +1695,7 @@ swiftlint lint --strict
 | CleanupService.swift | 定时清理 + 30 天周期 |
 | 默认黑名单预置 | 1Password / 钥匙串 / 银行 App |
 | 隐私设置 UI | 敏感识别开关 + 黑名单管理 + 清理周期 |
-| 通用设置 UI | 开机启动 + 快捷键 + 隐私模式 |
+| 通用设置 UI | 开机启动 + 快捷键 |
 | 首次启动引导 | 欢迎页 + 权限 + API Key + 隐私提示 |
 | Phase 3 单元测试 | 敏感检测 + 黑名单 + 清理测试 |
 | Phase 3 UI 测试 | 首启流程 + 设置交互 |
@@ -1834,3 +1830,4 @@ flowchart LR
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
 | v1.0 | 2026-07-12 | 初始版本，初赛 MVP 设计规范，覆盖 F1.1-F1.7 全部功能，包含 25 条 AC、5 阶段拆分、12 种分类类型、3 个状态机、9 个用户流程图 |
+| v1.1 | 2026-07-12 | 修复 3 轮审查发现的 13 项必须修复问题 + YAGNI 清理 |
