@@ -44,6 +44,8 @@
 		EE34A9219E8C14256D693A4F /* RewriteMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5158584C25CC46619ABEC6 /* RewriteMode.swift */; };
 		F20494C358A2F50BDB4C311C /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01878445936BEBB51FA6E3A7 /* PopoverView.swift */; };
 		FDFD1191DD1C38DB7463F418 /* ClipMindTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F3 /* LocalEmbeddingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* LocalEmbeddingService.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F5 /* LocalEmbeddingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F4 /* LocalEmbeddingServiceTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,6 +106,8 @@
 		DA1769A4084EFA0F4DEF90BA /* ContentType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentType.swift; sourceTree = "<group>"; };
 		E59153AE33F9659029A0BEA1 /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
 		F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMindTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* LocalEmbeddingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalEmbeddingService.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F4 /* LocalEmbeddingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalEmbeddingServiceTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -178,6 +182,7 @@
 				F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */,
 				C1BBD1632ACA26B77A266499 /* Capture */,
 				F979DE104069CD79370613CE /* Helpers */,
+				A1B2C3D4E5F6A7B8C9D0E1F7 /* ML */,
 				0A76F7263781F7DBD90A2906 /* Models */,
 				599C27B8DE7E5FDFA1B650EC /* Storage */,
 				A69B9815AC706190AB2B3D09 /* Utils */,
@@ -250,6 +255,22 @@
 			path = ClipMindUITests;
 			sourceTree = "<group>";
 		};
+		A1B2C3D4E5F6A7B8C9D0E1F6 /* ML */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* LocalEmbeddingService.swift */,
+			);
+			path = ML;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F6A7B8C9D0E1F7 /* ML */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6A7B8C9D0E1F4 /* LocalEmbeddingServiceTests.swift */,
+			);
+			path = ML;
+			sourceTree = "<group>";
+		};
 		D4A47BEB7E63C5857DF0423D /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -272,6 +293,7 @@
 			children = (
 				D4A47BEB7E63C5857DF0423D /* App */,
 				B5ECF66BE13C47AB151ABBEB /* Capture */,
+				A1B2C3D4E5F6A7B8C9D0E1F6 /* ML */,
 				BFBAD234F9E404AB8D2C6454 /* Models */,
 				FF8BDF593D3B9D1B0C745CD8 /* Resources */,
 				FAE72FA85C68455AEE766D42 /* Storage */,
@@ -429,6 +451,7 @@
 				8B646F09C1AA6994965271F9 /* DetailPanel.swift in Sources */,
 				0762D0A8012746CD01146EFA /* EncryptedStore.swift in Sources */,
 				5E90A6C26235DA3DB2038029 /* HistoryListView.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F3 /* LocalEmbeddingService.swift in Sources */,
 				68EF95C36F7FA4E7F4CF5BCC /* LogCategory.swift in Sources */,
 				DF67DCB9D662E8F4BF29374D /* Logger.swift in Sources */,
 				A298ECBA04CC7B7012B93C9E /* MainWindow.swift in Sources */,
@@ -452,6 +475,7 @@
 				672A4841F3AA38CD7D5B1929 /* EncryptedStoreTests.swift in Sources */,
 				D97F6F290EC621643D3B256B /* EncryptionTests.swift in Sources */,
 				BD5D1B4DBB4F613CEF118C00 /* LoggerTests.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F5 /* LocalEmbeddingServiceTests.swift in Sources */,
 				1E5D28AA74E8DF3052E821B1 /* PasteboardWatcherTests.swift in Sources */,
 				7CBD26620156652A43AAAEE3 /* TestDatabaseHelper.swift in Sources */,
 			);
