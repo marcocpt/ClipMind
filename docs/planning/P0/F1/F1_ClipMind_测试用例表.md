@@ -1,4 +1,4 @@
-> 最后更新：2026-07-12 | 版本：v1.0（基于设计规范 v1.3）
+> 最后更新：2026-07-12 | 版本：v1.1（基于设计规范 v1.3）
 
 # ClipMind 初赛 MVP 测试用例表
 
@@ -141,15 +141,19 @@ ClipMindUITests/
 | TC-13-01 | AC-13 | 智能总结生成 3-5 句核心要点（mock） | mockLLM=true，长文本 fixture 就绪 | 1. 启用 DebugConfig.mockLLM<br>2. 输入长文本（>500 字）<br>3. 调用 LLMService.summarize()<br>4. 按句号分割返回字符串<br>5. 统计句数 | 句数为 3-5 句 | XCTest | ❌ MISSING | mock 验证解析逻辑 |
 | TC-13-02 | AC-13 | 智能总结结果写入 ClipItem.summary | mockLLM=true | 1. 调用 summarize() 返回结果<br>2. 写入 ClipItem.summary<br>3. 查询数据库该 ClipItem | ClipItem.summary 字段非空，内容为总结结果 | XCTest | ❌ MISSING | 持久化验证 |
 | TC-13-03 | AC-13 | 智能总结真实 API 集成 | 真实 API Key 已配置 | 1. 选中长文本 ClipItem<br>2. 点击"智能总结"按钮<br>3. 等待最多 30 秒<br>4. 观察详情面板 | 30 秒内返回 3-5 句总结<br>详情面板展示总结区块 | 手动 | ❌ MISSING | 真实 API 质量验证 |
+| TC-13-04 | AC-13 | 智能总结 API 错误响应不阻塞本地 | mockLLM=true，mock 返回 HTTP 500 | 1. 配置 mock 返回 HTTP 500 错误响应<br>2. 调用 LLMService.summarize()<br>3. 检查返回结果与异常处理 | 抛出 LLMError.serverError<br>本地功能（分类/搜索/历史）不受影响<br>不崩溃 | XCTest | ❌ MISSING | mock 错误响应验证 |
 | TC-14-01 | AC-14 | 即时翻译生成中英对照（mock） | mockLLM=true | 1. 输入 "The NSWindowController manages window lifecycle"<br>2. 调用 LLMService.translate(from: "en", to: "zh")<br>3. 检查返回结果 | 结果包含中文翻译 + 原文对照<br>"NSWindowController"保留原文不翻译 | XCTest | ❌ MISSING | 术语保留验证 |
 | TC-14-02 | AC-14 | 即时翻译结果写入 ClipItem.translation | mockLLM=true | 1. 调用 translate() 返回结果<br>2. 写入 ClipItem.translation<br>3. 查询数据库 | ClipItem.translation 字段非空 | XCTest | ❌ MISSING | 持久化验证 |
 | TC-14-03 | AC-14 | 即时翻译真实 API 集成 | 真实 API Key 已配置 | 1. 选中英文 ClipItem<br>2. 点击"即时翻译"按钮<br>3. 等待最多 30 秒<br>4. 观察详情面板 | 30 秒内返回中英对照<br>技术术语保留原文 | 手动 | ❌ MISSING | 真实 API 质量验证 |
+| TC-14-04 | AC-14 | 即时翻译 API 超时不阻塞本地 | mockLLM=true，mock 配置超时响应 | 1. 配置 mock 返回延迟 >30s 的超时响应<br>2. 调用 LLMService.translate()<br>3. 检查返回结果与异常处理 | 抛出 LLMError.timeout<br>本地功能不受影响<br>不崩溃 | XCTest | ❌ MISSING | mock 超时验证 |
 | TC-15-01 | AC-15 | 智能改写提供 3 种模式（mock） | mockLLM=true | 1. 遍历 RewriteMode 枚举（adjustTone/condense/expand）<br>2. 对每种模式调用 LLMService.rewrite(mode:)<br>3. 检查返回结果 | 三种模式均返回非空字符串 | XCTest | ❌ MISSING | mock 验证 |
 | TC-15-02 | AC-15 | 智能改写模式选择 UI | App 已启动，API Key 已配置 | 1. 选中一条 ClipItem<br>2. 点击"智能改写"按钮<br>3. 观察弹出选项 | 弹出"调整语气/精简/扩写"三选项 | XCUITest | ❌ MISSING | 模式选择 UI |
 | TC-15-03 | AC-15 | 智能改写真实 API 集成 | 真实 API Key 已配置 | 1. 选中一条文本 ClipItem<br>2. 点击"智能改写"<br>3. 选择"精简"模式<br>4. 等待结果 | 返回精简后的改写结果 | 手动 | ❌ MISSING | 真实 API 质量验证 |
+| TC-15-04 | AC-15 | 智能改写 API 限流响应处理 | mockLLM=true，mock 返回 HTTP 429 | 1. 配置 mock 返回 HTTP 429 限流响应<br>2. 调用 LLMService.rewrite(mode: .condense)<br>3. 检查返回结果与异常处理 | 抛出 LLMError.rateLimited<br>本地功能不受影响<br>不崩溃 | XCTest | ❌ MISSING | mock 限流验证 |
 | TC-16-01 | AC-16 | 提取待办返回结构化任务列表（mock） | mockLLM=true | 1. 输入 "张三负责登录模块 06.25 前完成"<br>2. 调用 LLMService.extractTodos()<br>3. 检查返回数组 | 返回 [TodoItem]<br>包含 task="登录模块完成"<br>assignee="张三"<br>dueDate="06.25" | XCTest | ❌ MISSING | 结构化输出 |
 | TC-16-02 | AC-16 | 提取待办结果写入 ClipItem.todos | mockLLM=true | 1. 调用 extractTodos() 返回结果<br>2. 写入 ClipItem.todos<br>3. 查询数据库 | ClipItem.todos 字段非空，包含 TodoItem 数组 | XCTest | ❌ MISSING | 持久化验证 |
 | TC-16-03 | AC-16 | 提取待办真实 API 集成 | 真实 API Key 已配置 | 1. 选中会议纪要 ClipItem<br>2. 点击"提取待办"<br>3. 等待最多 30 秒<br>4. 观察详情面板 | 返回结构化任务列表<br>展示任务项 + 负责人 + 截止时间 | 手动 | ❌ MISSING | 真实 API 质量验证 |
+| TC-16-04 | AC-16 | 提取待办 API 响应解析失败处理 | mockLLM=true，mock 返回非 JSON 响应 | 1. 配置 mock 返回非 JSON 格式响应<br>2. 调用 LLMService.extractTodos()<br>3. 检查返回结果与异常处理 | 抛出 LLMError.parseError<br>本地功能不受影响<br>不崩溃 | XCTest | ❌ MISSING | mock 解析失败验证 |
 | TC-17-01 | AC-17 | 未配置 API Key 时按钮置灰 | App 启动且未配置 API Key | 1. 清空 API Key 配置<br>2. 启动 App<br>3. 选中一条 ClipItem<br>4. 观察"智能总结"按钮状态 | 按钮置灰不可点击<br>或点击后弹窗"需配置 API Key" | XCUITest | ❌ MISSING | UI 状态验证 |
 | TC-17-02 | AC-17 | 未配置 API Key 时点击提示 | App 启动且未配置 API Key | 1. 清空 API Key<br>2. 选中 ClipItem<br>3. 点击"智能总结"<br>4. 观察提示 | 出现提示文案"需配置 API Key" | XCUITest | ❌ MISSING | 错误提示 |
 | TC-17-03 | AC-17 | 未配置 API Key 手动验证 | App 已启动 | 1. 清空 API Key<br>2. 选中一条内容<br>3. 尝试点击"智能总结" | 按钮置灰或弹窗提示 | 手动 | ❌ MISSING | UX 验证 |
@@ -164,6 +168,7 @@ ClipMindUITests/
 | TC-21-01 | AC-21 | 30 天前内容自动清理 | EncryptedStore 测试库就绪 | 1. 插入一条 timestamp: Date().addingTimeInterval(-31*86400) 的记录<br>2. 调用 cleanup(olderThan: 30)<br>3. 查询该记录 | 该记录被删除 | XCTest | ❌ MISSING | 清理逻辑 |
 | TC-21-02 | AC-21 | 29 天前内容不被清理 | EncryptedStore 测试库就绪 | 1. 插入一条 timestamp: Date().addingTimeInterval(-29*86400) 的记录<br>2. 调用 cleanup(olderThan: 30)<br>3. 查询该记录 | 该记录保留 | XCTest | ❌ MISSING | 边界用例 |
 | TC-21-03 | AC-21 | 应用启动时自动触发清理 | 数据库中有 31 天前的记录 | 1. 启动 App<br>2. 等待启动完成<br>3. 查询数据库 | 31 天前的记录被删除 | XCTest | ❌ MISSING | 启动触发 |
+| TC-21-04 | AC-21 | 恰好 30 天前内容被清理（边界） | EncryptedStore 测试库就绪 | 1. 插入一条 timestamp: Date().addingTimeInterval(-30*86400) 的记录<br>2. 调用 cleanup(olderThan: 30)<br>3. 查询该记录 | 该记录被删除（恰好达到 30 天阈值触发清理） | XCTest | ❌ MISSING | 恰好边界用例 |
 | TC-22-01 | AC-22 | 关闭敏感识别后 Token 入库 | AppSettings.sensitiveDetectionEnabled=false | 1. 设置 sensitiveDetectionEnabled=false<br>2. 输入 `sk-proj-abcdef...`<br>3. 调用捕获流程<br>4. 查询数据库 | ClipItem 入库，数据库新增 1 条记录 | XCTest | ❌ MISSING | 开关关闭 |
 | TC-22-02 | AC-22 | 开启敏感识别后 Token 不入库 | AppSettings.sensitiveDetectionEnabled=true | 1. 设置 sensitiveDetectionEnabled=true<br>2. 输入 `sk-proj-abcdef...`<br>3. 调用捕获流程<br>4. 查询数据库 | 数据库无新增记录 | XCTest | ❌ MISSING | 开关开启（对照） |
 | TC-22-03 | AC-22 | 敏感识别开关 UI 切换 | App 已启动 | 1. 打开设置面板<br>2. 切换"敏感识别"开关为关闭<br>3. 保存设置<br>4. 复制 Token<br>5. 查询数据库 | Token 入库<br>开关状态持久化 | XCUITest | ❌ MISSING | UI 切换 |
@@ -682,6 +687,25 @@ ClipMindUITests/
 - **覆盖状态**：❌ MISSING
 - **备注**：真实 API 质量验证
 
+**TC-13-04：智能总结 API 错误响应不阻塞本地**
+
+- **前置条件**：
+  - DebugConfig.mockLLM = true
+  - MockLLMService 配置为返回 HTTP 500 错误响应
+- **测试步骤**：
+  1. 配置 `MockLLMService.summarizeReturnError = LLMError.serverError(statusCode: 500)`
+  2. 调用 `LLMService.summarize()`
+  3. 捕获 throws 抛出的错误
+  4. 验证本地功能：调用 `LocalEmbeddingService.classify()` 与 `EncryptedStore.query()` 确认仍可用
+- **预期结果**：
+  - 抛出 `LLMError.serverError` 错误
+  - 不引发崩溃
+  - 本地分类、搜索、历史查询功能不受影响
+  - ClipItem.summary 字段保持原值（不被错误响应污染）
+- **测试框架**：XCTest
+- **覆盖状态**：❌ MISSING
+- **备注**：mock 错误响应验证，对应设计规范 5.2.4 节"LLM API 错误处理不阻塞本地功能"
+
 ---
 
 #### AC-14：即时翻译生成中英对照且保留技术术语原文
@@ -734,6 +758,25 @@ ClipMindUITests/
 - **覆盖状态**：❌ MISSING
 - **备注**：真实 API 质量验证
 
+**TC-14-04：即时翻译 API 超时不阻塞本地**
+
+- **前置条件**：
+  - DebugConfig.mockLLM = true
+  - MockLLMService 配置为返回延迟超过 30 秒的超时响应
+- **测试步骤**：
+  1. 配置 `MockLLMService.translateReturnError = LLMError.timeout`
+  2. 调用 `LLMService.translate(from: "en", to: "zh")`
+  3. 捕获 throws 抛出的错误
+  4. 验证本地功能：调用 `LocalEmbeddingService.classify()` 与 `EncryptedStore.query()` 确认仍可用
+- **预期结果**：
+  - 抛出 `LLMError.timeout` 错误
+  - 不引发崩溃
+  - 本地分类、搜索、历史查询功能不受影响
+  - ClipItem.translation 字段保持原值
+- **测试框架**：XCTest
+- **覆盖状态**：❌ MISSING
+- **备注**：mock 超时验证，对应设计规范 5.2.4 节"LLM API 错误处理不阻塞本地功能"
+
 ---
 
 #### AC-15：智能改写提供 3 种模式
@@ -783,6 +826,25 @@ ClipMindUITests/
 - **测试框架**：手动
 - **覆盖状态**：❌ MISSING
 - **备注**：真实 API 质量验证
+
+**TC-15-04：智能改写 API 限流响应处理**
+
+- **前置条件**：
+  - DebugConfig.mockLLM = true
+  - MockLLMService 配置为返回 HTTP 429 限流响应
+- **测试步骤**：
+  1. 配置 `MockLLMService.rewriteReturnError = LLMError.rateLimited(retryAfter: 60)`
+  2. 调用 `LLMService.rewrite(mode: .condense)`
+  3. 捕获 throws 抛出的错误
+  4. 验证本地功能：调用 `LocalEmbeddingService.classify()` 与 `EncryptedStore.query()` 确认仍可用
+- **预期结果**：
+  - 抛出 `LLMError.rateLimited` 错误（含 retryAfter 提示）
+  - 不引发崩溃
+  - 本地分类、搜索、历史查询功能不受影响
+  - ClipItem.rewrite 字段保持原值
+- **测试框架**：XCTest
+- **覆盖状态**：❌ MISSING
+- **备注**：mock 限流验证，对应设计规范 5.2.4 节"LLM API 错误处理不阻塞本地功能"
 
 ---
 
@@ -838,6 +900,25 @@ ClipMindUITests/
 - **测试框架**：手动
 - **覆盖状态**：❌ MISSING
 - **备注**：真实 API 质量验证
+
+**TC-16-04：提取待办 API 响应解析失败处理**
+
+- **前置条件**：
+  - DebugConfig.mockLLM = true
+  - MockLLMService 配置为返回非 JSON 格式响应（无法解析为 [TodoItem]）
+- **测试步骤**：
+  1. 配置 `MockLLMService.extractTodosReturnRaw = "不是合法 JSON 的字符串"`
+  2. 调用 `LLMService.extractTodos()`
+  3. 捕获 throws 抛出的错误
+  4. 验证本地功能：调用 `LocalEmbeddingService.classify()` 与 `EncryptedStore.query()` 确认仍可用
+- **预期结果**：
+  - 抛出 `LLMError.parseError` 错误
+  - 不引发崩溃
+  - 本地分类、搜索、历史查询功能不受影响
+  - ClipItem.todos 字段保持原值
+- **测试框架**：XCTest
+- **覆盖状态**：❌ MISSING
+- **备注**：mock 解析失败验证，对应设计规范 5.2.4 节"LLM API 错误处理不阻塞本地功能"
 
 ---
 
@@ -1069,6 +1150,20 @@ ClipMindUITests/
 - **测试框架**：XCTest
 - **覆盖状态**：❌ MISSING
 - **备注**：启动触发
+
+**TC-21-04：恰好 30 天前内容被清理（边界用例）**
+
+- **前置条件**：EncryptedStore 测试库就绪
+- **测试步骤**：
+  1. 插入一条 `timestamp: Date().addingTimeInterval(-30*86400)` 的记录（恰好 30 天前）
+  2. 调用 `cleanup(olderThan: 30)`
+  3. 查询该记录
+- **预期结果**：
+  - 该记录被删除
+  - 验证边界条件：恰好达到 30 天阈值即触发清理
+- **测试框架**：XCTest
+- **覆盖状态**：❌ MISSING
+- **备注**：恰好边界用例，与 TC-21-02（29 天保留）形成对照
 
 ---
 
@@ -1402,12 +1497,12 @@ ClipMindUITests/
 | 属性 | 值 |
 |------|------|
 | 文件路径 | `ClipMindTests/Fixtures/llm_mock_responses.json` |
-| 数量 | 4 种处理 × 3 条 = 12 条 |
+| 数量 | 4 种处理 × 3 条正常响应 + 4 种错误响应 = 16 条 |
 | 创建时机 | Phase 2 开始前 |
 | 标注方式 | 人工编写预期响应 |
 | 质量保证 | 与 AC 预期输出格式一致 |
 
-**4 种处理分布**：
+**正常响应分布**：
 
 | 处理类型 | 数量 | 输出格式要求 |
 |---------|------|------------|
@@ -1415,6 +1510,15 @@ ClipMindUITests/
 | 即时翻译 | 3 | 中英对照 + 技术术语保留原文 |
 | 智能改写 | 3 | 三种模式（adjustTone/condense/expand）各 1 条 |
 | 提取待办 | 3 | 结构化 JSON：task + assignee + dueDate |
+
+**错误响应分布（用于 AC-13~AC-16 错误路径测试）**：
+
+| 错误类型 | 对应 AC | 数量 | mock 配置 | 预期错误 |
+|---------|---------|------|----------|---------|
+| HTTP 500 服务器错误 | AC-13（TC-13-04） | 1 | `summarizeReturnError = LLMError.serverError(500)` | 抛出 serverError，本地功能不受影响 |
+| 请求超时 | AC-14（TC-14-04） | 1 | `translateReturnError = LLMError.timeout` | 抛出 timeout，本地功能不受影响 |
+| HTTP 429 限流 | AC-15（TC-15-04） | 1 | `rewriteReturnError = LLMError.rateLimited(retryAfter: 60)` | 抛出 rateLimited，本地功能不受影响 |
+| 响应解析失败 | AC-16（TC-16-04） | 1 | `extractTodosReturnRaw = "非 JSON 字符串"` | 抛出 parseError，本地功能不受影响 |
 
 **JSON 格式示例**：
 
@@ -1514,14 +1618,14 @@ ClipMindUITests/
 
 | AC 编号 | 用例编号 | 测试框架 | 验证内容 |
 |---------|---------|---------|---------|
-| AC-13 | TC-13-01, TC-13-02, TC-13-03 | XCTest（mock）+ 手动 | 智能总结 3-5 句 |
-| AC-14 | TC-14-01, TC-14-02, TC-14-03 | XCTest（mock）+ 手动 | 即时翻译 + 术语保留 |
-| AC-15 | TC-15-01, TC-15-02, TC-15-03 | XCTest（mock）+ 手动 | 智能改写 3 模式 |
-| AC-16 | TC-16-01, TC-16-02, TC-16-03 | XCTest（mock）+ 手动 | 提取待办结构化 |
+| AC-13 | TC-13-01, TC-13-02, TC-13-03, TC-13-04 | XCTest（mock）+ 手动 | 智能总结 3-5 句 + 错误路径 |
+| AC-14 | TC-14-01, TC-14-02, TC-14-03, TC-14-04 | XCTest（mock）+ 手动 | 即时翻译 + 术语保留 + 超时处理 |
+| AC-15 | TC-15-01, TC-15-02, TC-15-03, TC-15-04 | XCTest（mock）+ 手动 | 智能改写 3 模式 + 限流处理 |
+| AC-16 | TC-16-01, TC-16-02, TC-16-03, TC-16-04 | XCTest（mock）+ 手动 | 提取待办结构化 + 解析失败处理 |
 | AC-17 | TC-17-01, TC-17-02, TC-17-03 | XCUITest + 手动 | 未配置 Key 置灰 |
 
 **测试数据集准备**：
-- LLM mock 响应（12 条）— Phase 2 开始前完成
+- LLM mock 响应（16 条，含 4 条错误响应）— Phase 2 开始前完成
 
 **完成标志**：
 - 4 种处理在配置 API Key 后可用
@@ -1541,7 +1645,7 @@ ClipMindUITests/
 |---------|---------|---------|---------|
 | AC-08 | TC-08-01 ~ TC-08-07 | XCTest + 手动 | 敏感内容识别 + 不入库 + 通知 |
 | AC-20 | TC-20-01, TC-20-02, TC-20-03 | XCTest | 黑名单忽略 |
-| AC-21 | TC-21-01, TC-21-02, TC-21-03 | XCTest | 30 天清理 + 边界 + 启动触发 |
+| AC-21 | TC-21-01, TC-21-02, TC-21-03, TC-21-04 | XCTest | 30 天清理 + 边界（29/30/31 天）+ 启动触发 |
 | AC-22 | TC-22-01, TC-22-02, TC-22-03 | XCTest + XCUITest | 敏感识别开关 |
 | AC-23 | TC-23-03 | 手动 | popover 完整内容 |
 | AC-24 | TC-24-01, TC-24-02, TC-24-03 | XCUITest + 手动 | 首启引导完整流程 |
@@ -1581,8 +1685,8 @@ ClipMindUITests/
 | 指标 | 数值 |
 |------|------|
 | AC 总数 | 25 |
-| 测试用例总数 | 63 |
-| 平均每 AC 用例数 | 2.52 |
+| 测试用例总数 | 69 |
+| 平均每 AC 用例数 | 2.76 |
 | AC 覆盖率 | 100%（25/25） |
 
 ### 6.2 按 AC 覆盖率
@@ -1601,15 +1705,15 @@ ClipMindUITests/
 | AC-10 | 1 | ❌ MISSING |
 | AC-11 | 2 | ❌ MISSING |
 | AC-12 | 2 | ❌ MISSING |
-| AC-13 | 3 | ❌ MISSING |
-| AC-14 | 3 | ❌ MISSING |
-| AC-15 | 3 | ❌ MISSING |
-| AC-16 | 3 | ❌ MISSING |
+| AC-13 | 4 | ❌ MISSING |
+| AC-14 | 4 | ❌ MISSING |
+| AC-15 | 4 | ❌ MISSING |
+| AC-16 | 4 | ❌ MISSING |
 | AC-17 | 3 | ❌ MISSING |
 | AC-18 | 3 | ❌ MISSING |
 | AC-19 | 2 | ❌ MISSING |
 | AC-20 | 3 | ❌ MISSING |
-| AC-21 | 3 | ❌ MISSING |
+| AC-21 | 4 | ❌ MISSING |
 | AC-22 | 3 | ❌ MISSING |
 | AC-23 | 3 | ❌ MISSING |
 | AC-24 | 3 | ❌ MISSING |
@@ -1619,11 +1723,11 @@ ClipMindUITests/
 
 | 测试框架 | 用例数 | 占比 |
 |---------|--------|------|
-| XCTest | 33 | 52.4% |
-| XCUITest | 15 | 23.8% |
-| 手动 | 14 | 22.2% |
-| curl | 1 | 1.6% |
-| **合计** | **63** | **100%** |
+| XCTest | 41 | 59.42% |
+| XCUITest | 11 | 15.94% |
+| 手动 | 16 | 23.19% |
+| curl | 1 | 1.45% |
+| **合计** | **69** | **100%** |
 
 **说明**：部分用例同时涉及 XCTest（mock）与手动（真实 API），统计时按主框架归类。
 
@@ -1633,26 +1737,26 @@ ClipMindUITests/
 |---------|--------|------|
 | ✅ COVERED | 0 | 0% |
 | 🟡 PARTIAL | 0 | 0% |
-| ❌ MISSING | 63 | 100% |
+| ❌ MISSING | 69 | 100% |
 | ⏸️ DEFERRED | 0 | 0% |
-| **合计** | **63** | **100%** |
+| **合计** | **69** | **100%** |
 
-> **当前状态**：代码尚未实现，所有 63 个用例标注为 ❌ MISSING。本文档作为测试规划与执行依据，待对应 Phase 实现后逐项落地为可执行测试代码。
+> **当前状态**：代码尚未实现，所有 69 个用例标注为 ❌ MISSING。本文档作为测试规划与执行依据，待对应 Phase 实现后逐项落地为可执行测试代码。
 
 ### 6.5 按模块分布
 
 | 模块 | AC 数 | 用例数 | XCTest | XCUITest | 手动 | curl |
 |------|-------|--------|--------|----------|------|------|
-| F1.1 剪贴板监听与捕获 | 4 | 8 | 4 | 2 | 2 | 0 |
-| F1.2 自动分类 | 4 | 12 | 12 | 0 | 1 | 0 |
+| F1.1 剪贴板监听与捕获 | 4 | 8 | 3 | 2 | 3 | 0 |
+| F1.2 自动分类 | 4 | 12 | 11 | 0 | 1 | 0 |
 | F1.3 自然语言语义搜索 | 4 | 6 | 5 | 1 | 0 | 0 |
-| F1.4 一键处理 | 5 | 15 | 8 | 2 | 5 | 0 |
+| F1.4 一键处理 | 5 | 19 | 11 | 3 | 5 | 0 |
 | F1.5 本地加密存储 | 2 | 5 | 2 | 0 | 3 | 0 |
-| F1.6 隐私保护 | 3 | 9 | 7 | 1 | 1 | 0 |
-| F1.7 主界面与交互 | 3 | 8 | 0 | 4 | 3 | 1 |
-| **合计** | **25** | **63** | **38** | **10** | **15** | **1** |
+| F1.6 隐私保护 | 3 | 10 | 9 | 1 | 0 | 0 |
+| F1.7 主界面与交互 | 3 | 9 | 0 | 4 | 4 | 1 |
+| **合计** | **25** | **69** | **41** | **11** | **16** | **1** |
 
-> **说明**：F1.2 中 TC-08-07 同时涉及 XCTest（前置单元测试）与手动（通知 UX 验证），表中按主框架 XCTest 统计，手动 1 条为 TC-08-07 单独计算。
+> **说明**：每条用例按"主测试框架"归类一次，无双重计数。F1.2 中 TC-08-07（复制 Token 弹通知）归类为手动；F1.4 新增 4 条 LLM API 错误路径用例（TC-13-04/14-04/15-04/16-04）归类为 XCTest；F1.6 新增 TC-21-04（恰好 30 天边界）归类为 XCTest。
 
 ---
 
@@ -1661,3 +1765,4 @@ ClipMindUITests/
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
 | v1.0 | 2026-07-12 | 初始版本，基于设计规范 v1.3，覆盖 25 条 AC，共 63 个测试用例 |
+| v1.1 | 2026-07-12 | 修复 6.1~6.5 节统计错误（原 63 条实际为 64 条）；补充 AC-13~AC-16 LLM API 错误路径测试各 1 条（共 4 条）；补充 AC-21 恰好 30 天边界用例（TC-21-04）；同步 4.4 LLM mock 响应数据集（新增 4 条错误响应）；统计总数 69 条；解决 6.3 与 6.5 节 XCTest 数量矛盾；删除 6.5 节 TC-08-07 双重计数的过时备注 |
