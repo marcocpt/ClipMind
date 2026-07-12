@@ -81,31 +81,4 @@ final class LocalEmbeddingServiceTests: XCTestCase {
         let similarity = LocalEmbeddingService.cosineSimilarity(vectorA, vectorB)
         XCTAssertEqual(similarity, 0.0)
     }
-
-    // MARK: - classify
-
-    func testClassifyCode() {
-        let type = service.classify("func viewDidLoad() { super.viewDidLoad() }")
-        XCTAssertEqual(type, .code)
-    }
-
-    func testClassifyLink() {
-        let type = service.classify("https://www.github.com/user/repo")
-        XCTAssertEqual(type, .link)
-    }
-
-    func testClassifyError() {
-        let type = service.classify("Fatal error: Unexpectedly found nil while unwrapping")
-        XCTAssertEqual(type, .error)
-    }
-
-    func testClassifyTodo() {
-        let type = service.classify("TODO: Fix the login bug before Friday")
-        XCTAssertEqual(type, .todo)
-    }
-
-    func testClassifyReturnsValidType() {
-        let type = service.classify("Random miscellaneous text 12345")
-        XCTAssertNotNil(type)
-    }
 }
