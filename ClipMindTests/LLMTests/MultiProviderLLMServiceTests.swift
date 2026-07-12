@@ -20,6 +20,7 @@ final class MultiProviderLLMServiceTests: XCTestCase {
         InterceptingURLProtocol.capturedRequestBodies.removeAll()
         InterceptingURLProtocol.mockResponseData = nil
         InterceptingURLProtocol.mockStatusCode = nil
+        InterceptingURLProtocol.mockError = nil
     }
 
     override func tearDown() {
@@ -28,6 +29,7 @@ final class MultiProviderLLMServiceTests: XCTestCase {
         InterceptingURLProtocol.capturedRequestBodies.removeAll()
         InterceptingURLProtocol.mockResponseData = nil
         InterceptingURLProtocol.mockStatusCode = nil
+        InterceptingURLProtocol.mockError = nil
         super.tearDown()
     }
 
@@ -269,6 +271,72 @@ final class MultiProviderLLMServiceTests: XCTestCase {
             }
         } catch {
             XCTFail("应抛出 LLMError")
+        }
+    }
+
+    // MARK: - 超时错误（F1.4 修复：URLError.timedOut 应转换为 LLMError.timeout）
+
+    func testTimeoutThrowsTimeoutError() async {
+        // 模拟 URLSession 超时：返回 URLError(.timedOut)
+        // 修复前：会被包装为 LLMError.networkError，UI 显示"网络连接失败"
+        // 修复后：应转换为 LLMError.timeout，UI 显示"请求超时"
+        InterceptingURLProtocol.mockError = URLError(.timedOut)
+
+        let service = makeService(apiKey: "key")
+
+        do {
+            _ = try await service.summarize(text: "test")
+            XCTFail("应抛出 timeout")
+        } catch let error as LLMError {
+            XCTAssertEqual(error, .timeout, "URLError.timedOut 应转换为 LLMError.timeout")
+        } catch {
+            XCTFail("应抛出 LLMError，实际：\(error)")
+        }
+    }
+
+    // MARK: - parseResponse parseError 路径（F1.4 测试补充）
+
+    func testParseResponseThrowsParseErrorWhenChoicesEmpty() async {
+        // choices 为空数组：guard let choices.first 失败 → 抛 LLMError.parseError
+        InterceptingURLProtocol.mockResponseData = Data("{\"choices\":[]}".utf8)
+        InterceptingURLProtocol.mockStatusCode = 200
+
+        let service = makeService(apiKey: "key")
+
+        do {
+            _ = try await service.summarize(text: "test")
+            XCTFail("应抛出 parseError")
+        } catch let error as LLMError {
+            if case .parseError = error {
+                // 预期行为：空 choices 触发 parseError
+            } else {
+                XCTFail("应为 parseError，实际：\(error)")
+            }
+        } catch {
+            XCTFail("应抛出 LLMError，实际：\(error)")
+        }
+    }
+
+    func testParseResponseThrowsParseErrorWhenContentMissing() async {
+        // 响应缺少 content 字段：JSONDecoder 抛 DecodingError
+        // 修复后：parseResponse 应捕获 DecodingError 并包装为 LLMError.parseError
+        let missingContentJson = "{\"choices\":[{\"message\":{\"role\":\"assistant\"}}]}"
+        InterceptingURLProtocol.mockResponseData = Data(missingContentJson.utf8)
+        InterceptingURLProtocol.mockStatusCode = 200
+
+        let service = makeService(apiKey: "key")
+
+        do {
+            _ = try await service.summarize(text: "test")
+            XCTFail("应抛出 parseError")
+        } catch let error as LLMError {
+            if case .parseError = error {
+                // 预期行为：缺少 content 字段触发 parseError
+            } else {
+                XCTFail("应为 parseError，实际：\(error)")
+            }
+        } catch {
+            XCTFail("应抛出 LLMError（parseError），实际：\(error)")
         }
     }
 

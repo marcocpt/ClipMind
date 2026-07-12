@@ -3,13 +3,20 @@ import XCTest
 
 final class APIKeyManagerTests: XCTestCase {
     private var keyManager: APIKeyManager!
+    private var testSession: URLSession!
 
     override func setUp() {
         super.setUp()
-        keyManager = APIKeyManager()
+        testSession = makeTestSession()
+        keyManager = APIKeyManager(urlSession: testSession)
         // 清理之前的测试数据：所有 provider 的 key + UserDefaults 中的 provider
         clearAllKeychainKeys()
         UserDefaults.standard.removeObject(forKey: "apiProvider")
+        InterceptingURLProtocol.capturedRequests.removeAll()
+        InterceptingURLProtocol.capturedRequestBodies.removeAll()
+        InterceptingURLProtocol.mockResponseData = nil
+        InterceptingURLProtocol.mockStatusCode = nil
+        InterceptingURLProtocol.mockError = nil
     }
 
     override func tearDown() {
@@ -17,6 +24,12 @@ final class APIKeyManagerTests: XCTestCase {
         clearAllKeychainKeys()
         UserDefaults.standard.removeObject(forKey: "apiProvider")
         keyManager = nil
+        testSession = nil
+        InterceptingURLProtocol.capturedRequests.removeAll()
+        InterceptingURLProtocol.capturedRequestBodies.removeAll()
+        InterceptingURLProtocol.mockResponseData = nil
+        InterceptingURLProtocol.mockStatusCode = nil
+        InterceptingURLProtocol.mockError = nil
         super.tearDown()
     }
 
@@ -167,22 +180,68 @@ final class APIKeyManagerTests: XCTestCase {
         XCTAssertFalse(keyManager.isConfigured, "currentProvider 为 nil 时 isConfigured 应为 false")
     }
 
-    // MARK: - validateKey 在已配置时返回 .valid
+    // MARK: - validateKey 在已配置且 API 接受时返回 .valid
 
     func testValidateKeyReturnsValidForConfiguredKey() async throws {
+        // 已配置 key 且 API 返回 200 → .valid
         try keyManager.saveKey("test-key-openai", for: .openai)
+        InterceptingURLProtocol.mockResponseData = Data("{\"data\":[]}".utf8)
+        InterceptingURLProtocol.mockStatusCode = 200
 
         let result = await keyManager.validateKey(for: .openai)
 
-        // 测试环境无法发起真实 API 请求，预期返回 .valid 表示 key 已就绪可验证
-        XCTAssertEqual(result, .valid, "已配置 key 时 validateKey 应返回 .valid")
+        XCTAssertEqual(result, .valid, "已配置 key 且 API 接受时 validateKey 应返回 .valid")
     }
 
     func testValidateKeyReturnsInvalidWhenKeyMissing() async {
-        // 未配置 key 时，validateKey 应返回 .invalid 而非 .networkError
+        // 未配置 key 时，validateKey 应直接返回 .invalid（不发起网络请求）
         let result = await keyManager.validateKey(for: .openai)
 
         XCTAssertEqual(result, .invalid, "未配置 key 时 validateKey 应返回 .invalid")
+        // 验证未发起网络请求（快速失败）
+        XCTAssertTrue(InterceptingURLProtocol.capturedRequests.isEmpty,
+                      "未配置 key 时不应发起网络请求")
+    }
+
+    // MARK: - validateKey 真实 API 验证（F1.4 修复：调用 /v1/models 端点）
+
+    func testValidateKeyReturnsValidWhenAPIAcceptsKey() async throws {
+        // mock 200 响应 → .valid
+        try keyManager.saveKey("valid-key", for: .openai)
+        InterceptingURLProtocol.mockResponseData = Data("{\"data\":[]}".utf8)
+        InterceptingURLProtocol.mockStatusCode = 200
+
+        let result = await keyManager.validateKey(for: .openai)
+
+        XCTAssertEqual(result, .valid, "API 返回 200 时应返回 .valid")
+        // 验证请求发往 /v1/models 端点
+        XCTAssertEqual(InterceptingURLProtocol.capturedRequests.count, 1)
+        let url = InterceptingURLProtocol.capturedRequests[0].url?.absoluteString
+        XCTAssertEqual(url, "https://api.openai.com/v1/models")
+        // 验证携带 Authorization 头
+        let auth = InterceptingURLProtocol.capturedRequests[0].value(forHTTPHeaderField: "Authorization")
+        XCTAssertEqual(auth, "Bearer valid-key")
+    }
+
+    func testValidateKeyReturnsInvalidWhenAPIRejectsKey() async throws {
+        // mock 401 响应 → .invalid（API Key 被服务端拒绝）
+        try keyManager.saveKey("bad-key", for: .openai)
+        InterceptingURLProtocol.mockResponseData = Data("{\"error\":{\"message\":\"Invalid API key\"}}".utf8)
+        InterceptingURLProtocol.mockStatusCode = 401
+
+        let result = await keyManager.validateKey(for: .openai)
+
+        XCTAssertEqual(result, .invalid, "API 返回 401 时应返回 .invalid")
+    }
+
+    func testValidateKeyReturnsNetworkErrorOnFailure() async throws {
+        // mock URLError → .networkError（无法判断有效性）
+        try keyManager.saveKey("any-key", for: .openai)
+        InterceptingURLProtocol.mockError = URLError(.notConnectedToInternet)
+
+        let result = await keyManager.validateKey(for: .openai)
+
+        XCTAssertEqual(result, .networkError, "网络错误时应返回 .networkError")
     }
 
     // MARK: - 辅助方法
@@ -191,5 +250,12 @@ final class APIKeyManagerTests: XCTestCase {
         for provider in APIProvider.allCases {
             keyManager.deleteKey(for: provider)
         }
+    }
+
+    private func makeTestSession() -> URLSession {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [InterceptingURLProtocol.self]
+        config.timeoutIntervalForRequest = 5
+        return URLSession(configuration: config)
     }
 }

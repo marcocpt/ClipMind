@@ -208,6 +208,13 @@ final class MultiProviderLLMService: LLMService {
                     await sleepForRetry(attempt: attempt)
                     continue
                 }
+                // F1.4 修复：URLError.timedOut 应转换为 LLMError.timeout（而非 networkError），
+                // 让 UI 显示"请求超时"而非"网络连接失败"。
+                // shouldRetry 已包含 .timeout case，可达性与重试语义对齐。
+                if let urlError = error as? URLError, urlError.code == .timedOut {
+                    LogCategory.llm.warning("请求超时（URLError.timedOut）")
+                    throw LLMError.timeout
+                }
                 throw LLMError.networkError(error)
             }
         }
@@ -266,19 +273,28 @@ final class MultiProviderLLMService: LLMService {
     /// 解析响应，提取生成内容
     private func parseResponse(_ data: Data) throws -> String {
         let decoder = JSONDecoder()
-        if provider == .qianwen {
-            let response = try decoder.decode(DashScopeResponse.self, from: data)
-            guard let content = response.output.choices.first?.message.content else {
-                throw LLMError.parseError("DashScope 响应缺少 content 字段")
+        do {
+            if provider == .qianwen {
+                let response = try decoder.decode(DashScopeResponse.self, from: data)
+                guard let content = response.output.choices.first?.message.content else {
+                    throw LLMError.parseError("DashScope 响应缺少 content 字段")
+                }
+                return content
+            }
+
+            let response = try decoder.decode(ChatResponse.self, from: data)
+            guard let content = response.choices.first?.message.content else {
+                throw LLMError.parseError("响应缺少 content 字段")
             }
             return content
+        } catch let error as LLMError {
+            // 已是 LLMError（如 guard let 触发的 parseError），原样抛出
+            throw error
+        } catch {
+            // F1.4 修复：捕获 DecodingError（如缺少 content 字段）并包装为 parseError，
+            // 使 parseError 路径对"字段缺失"和"空 choices"两种场景均可达。
+            throw LLMError.parseError("响应 JSON 解析失败: \(error.localizedDescription)")
         }
-
-        let response = try decoder.decode(ChatResponse.self, from: data)
-        guard let content = response.choices.first?.message.content else {
-            throw LLMError.parseError("响应缺少 content 字段")
-        }
-        return content
     }
 
     /// 解析 extractTodos 返回的 JSON 数组内容

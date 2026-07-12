@@ -57,6 +57,15 @@ final class APIKeyManager {
     /// UserDefaults 中 apiProvider 的 key
     private static let providerKey = "apiProvider"
 
+    /// 用于发起验证请求的 URLSession（测试可注入 InterceptingURLProtocol）
+    private let urlSession: URLSession
+
+    /// 初始化。
+    /// - Parameter urlSession: 用于发起 API 验证请求的 URLSession（默认 .shared，测试可注入）
+    init(urlSession: URLSession = .shared) {
+        self.urlSession = urlSession
+    }
+
     /// 当前配置的 API Provider（从 UserDefaults 读取，每次调用实时获取）
     var currentProvider: APIProvider? {
         guard let raw = UserDefaults.standard.string(forKey: Self.providerKey) else {
@@ -159,21 +168,68 @@ final class APIKeyManager {
 
     /// 验证 API Key 是否有效。
     ///
-    /// 当前实现为本地存在性检查：
-    /// - Key 不存在 → `.invalid`
-    /// - Key 已配置 → `.valid`
+    /// 实现真实 API 验证：调用各提供商的 `/v1/models`（或等价）端点。
+    /// - Key 不存在（Keychain 中无 key）→ 直接返回 `.invalid`（快速失败，不发起网络请求）
+    /// - 200 → `.valid`
+    /// - 401/403 → `.invalid`（API Key 被服务端拒绝）
+    /// - 其他状态码或网络错误 → `.networkError`（无法判断有效性）
     ///
-    /// 真实 API 请求验证（如调用 `/v1/models`）将在 T2.6 UI 集成时实现，
-    /// 届时网络异常会返回 `.networkError`。
+    /// 各 provider 的验证端点：
+    /// - OpenAI: `https://api.openai.com/v1/models`（GET，Authorization: Bearer <key>）
+    /// - 智谱 GLM: `https://open.bigmodel.cn/api/paas/v4/models`（GET，Authorization: Bearer <key>）
+    /// - 通义千问: `https://dashscope.aliyuncs.com/api/v1/models`（GET，Authorization: Bearer <key>）
+    /// - DeepSeek: `https://api.deepseek.com/v1/models`（GET，Authorization: Bearer <key>）
     /// - Parameter provider: API 提供商
     /// - Returns: 验证结果（valid / invalid / networkError），不抛错
     func validateKey(for provider: APIProvider) async -> ValidationResult {
-        guard loadKey(for: provider) != nil else {
+        // 快速失败：Keychain 中无 key 时直接返回 invalid（不发起网络请求）
+        guard let key = loadKey(for: provider) else {
             LogCategory.llm.info("validateKey: provider=\(provider.rawValue) 未配置 key，返回 invalid")
             return .invalid
         }
-        LogCategory.llm.info("validateKey: provider=\(provider.rawValue) key 已配置，返回 valid（暂未发起 API 请求）")
-        return .valid
+
+        let url = validationURL(for: provider)
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (_, response) = try await urlSession.data(for: request)
+            guard let http = response as? HTTPURLResponse else {
+                LogCategory.llm.warning("validateKey: 非 HTTP 响应 provider=\(provider.rawValue)")
+                return .networkError
+            }
+            switch http.statusCode {
+            case 200...299:
+                LogCategory.llm.info("validateKey: provider=\(provider.rawValue) 验证成功 (\(http.statusCode))")
+                return .valid
+            case 401, 403:
+                LogCategory.llm.warning("validateKey: provider=\(provider.rawValue) 被拒绝 (\(http.statusCode))")
+                return .invalid
+            default:
+                LogCategory.llm.warning("validateKey: provider=\(provider.rawValue) 异常状态码 \(http.statusCode)")
+                return .networkError
+            }
+        } catch {
+            LogCategory.llm.warning("validateKey: provider=\(provider.rawValue) 网络错误: \(error.localizedDescription)")
+            return .networkError
+        }
+    }
+
+    /// 根据 provider 返回验证 API 的 URL（`/v1/models` 或等价端点）。
+    /// - Parameter provider: API 提供商
+    /// - Returns: 验证端点 URL
+    private func validationURL(for provider: APIProvider) -> URL {
+        switch provider {
+        case .openai:
+            return URL(string: "https://api.openai.com/v1/models")!
+        case .zhipu:
+            return URL(string: "https://open.bigmodel.cn/api/paas/v4/models")!
+        case .qianwen:
+            return URL(string: "https://dashscope.aliyuncs.com/api/v1/models")!
+        case .deepseek:
+            return URL(string: "https://api.deepseek.com/v1/models")!
+        }
     }
 
     /// 清除所有配置（所有 provider 的 Keychain 条目 + UserDefaults 中的 provider）。

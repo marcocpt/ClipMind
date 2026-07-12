@@ -29,6 +29,9 @@ final class InterceptingURLProtocol: URLProtocol {
     static var mockStatusCode: Int?
     /// mock 响应头
     static var mockHeaders: [String: String]?
+    /// mock 错误（非 nil 时优先于 mockResponseData/mockStatusCode，
+    /// 用于模拟 URLError.timedOut 等网络错误场景）
+    static var mockError: Error?
 
     // URLProtocol 要求 class func（非 static func），无法修改
     // swiftlint:disable:next static_over_final_class
@@ -45,6 +48,12 @@ final class InterceptingURLProtocol: URLProtocol {
         Self.capturedRequests.append(request)
         Self.capturedRequestBodies.append(readRequestBody(request))
         LogCategory.llm.debug("[TEST] 拦截请求: \(request.url?.absoluteString ?? "nil")")
+
+        // 优先处理 mockError：模拟网络层错误（如 URLError.timedOut）
+        if let error = Self.mockError {
+            client?.urlProtocol(self, didFailWithError: error)
+            return
+        }
 
         let statusCode = Self.mockStatusCode ?? 200
         let headers = Self.mockHeaders ?? [:]
