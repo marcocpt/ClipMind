@@ -198,10 +198,30 @@ struct DetailPanel: View {
 private extension DetailPanel {
     func performSummarize() {
         guard let clip = clip, let text = textContent(for: clip) else { return }
+        // UITEST_MOCK_ERROR: 测试模式下直接设置错误信息，模拟 LLM 失败
+        if let mockErr = mockError {
+            errorMessage = mockErr
+            return
+        }
         if let mock = mockSummary {
-            var updated = clip
-            updated.summary = mock
-            onUpdateClip?(updated)
+            // UITEST_MOCK_DELAY: 测试模式下延迟返回结果，使 isProcessing 状态可被 UI 测试捕获
+            if let delay = mockDelay, delay > 0 {
+                isProcessing = true
+                errorMessage = nil
+                Task {
+                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                    await MainActor.run {
+                        var updated = clip
+                        updated.summary = mock
+                        onUpdateClip?(updated)
+                        isProcessing = false
+                    }
+                }
+            } else {
+                var updated = clip
+                updated.summary = mock
+                onUpdateClip?(updated)
+            }
             return
         }
         guard let service = createLLMService() else {
@@ -385,11 +405,27 @@ private extension DetailPanel {
         return try? JSONDecoder().decode([TodoItem].self, from: data)
     }
 
+    /// UITEST_MOCK_ERROR: 测试模式下直接设置错误信息，模拟 LLM 失败
+    var mockError: String? {
+        ProcessInfo.processInfo.environment["UITEST_MOCK_ERROR"]
+    }
+
+    /// UITEST_MOCK_DELAY: 测试模式下延迟返回 mock 结果（秒），使 isProcessing 状态可被 UI 测试捕获
+    var mockDelay: TimeInterval? {
+        guard let raw = ProcessInfo.processInfo.environment["UITEST_MOCK_DELAY"],
+              let value = TimeInterval(raw) else { return nil }
+        return value
+    }
+
     var forceConfigured: Bool {
         ProcessInfo.processInfo.environment["UITEST_FORCE_CONFIGURED"] != nil
     }
 
     var isConfigured: Bool {
-        forceConfigured || apiKeyManager.isConfigured
+        // UITEST_NO_API_KEY: 测试模式下强制未配置，避免 Keychain 历史数据干扰
+        if CommandLine.arguments.contains("--UITEST_NO_API_KEY") {
+            return false
+        }
+        return forceConfigured || apiKeyManager.isConfigured
     }
 }

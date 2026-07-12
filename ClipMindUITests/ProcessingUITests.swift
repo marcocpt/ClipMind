@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 
 /// T2.5 一键处理 UI 测试。
@@ -10,6 +11,9 @@ import XCTest
 /// - UI-AC-12: 智能改写模式选择
 /// - UI-AC-13: 提取待办结果展示
 /// - AC-17: 未配置 API Key 时按钮置灰
+/// - AC-D4: 处理中显示加载动画
+/// - AC-D6: 处理失败显示错误信息
+/// - AC-D10: 复制按钮写入剪贴板
 final class ProcessingUITests: XCTestCase {
     override func setUp() {
         super.setUp()
@@ -21,19 +25,28 @@ final class ProcessingUITests: XCTestCase {
     /// 启动 app 并注入预览数据，自动选中第一条 clip。
     /// - Parameters:
     ///   - forceConfigured: 是否强制 API Key 已配置
+    ///   - noAPIKey: 是否注入 --UITEST_NO_API_KEY（强制未配置，避免 Keychain 历史数据干扰）
     ///   - mockSummary: mock 总结结果
     ///   - mockTranslation: mock 翻译结果
     ///   - mockRewrite: mock 改写结果
     ///   - mockTodos: mock 待办 JSON 字符串
+    ///   - mockDelay: mock 延迟秒数（使 isProcessing 状态可被 UI 测试捕获）
+    ///   - mockError: mock 错误信息（模拟 LLM 失败）
     private func launchApp(
         forceConfigured: Bool = false,
+        noAPIKey: Bool = false,
         mockSummary: String? = nil,
         mockTranslation: String? = nil,
         mockRewrite: String? = nil,
-        mockTodos: String? = nil
+        mockTodos: String? = nil,
+        mockDelay: String? = nil,
+        mockError: String? = nil
     ) -> XCUIApplication {
         let app = XCUIApplication()
-        let args = ["--UITEST_SHOW_MAIN_WINDOW", "--UITEST_PREVIEW_DATA", "--UITEST_AUTO_SELECT_FIRST"]
+        var args = ["--UITEST_SHOW_MAIN_WINDOW", "--UITEST_PREVIEW_DATA", "--UITEST_AUTO_SELECT_FIRST"]
+        if noAPIKey {
+            args.append("--UITEST_NO_API_KEY")
+        }
         app.launchArguments = args
         if forceConfigured {
             app.launchEnvironment["UITEST_FORCE_CONFIGURED"] = "1"
@@ -49,6 +62,12 @@ final class ProcessingUITests: XCTestCase {
         }
         if let mockTodos {
             app.launchEnvironment["UITEST_MOCK_TODOS"] = mockTodos
+        }
+        if let mockDelay {
+            app.launchEnvironment["UITEST_MOCK_DELAY"] = mockDelay
+        }
+        if let mockError {
+            app.launchEnvironment["UITEST_MOCK_ERROR"] = mockError
         }
         app.launch()
         app.activate()
@@ -82,8 +101,9 @@ final class ProcessingUITests: XCTestCase {
     // MARK: - AC-17 / TC-17-01: 未配置时按钮置灰
 
     /// 未配置 API Key 时，处理按钮应置灰（disabled）。
+    /// 注入 --UITEST_NO_API_KEY 避免 Keychain 历史数据导致 isConfigured=true。
     func testProcessingButtonsDisabledWhenNoAPIKey() {
-        let app = launchApp(forceConfigured: false)
+        let app = launchApp(forceConfigured: false, noAPIKey: true)
 
         let summarizeButton = app.buttons["summarizeButton"]
         XCTAssertTrue(summarizeButton.waitForExistence(timeout: 5), "总结按钮应存在")
@@ -243,6 +263,76 @@ final class ProcessingUITests: XCTestCase {
         XCTAssertTrue(
             copyButton.waitForExistence(timeout: 3),
             "总结结果区块应包含复制按钮"
+        )
+    }
+
+    // MARK: - AC-D10: 复制按钮写入剪贴板
+
+    /// 点击复制按钮后，剪贴板应包含总结结果文本。
+    func testCopyButtonCopiesToPasteboard() {
+        let app = launchApp(
+            forceConfigured: true,
+            mockSummary: "这是可复制的总结结果"
+        )
+
+        let summarizeButton = app.buttons["summarizeButton"]
+        XCTAssertTrue(summarizeButton.waitForExistence(timeout: 5))
+        summarizeButton.click()
+
+        // 等待结果块出现
+        let resultBlock = app.descendants(matching: .any)["summaryResultBlock"].firstMatch
+        XCTAssertTrue(resultBlock.waitForExistence(timeout: 5), "应显示总结结果区块")
+
+        // 点击复制按钮
+        let copyButton = app.buttons["copySummaryButton"]
+        XCTAssertTrue(copyButton.waitForExistence(timeout: 3), "应显示复制按钮")
+        copyButton.click()
+
+        // 等待剪贴板写入（跨进程同步）
+        Thread.sleep(forTimeInterval: 1)
+        let pasteboardString = NSPasteboard.general.string(forType: .string)
+        XCTAssertEqual(pasteboardString, "这是可复制的总结结果", "剪贴板应包含总结结果文本")
+    }
+
+    // MARK: - AC-D4: 处理中显示加载动画
+
+    /// 处理过程中应显示加载动画（通过 UITEST_MOCK_DELAY 让 isProcessing 状态可被捕获）。
+    func testProcessingIndicatorShowsDuringProcessing() {
+        let app = launchApp(
+            forceConfigured: true,
+            mockSummary: "测试总结",
+            mockDelay: "2"
+        )
+
+        let summarizeButton = app.buttons["summarizeButton"]
+        XCTAssertTrue(summarizeButton.waitForExistence(timeout: 5))
+        summarizeButton.click()
+
+        // 验证加载动画出现（macOS ProgressView 可能映射为 otherElements，使用 descendants 兜底）
+        let indicator = app.descendants(matching: .any)["processingIndicator"].firstMatch
+        XCTAssertTrue(
+            indicator.waitForExistence(timeout: 5),
+            "处理中应显示加载动画"
+        )
+    }
+
+    // MARK: - AC-D6: 处理失败显示错误信息
+
+    /// LLM 处理失败时应显示错误信息（通过 UITEST_MOCK_ERROR 模拟失败）。
+    func testProcessingErrorDisplaysWhenLLMFails() {
+        let app = launchApp(
+            forceConfigured: true,
+            mockError: "API Key 无效"
+        )
+
+        let summarizeButton = app.buttons["summarizeButton"]
+        XCTAssertTrue(summarizeButton.waitForExistence(timeout: 5))
+        summarizeButton.click()
+
+        let errorText = app.staticTexts["processingErrorText"]
+        XCTAssertTrue(
+            errorText.waitForExistence(timeout: 3),
+            "处理失败应显示错误信息"
         )
     }
 }
