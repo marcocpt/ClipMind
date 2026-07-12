@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PopoverView: View {
     @State private var searchText = ""
-    private let clips: [ClipItem] = []
+    @State private var clips: [ClipItem] = ClipTestData.isUITesting ? ClipTestData.previewClips : []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,9 +26,20 @@ struct PopoverView: View {
         .padding(8)
     }
 
+    private var filteredClips: [ClipItem] {
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return clips }
+        return clips.filter { clip in
+            if case .text(let text) = clip.content {
+                return text.localizedCaseInsensitiveContains(trimmed)
+            }
+            return false
+        }
+    }
+
     private var contentList: some View {
         Group {
-            if clips.isEmpty {
+            if filteredClips.isEmpty {
                 VStack(spacing: 8) {
                     Image(systemName: "tray")
                         .font(.system(size: 32))
@@ -40,7 +51,7 @@ struct PopoverView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        ForEach(clips) { clip in
+                        ForEach(filteredClips) { clip in
                             ClipRowView(clip: clip)
                         }
                     }

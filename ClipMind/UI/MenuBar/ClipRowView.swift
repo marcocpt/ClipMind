@@ -4,7 +4,11 @@ struct ClipRowView: View {
     let clip: ClipItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                TypeTagView(contentType: clip.contentType)
+                Spacer()
+            }
             Text(contentPreview)
                 .font(.system(size: 13))
                 .lineLimit(2)

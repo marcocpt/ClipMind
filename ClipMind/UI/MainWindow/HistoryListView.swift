@@ -2,7 +2,7 @@ import SwiftUI
 
 struct HistoryListView: View {
     @Binding var selectedClip: ClipItem?
-    private let clips: [ClipItem] = []
+    @State private var clips: [ClipItem] = ClipTestData.isUITesting ? ClipTestData.previewClips : []
 
     var body: some View {
         if clips.isEmpty {
@@ -19,11 +19,10 @@ struct HistoryListView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            List {
-                ForEach(clips) { clip in
-                    ClipRowView(clip: clip)
-                        .onTapGesture { selectedClip = clip }
-                }
+            List(clips) { clip in
+                ClipRowView(clip: clip)
+                    .contentShape(Rectangle())
+                    .onTapGesture { selectedClip = clip }
             }
         }
     }
