@@ -1,0 +1,36 @@
+included:
+  - ClipMind
+  - ClipMindTests
+  - ClipMindUITests
+
+excluded:
+  - Pods
+  - ClipMind/Models/Generated
+  - build
+
+opt_in_rules:
+  - empty_count
+  - closure_end_indentation
+  - first_where
+  - operator_usage_whitespace
+  - sorted_imports
+  - vertical_whitespace_closing_braces
+
+disabled_rules:
+  - trailing_whitespace
+
+line_length:
+  warning: 120
+  error: 200
+
+type_body_length:
+  warning: 300
+  error: 500
+
+function_body_length:
+  warning: 50
+  error: 100
+
+file_length:
+  warning: 500
+  error: 1000
