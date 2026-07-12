@@ -1,0 +1,3212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipMind 视觉原型 — F1 初赛 MVP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #0a0a0f;
+    --bg-1: #0f0f17;
+    --bg-2: #14141f;
+    --bg-3: #1a1a28;
+    --bg-4: #22222e;
+    --surface: rgba(255, 255, 255, 0.03);
+    --surface-hover: rgba(255, 255, 255, 0.06);
+    --surface-active: rgba(255, 255, 255, 0.09);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.14);
+    --text-0: #f5f5f7;
+    --text-1: #c7c7d1;
+    --text-2: #8a8a99;
+    --text-3: #5a5a6e;
+    --accent-violet: #8b5cf6;
+    --accent-cyan: #22d3ee;
+    --accent-amber: #fbbf24;
+    --accent-rose: #fb7185;
+    --accent-emerald: #34d399;
+    --accent-orange: #fb923c;
+    --accent-pink: #f472b6;
+    --accent-blue: #60a5fa;
+    --accent-indigo: #818cf8;
+    --grad-primary: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
+    --grad-warm: linear-gradient(135deg, #fb7185 0%, #fbbf24 100%);
+    --grad-cool: linear-gradient(135deg, #34d399 0%, #22d3ee 100%);
+    --shadow-glow: 0 0 80px rgba(139, 92, 246, 0.25);
+    --shadow-card: 0 20px 60px rgba(0, 0, 0, 0.4);
+    --shadow-popover: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-0);
+    color: var(--text-0);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 背景氛围层 */
+  .ambient-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .ambient-bg::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    left: -10%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 60%);
+    filter: blur(80px);
+    animation: float1 20s ease-in-out infinite;
+  }
+  .ambient-bg::after {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    right: -10%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.10) 0%, transparent 60%);
+    filter: blur(80px);
+    animation: float2 25s ease-in-out infinite;
+  }
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(10%, 10%) scale(1.1); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-10%, -10%) scale(1.1); }
+  }
+
+  /* 噪点纹理 */
+  .noise {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.02;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* 顶部导航 */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 16px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(10, 10, 15, 0.7);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+  }
+  .logo-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--grad-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+  }
+  .logo-mark svg { width: 16px; height: 16px; }
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--text-1);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text-0); }
+  .version-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-emerald);
+    padding: 5px 12px;
+    background: rgba(52, 211, 153, 0.1);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    border-radius: 100px;
+  }
+
+  /* 头部 */
+  header {
+    padding: 120px 40px 60px;
+    text-align: center;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .header-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-violet);
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+  }
+  .header-label .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-emerald);
+    box-shadow: 0 0 8px var(--accent-emerald);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(40px, 5vw, 64px);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+  }
+  header h1 .italic {
+    font-style: italic;
+    font-weight: 300;
+    background: var(--grad-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .subtitle {
+    font-size: 16px;
+    color: var(--text-1);
+    line-height: 1.7;
+    max-width: 680px;
+    margin: 0 auto 24px;
+  }
+  header .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-2);
+    padding: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: inline-block;
+  }
+
+  /* 章节通用 */
+  section.proto-section {
+    padding: 80px 40px;
+    max-width: 1280px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .section-header {
+    margin-bottom: 40px;
+  }
+  .section-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-cyan);
+    letter-spacing: 0.15em;
+    margin-bottom: 12px;
+    padding: 4px 10px;
+    background: rgba(34, 211, 238, 0.08);
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    border-radius: 6px;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .section-title .italic {
+    font-style: italic;
+    color: var(--accent-violet);
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-2);
+    line-height: 1.7;
+    max-width: 720px;
+  }
+  .section-info {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: rgba(139, 92, 246, 0.05);
+    border-left: 3px solid var(--accent-violet);
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: var(--text-1);
+  }
+  .section-info code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-amber);
+    background: rgba(251, 191, 36, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* 模拟 macOS 窗口 */
+  .mac-window {
+    background: linear-gradient(145deg, rgba(26, 26, 40, 0.95), rgba(20, 20, 31, 0.95));
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(20px);
+  }
+  .mac-titlebar {
+    background: var(--bg-3);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mac-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .mac-dots span {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+  }
+  .mac-dots .red { background: #fb7185; }
+  .mac-dots .yellow { background: #fbbf24; }
+  .mac-dots .green { background: #34d399; }
+  .mac-title {
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 500;
+    flex: 1;
+    text-align: center;
+  }
+  .mac-toolbar {
+    display: flex;
+    gap: 6px;
+  }
+  .mac-toolbar .tool {
+    width: 16px;
+    height: 16px;
+    color: var(--text-3);
+  }
+  .mac-body {
+    padding: 0;
+  }
+
+  /* 类型标签通用 */
+  .type-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .tag-code { background: rgba(139, 92, 246, 0.15); color: var(--accent-violet); }
+  .tag-link { background: rgba(34, 211, 238, 0.15); color: var(--accent-cyan); }
+  .tag-error { background: rgba(251, 113, 133, 0.15); color: var(--accent-rose); }
+  .tag-article { background: rgba(96, 165, 250, 0.15); color: var(--accent-blue); }
+  .tag-todo { background: rgba(251, 191, 36, 0.15); color: var(--accent-amber); }
+  .tag-meeting { background: rgba(52, 211, 153, 0.15); color: var(--accent-emerald); }
+  .tag-sensitive { background: rgba(251, 113, 133, 0.2); color: var(--accent-rose); }
+  .tag-translation { background: rgba(129, 140, 248, 0.15); color: var(--accent-indigo); }
+  .tag-requirement { background: rgba(251, 146, 60, 0.15); color: var(--accent-orange); }
+  .tag-api_doc { background: rgba(244, 114, 182, 0.15); color: var(--accent-pink); }
+  .tag-english_doc { background: rgba(96, 165, 250, 0.12); color: var(--accent-blue); }
+  .tag-other { background: rgba(138, 138, 153, 0.15); color: var(--text-2); }
+
+  /* ===================== 1. 菜单栏 Popover ===================== */
+  .menubar-demo {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px;
+    position: relative;
+  }
+  .menubar-strip {
+    height: 28px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 12px;
+    gap: 14px;
+    margin-bottom: 40px;
+    position: relative;
+  }
+  .menubar-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-1);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .menubar-item:hover {
+    background: var(--surface-hover);
+  }
+  .menubar-item.active {
+    background: rgba(139, 92, 246, 0.2);
+    color: var(--accent-violet);
+  }
+  .menubar-item svg {
+    width: 14px;
+    height: 14px;
+  }
+  .menubar-item .label {
+    font-weight: 500;
+  }
+  .menubar-system {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-1);
+    font-size: 11px;
+  }
+  .menubar-system svg { width: 13px; height: 13px; }
+
+  /* popover 弹出 */
+  .popover-wrap {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -10px;
+    padding-right: 60px;
+  }
+  .popover {
+    width: 380px;
+    background: rgba(26, 26, 40, 0.95);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    box-shadow: var(--shadow-popover);
+    backdrop-filter: blur(30px);
+    overflow: hidden;
+    position: relative;
+    animation: popIn 0.3s ease;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .popover::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    right: 30px;
+    width: 14px;
+    height: 14px;
+    background: rgba(26, 26, 40, 0.95);
+    border-left: 1px solid var(--border-strong);
+    border-top: 1px solid var(--border-strong);
+    transform: rotate(45deg);
+  }
+  .popover-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .popover-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .popover-search svg { width: 12px; height: 12px; }
+  .popover-search .cursor {
+    width: 1px;
+    height: 12px;
+    background: var(--accent-cyan);
+    animation: blink 1s infinite;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+  .popover-list {
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .popover-list::-webkit-scrollbar { width: 6px; }
+  .popover-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  .popover-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .popover-item:hover {
+    background: var(--surface-hover);
+    border-color: var(--border);
+  }
+  .popover-item .icon-wrap {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .popover-item .icon-wrap svg { width: 14px; height: 14px; }
+  .popover-item .info { flex: 1; min-width: 0; }
+  .popover-item .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+  }
+  .popover-item .preview {
+    font-size: 12px;
+    color: var(--text-1);
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .popover-item .meta {
+    font-size: 10px;
+    color: var(--text-3);
+    margin-top: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .popover-footer {
+    display: flex;
+    border-top: 1px solid var(--border);
+    background: var(--bg-2);
+  }
+  .popover-footer button {
+    flex: 1;
+    padding: 11px;
+    background: transparent;
+    border: none;
+    color: var(--text-1);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+  .popover-footer button:hover {
+    background: var(--surface-hover);
+  }
+  .popover-footer button.primary {
+    color: var(--accent-violet);
+    border-right: 1px solid var(--border);
+  }
+  .popover-footer button svg { width: 12px; height: 12px; }
+
+  .menubar-hint {
+    margin-top: 24px;
+    padding: 14px 16px;
+    background: rgba(34, 211, 238, 0.05);
+    border: 1px dashed rgba(34, 211, 238, 0.3);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.7;
+  }
+  .menubar-hint strong { color: var(--accent-cyan); }
+
+  /* ===================== 2. 主窗口三栏布局 ===================== */
+  .main-window {
+    height: 680px;
+    display: flex;
+    flex-direction: column;
+  }
+  .main-toolbar {
+    padding: 12px 16px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .toolbar-search {
+    flex: 1;
+    max-width: 420px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text-1);
+  }
+  .toolbar-search:focus-within {
+    border-color: var(--accent-violet);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+  .toolbar-search svg { width: 14px; height: 14px; color: var(--text-2); }
+  .toolbar-search input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-0);
+    font-family: inherit;
+    font-size: 13px;
+    flex: 1;
+  }
+  .toolbar-search input::placeholder { color: var(--text-3); }
+  .toolbar-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--text-1);
+    cursor: pointer;
+  }
+  .toolbar-filter:hover { border-color: var(--border-strong); }
+  .toolbar-filter svg { width: 12px; height: 12px; color: var(--text-2); }
+  .toolbar-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+  .tool-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .tool-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text-0);
+  }
+  .tool-btn svg { width: 14px; height: 14px; }
+
+  .main-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 220px 1fr 380px;
+    min-height: 0;
+  }
+
+  /* 左侧边栏 */
+  .sidebar {
+    background: var(--bg-1);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px 12px;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+  .sidebar-section { margin-bottom: 24px; }
+  .sidebar-title {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0 8px 8px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-1);
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .sidebar-item:hover {
+    background: var(--surface-hover);
+  }
+  .sidebar-item.active {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--accent-violet);
+  }
+  .sidebar-item .left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-item .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+  .sidebar-item .count {
+    font-size: 11px;
+    color: var(--text-3);
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .sidebar-item.active .count {
+    background: rgba(139, 92, 246, 0.2);
+    color: var(--accent-violet);
+  }
+  .sidebar-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-2);
+    transition: all 0.15s;
+  }
+  .sidebar-tag:hover { color: var(--text-0); background: var(--surface-hover); }
+  .sidebar-tag .hash { color: var(--text-3); }
+
+  /* 中间列表 */
+  .list-pane {
+    background: var(--bg-0);
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+  }
+  .list-pane::-webkit-scrollbar { width: 6px; }
+  .list-pane::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  .list-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: var(--bg-0);
+    z-index: 5;
+  }
+  .list-header .title {
+    font-size: 13px;
+    color: var(--text-1);
+    font-weight: 600;
+  }
+  .list-header .count {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .list-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .list-item:hover {
+    background: var(--surface);
+  }
+  .list-item.active {
+    background: rgba(139, 92, 246, 0.08);
+    border-left-color: var(--accent-violet);
+  }
+  .list-item .top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .list-item .preview {
+    font-size: 13px;
+    color: var(--text-1);
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 6px;
+  }
+  .list-item .preview.code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-1);
+  }
+  .list-item .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .list-item .meta .source {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .list-item .meta .source .app-icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: var(--accent-violet);
+  }
+
+  /* 右侧详情 */
+  .detail-pane {
+    background: var(--bg-1);
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .detail-pane::-webkit-scrollbar { width: 6px; }
+  .detail-pane::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  .detail-header {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .detail-meta .chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .detail-meta .chip svg { width: 10px; height: 10px; }
+  .detail-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-0);
+    margin-bottom: 4px;
+  }
+  .detail-content {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--text-1);
+    line-height: 1.7;
+    max-height: 240px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: pre-wrap;
+  }
+  .detail-content::-webkit-scrollbar { width: 4px; }
+  .detail-content::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+  .process-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .process-btn {
+    padding: 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-1);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+  .process-btn:hover {
+    border-color: var(--accent-violet);
+    background: rgba(139, 92, 246, 0.08);
+    color: var(--accent-violet);
+  }
+  .process-btn svg { width: 12px; height: 12px; }
+  .process-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .process-btn.disabled:hover {
+    border-color: var(--border);
+    background: var(--bg-2);
+    color: var(--text-1);
+  }
+
+  .process-result {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .process-result.show { display: block; }
+  .process-result .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .process-result .label {
+    font-size: 11px;
+    color: var(--accent-violet);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .process-result .copy {
+    font-size: 11px;
+    color: var(--text-2);
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--bg-3);
+    transition: all 0.2s;
+  }
+  .process-result .copy:hover {
+    color: var(--accent-cyan);
+    background: rgba(34, 211, 238, 0.1);
+  }
+  .process-result .content {
+    font-size: 13px;
+    color: var(--text-1);
+    line-height: 1.7;
+  }
+
+  /* ===================== 3. 设置面板 ===================== */
+  .settings-window {
+    height: 640px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+  }
+  .settings-sidebar {
+    background: var(--bg-1);
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+  }
+  .settings-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-1);
+    margin-bottom: 4px;
+    transition: all 0.15s;
+  }
+  .settings-nav-item:hover { background: var(--surface-hover); }
+  .settings-nav-item.active {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--accent-violet);
+  }
+  .settings-nav-item svg { width: 15px; height: 15px; }
+  .settings-content {
+    background: var(--bg-0);
+    padding: 24px 28px;
+    overflow-y: auto;
+  }
+  .settings-content::-webkit-scrollbar { width: 6px; }
+  .settings-content::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  .settings-pane { display: none; }
+  .settings-pane.active { display: block; }
+  .settings-section {
+    margin-bottom: 28px;
+  }
+  .settings-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-0);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .settings-section-desc {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 14px;
+  }
+  .form-group {
+    margin-bottom: 14px;
+  }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-1);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .form-input {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-0);
+    font-size: 13px;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--accent-violet);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+  .form-input.mono { font-family: 'JetBrains Mono', monospace; }
+  .form-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .form-row .input-action {
+    padding: 9px 14px;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
+    color: var(--accent-violet);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .form-row .input-action:hover {
+    background: rgba(139, 92, 246, 0.2);
+  }
+  .form-row .input-action.success {
+    background: rgba(52, 211, 153, 0.1);
+    border-color: rgba(52, 211, 153, 0.3);
+    color: var(--accent-emerald);
+  }
+  .select-wrap {
+    position: relative;
+  }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-2);
+    pointer-events: none;
+    font-size: 10px;
+  }
+  .form-select {
+    width: 100%;
+    padding: 9px 32px 9px 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-0);
+    font-size: 13px;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+  .form-select:focus {
+    outline: none;
+    border-color: var(--accent-violet);
+  }
+
+  /* 开关 */
+  .toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .toggle-row .info {
+    flex: 1;
+  }
+  .toggle-row .title {
+    font-size: 13px;
+    color: var(--text-0);
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .toggle-row .desc {
+    font-size: 11px;
+    color: var(--text-2);
+  }
+  .toggle {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    background: var(--bg-3);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent-emerald); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(16px); }
+
+  /* 黑名单列表 */
+  .blacklist-list {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .blacklist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .blacklist-item:last-child { border-bottom: none; }
+  .blacklist-item .app-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--bg-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-1);
+  }
+  .blacklist-item .app-icon svg { width: 13px; height: 13px; }
+  .blacklist-item .name { flex: 1; color: var(--text-1); }
+  .blacklist-item .bundle { font-size: 10px; color: var(--text-3); font-family: 'JetBrains Mono', monospace; }
+  .blacklist-item .default {
+    font-size: 9px;
+    padding: 2px 6px;
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--accent-violet);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .blacklist-item .remove {
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+  }
+  .blacklist-item .remove:hover { color: var(--accent-rose); background: rgba(251, 113, 133, 0.1); }
+
+  /* ===================== 4. 首次启动引导 ===================== */
+  .onboarding-window {
+    height: 580px;
+    display: flex;
+    flex-direction: column;
+  }
+  .onboarding-progress {
+    display: flex;
+    padding: 16px 24px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    gap: 24px;
+  }
+  .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .progress-step .num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .progress-step.active { color: var(--accent-violet); }
+  .progress-step.active .num {
+    background: var(--accent-violet);
+    border-color: var(--accent-violet);
+    color: white;
+  }
+  .progress-step.done { color: var(--accent-emerald); }
+  .progress-step.done .num {
+    background: var(--accent-emerald);
+    border-color: var(--accent-emerald);
+    color: white;
+  }
+  .progress-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    margin: 11px 0;
+  }
+  .progress-line.done { background: var(--accent-emerald); }
+
+  .onboarding-body {
+    flex: 1;
+    padding: 40px 48px;
+    overflow-y: auto;
+  }
+  .onboarding-pane { display: none; }
+  .onboarding-pane.active { display: block; }
+  .onboarding-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    background: var(--grad-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+  }
+  .onboarding-icon svg { width: 36px; height: 36px; }
+  .onboarding-title {
+    font-family: 'Fraunces', serif;
+    font-size: 30px;
+    font-weight: 400;
+    color: var(--text-0);
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+  .onboarding-title .italic {
+    font-style: italic;
+    background: var(--grad-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .onboarding-desc {
+    font-size: 14px;
+    color: var(--text-1);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    max-width: 520px;
+  }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+    max-width: 640px;
+  }
+  .feature-pill {
+    padding: 12px 14px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .feature-pill .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--accent-violet);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .feature-pill .icon svg { width: 14px; height: 14px; }
+  .feature-pill .name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-0);
+    margin-bottom: 3px;
+  }
+  .feature-pill .text {
+    font-size: 11px;
+    color: var(--text-2);
+    line-height: 1.4;
+  }
+
+  /* 权限卡片 */
+  .permission-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+  .permission-card .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--accent-violet);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .permission-card .icon svg { width: 20px; height: 20px; }
+  .permission-card .info { flex: 1; }
+  .permission-card .name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-0);
+    margin-bottom: 3px;
+  }
+  .permission-card .desc {
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+  .permission-card .status {
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .status.granted { background: rgba(52, 211, 153, 0.1); color: var(--accent-emerald); }
+  .status.pending { background: rgba(251, 191, 36, 0.1); color: var(--accent-amber); }
+
+  /* 隐私默认值提示 */
+  .privacy-defaults {
+    background: rgba(52, 211, 153, 0.05);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    border-radius: 12px;
+    padding: 18px;
+    margin-top: 12px;
+  }
+  .privacy-defaults .title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-emerald);
+    margin-bottom: 12px;
+  }
+  .privacy-defaults .title svg { width: 16px; height: 16px; }
+  .privacy-defaults ul {
+    list-style: none;
+  }
+  .privacy-defaults li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 13px;
+    color: var(--text-1);
+  }
+  .privacy-defaults li .check {
+    color: var(--accent-emerald);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .privacy-defaults li .check svg { width: 14px; height: 14px; }
+
+  .onboarding-footer {
+    padding: 16px 48px;
+    background: var(--bg-2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .btn-primary {
+    padding: 10px 22px;
+    background: var(--grad-primary);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+  }
+  .btn-primary svg { width: 13px; height: 13px; }
+  .btn-ghost {
+    padding: 10px 18px;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    color: var(--text-1);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn-ghost:hover {
+    background: var(--surface-hover);
+    color: var(--text-0);
+  }
+
+  /* ===================== 5. 一键处理结果展示 ===================== */
+  .process-showcase {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .process-card {
+    background: linear-gradient(145deg, rgba(26, 26, 40, 0.6), rgba(20, 20, 31, 0.6));
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+  }
+  .process-card .head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .process-card .head .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .process-card .head .icon svg { width: 14px; height: 14px; }
+  .process-card .head .name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-0);
+  }
+  .process-card .head .badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--accent-emerald);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: auto;
+  }
+  .process-card .body {
+    padding: 14px 16px;
+  }
+  .process-card .input-block {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: var(--text-2);
+    line-height: 1.6;
+    font-family: 'JetBrains Mono', monospace;
+    max-height: 80px;
+    overflow: hidden;
+  }
+  .process-card .arrow {
+    text-align: center;
+    color: var(--accent-violet);
+    margin: 6px 0;
+  }
+  .process-card .arrow svg { width: 16px; height: 16px; }
+  .process-card .output-block {
+    background: rgba(139, 92, 246, 0.05);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text-1);
+    line-height: 1.7;
+  }
+  .process-card .output-block .label {
+    font-size: 10px;
+    color: var(--accent-violet);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .process-card .output-block .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .process-card .output-block .pair .en {
+    color: var(--text-2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .process-card .output-block .pair .zh {
+    color: var(--text-0);
+  }
+  .process-card .output-block .term {
+    color: var(--accent-amber);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-item .check-box {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--accent-emerald);
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .todo-item .task { flex: 1; color: var(--text-1); }
+  .todo-item .assignee {
+    color: var(--accent-amber);
+    font-size: 11px;
+    padding: 2px 6px;
+    background: rgba(251, 191, 36, 0.1);
+    border-radius: 4px;
+  }
+  .todo-item .due {
+    color: var(--accent-cyan);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ===================== 6. 敏感内容识别提示 ===================== */
+  .sensitive-demo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .sensitive-card {
+    background: linear-gradient(145deg, rgba(26, 26, 40, 0.6), rgba(20, 20, 31, 0.6));
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+  }
+  .sensitive-card .head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sensitive-card .head .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sensitive-card .head .icon svg { width: 14px; height: 14px; }
+  .sensitive-card .head .name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-0);
+  }
+  .sensitive-card .body { padding: 16px; }
+
+  /* macOS 通知样式 */
+  .mac-notification {
+    background: rgba(26, 26, 40, 0.95);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(30px);
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    animation: slideIn 0.4s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .mac-notification .app-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--grad-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .mac-notification .app-icon svg { width: 16px; height: 16px; }
+  .mac-notification .content { flex: 1; }
+  .mac-notification .title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-0);
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mac-notification .title .time {
+    font-size: 10px;
+    color: var(--text-3);
+    font-weight: 400;
+    margin-left: auto;
+  }
+  .mac-notification .text {
+    font-size: 12px;
+    color: var(--text-1);
+    line-height: 1.5;
+  }
+  .mac-notification .text .highlight {
+    color: var(--accent-rose);
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(251, 113, 133, 0.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .sensitive-flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .sensitive-flow .step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-1);
+  }
+  .sensitive-flow .step .num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--bg-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-2);
+  }
+  .sensitive-flow .step.danger .num {
+    background: rgba(251, 113, 133, 0.2);
+    color: var(--accent-rose);
+  }
+  .sensitive-flow .step.success .num {
+    background: rgba(52, 211, 153, 0.2);
+    color: var(--accent-emerald);
+  }
+  .sensitive-flow .arrow {
+    color: var(--text-3);
+  }
+
+  .blacklist-apps {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .blacklist-app {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .blacklist-app .icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    background: var(--bg-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-1);
+  }
+  .blacklist-app .icon svg { width: 12px; height: 12px; }
+  .blacklist-app .name { flex: 1; color: var(--text-1); }
+  .blacklist-app .status {
+    font-size: 9px;
+    padding: 2px 5px;
+    background: rgba(138, 138, 153, 0.15);
+    color: var(--text-2);
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* 页脚 */
+  footer {
+    padding: 60px 40px 40px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  .footer-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .footer-content .logo {
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .footer-content p {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+  .footer-content .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  /* 响应式 */
+  @media (max-width: 1024px) {
+    .main-content { grid-template-columns: 180px 1fr 320px; }
+    .process-showcase, .sensitive-demo { grid-template-columns: 1fr; }
+    .settings-window { grid-template-columns: 180px 1fr; }
+  }
+  @media (max-width: 768px) {
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    header { padding: 100px 20px 40px; }
+    section.proto-section { padding: 60px 20px; }
+    .main-content { grid-template-columns: 1fr; }
+    .sidebar, .detail-pane { display: none; }
+    .settings-window { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .settings-sidebar { display: flex; gap: 8px; overflow-x: auto; padding: 12px; }
+    .settings-nav-item { white-space: nowrap; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .popover-wrap { padding-right: 0; justify-content: center; }
+    .popover { width: 100%; max-width: 380px; }
+  }
+</style>
+</head>
+<body>
+<div class="ambient-bg"></div>
+<div class="noise"></div>
+
+<!-- 导航 -->
+<nav>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/>
+        <path d="M9 12h6M9 16h4"/>
+      </svg>
+    </div>
+    ClipMind
+  </div>
+  <ul class="nav-links">
+    <li><a href="#menubar">菜单栏</a></li>
+    <li><a href="#mainwindow">主窗口</a></li>
+    <li><a href="#settings">设置</a></li>
+    <li><a href="#onboarding">首启引导</a></li>
+    <li><a href="#process">一键处理</a></li>
+    <li><a href="#sensitive">隐私保护</a></li>
+  </ul>
+  <span class="version-badge">v1.0 · MVP</span>
+</nav>
+
+<!-- 头部 -->
+<header>
+  <div class="header-label">
+    <span class="dot"></span>
+    VISUAL PROTOTYPE · F1 INITIAL MVP
+  </div>
+  <h1>ClipMind <span class="italic">视觉原型</span></h1>
+  <p class="subtitle">
+    基于 F1 设计规范 v1.3 的 UI 视觉原型，展示菜单栏 Popover、主窗口三栏布局、设置面板、首启引导、一键处理结果与敏感内容识别提示六大模块。
+  </p>
+  <div class="meta">&gt; 最后更新：2026-07-12 | 版本：v1.0（基于设计规范 v1.3）</div>
+</header>
+
+<!-- ============ 1. 菜单栏 Popover ============ -->
+<section class="proto-section" id="menubar">
+  <div class="section-header">
+    <div class="section-tag">F1.7 · MENU BAR POPOVER</div>
+    <h2 class="section-title">菜单栏常驻图标 + <span class="italic">Popover</span></h2>
+    <p class="section-desc">
+      NSStatusItem 常驻菜单栏，点击弹出 popover 显示最近 5-8 条剪贴内容。每条显示类型图标 + 内容预览 + 时间戳，底部提供"查看全部"与"设置"入口。
+    </p>
+    <div class="section-info">
+      <strong>对应 AC：</strong><code>AC-23</code> 菜单栏图标常驻，点击弹出 popover · <code>AC-01</code> 复制后 3 秒内出现在 popover
+    </div>
+  </div>
+
+  <div class="menubar-demo">
+    <!-- 模拟 macOS 菜单栏 -->
+    <div class="menubar-strip">
+      <div class="menubar-system">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span>14:32</span>
+      </div>
+      <div class="menubar-system">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M5 18h14M5 6h14"/></svg>
+      </div>
+      <div class="menubar-system">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20v-8a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8"/><path d="M2 16h20"/></svg>
+      </div>
+      <div class="menubar-system">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+      </div>
+      <!-- ClipMind 菜单栏图标 -->
+      <div class="menubar-item active" id="menubarIcon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/>
+          <path d="M9 12h6M9 16h4"/>
+        </svg>
+        <span class="label">ClipMind</span>
+      </div>
+    </div>
+
+    <!-- Popover 弹出 -->
+    <div class="popover-wrap">
+      <div class="popover" id="popover">
+        <div class="popover-header">
+          <div class="popover-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>搜索剪贴历史...</span>
+            <span class="cursor"></span>
+          </div>
+        </div>
+        <div class="popover-list">
+          <!-- 1. 代码 -->
+          <div class="popover-item">
+            <div class="icon-wrap" style="background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.3)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div class="info">
+              <div class="top">
+                <span class="type-tag tag-code">CODE</span>
+                <span style="font-size:10px;color:var(--text-3)">刚刚</span>
+              </div>
+              <div class="preview">func viewDidLoad() { super.viewDidLoad() setupUI() }</div>
+              <div class="meta"><span>Xcode</span><span>AppDelegate.swift</span></div>
+            </div>
+          </div>
+          <!-- 2. 报错 -->
+          <div class="popover-item">
+            <div class="icon-wrap" style="background:rgba(251,113,133,0.1);border-color:rgba(251,113,133,0.3)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            </div>
+            <div class="info">
+              <div class="top">
+                <span class="type-tag tag-error">ERROR</span>
+                <span style="font-size:10px;color:var(--text-3)">2 分钟前</span>
+              </div>
+              <div class="preview">Thread 1: Fatal error: Unexpectedly found nil while unwrapping Optional...</div>
+              <div class="meta"><span>Xcode</span><span>ViewController.swift:42</span></div>
+            </div>
+          </div>
+          <!-- 3. 链接 -->
+          <div class="popover-item">
+            <div class="icon-wrap" style="background:rgba(34,211,238,0.1);border-color:rgba(34,211,238,0.3)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <div class="info">
+              <div class="top">
+                <span class="type-tag tag-link">LINK</span>
+                <span style="font-size:10px;color:var(--text-3)">12 分钟前</span>
+              </div>
+              <div class="preview">developer.apple.com/documentation/swiftui/navigationstack</div>
+              <div class="meta"><span>Safari</span><span>已提取标题</span></div>
+            </div>
+          </div>
+          <!-- 4. 会议纪要 -->
+          <div class="popover-item">
+            <div class="icon-wrap" style="background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.3)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="info">
+              <div class="top">
+                <span class="type-tag tag-meeting">MEETING</span>
+                <span style="font-size:10px;color:var(--text-3)">1 小时前</span>
+              </div>
+              <div class="preview">产品周会 06.18 - 下周需交付登录模块、支付联调...</div>
+              <div class="meta"><span>飞书</span><span>已提取 5 项待办</span></div>
+            </div>
+          </div>
+          <!-- 5. 待办 -->
+          <div class="popover-item">
+            <div class="icon-wrap" style="background:rgba(251,191,36,0.1);border-color:rgba(251,191,36,0.3)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div class="info">
+              <div class="top">
+                <span class="type-tag tag-todo">TODO</span>
+                <span style="font-size:10px;color:var(--text-3)">2 小时前</span>
+              </div>
+              <div class="preview">- [ ] 登录模块 06.25 前完成 - [ ] 支付联调 06.28</div>
+              <div class="meta"><span>Things</span><span>2 项任务</span></div>
+            </div>
+          </div>
+          <!-- 6. API 文档 -->
+          <div class="popover-item">
+            <div class="icon-wrap" style="background:rgba(244,114,182,0.1);border-color:rgba(244,114,182,0.3)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div class="info">
+              <div class="top">
+                <span class="type-tag tag-api_doc">API_DOC</span>
+                <span style="font-size:10px;color:var(--text-3)">3 小时前</span>
+              </div>
+              <div class="preview">POST /api/v1/users { "name": "string", "email": "string" }</div>
+              <div class="meta"><span>Chrome</span><span>api.example.com</span></div>
+            </div>
+          </div>
+          <!-- 7. 翻译素材 -->
+          <div class="popover-item">
+            <div class="icon-wrap" style="background:rgba(129,140,248,0.1);border-color:rgba(129,140,248,0.3)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg>
+            </div>
+            <div class="info">
+              <div class="top">
+                <span class="type-tag tag-translation">TRANSLATION</span>
+                <span style="font-size:10px;color:var(--text-3)">昨天</span>
+              </div>
+              <div class="preview">The Transformer follows this overall architecture using stacked...</div>
+              <div class="meta"><span>Preview</span><span>attention.pdf</span></div>
+            </div>
+          </div>
+          <!-- 8. 敏感(已忽略) -->
+          <div class="popover-item" style="opacity:0.55">
+            <div class="icon-wrap" style="background:rgba(251,113,133,0.1);border-color:rgba(251,113,133,0.3)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="info">
+              <div class="top">
+                <span class="type-tag tag-sensitive">SENSITIVE · 已忽略</span>
+                <span style="font-size:10px;color:var(--text-3)">昨天</span>
+              </div>
+              <div class="preview" style="color:var(--text-3);font-style:italic">••••••••••••（Token 格式，未入库）</div>
+              <div class="meta"><span>1Password</span><span>已自动忽略</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="popover-footer">
+          <button class="primary" onclick="document.getElementById('mainwindow').scrollIntoView({behavior:'smooth'})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            查看全部
+          </button>
+          <button onclick="document.getElementById('settings').scrollIntoView({behavior:'smooth'})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            设置
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="menubar-hint">
+      <strong>交互提示：</strong>点击上方菜单栏中紫色高亮的 <strong>ClipMind</strong> 图标可切换 popover 显示状态。Popover 展示最近 8 条剪贴内容，覆盖 12 种分类中的 8 种典型类型；底部按钮可跳转到主窗口或设置面板。
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. 主窗口三栏布局 ============ -->
+<section class="proto-section" id="mainwindow">
+  <div class="section-header">
+    <div class="section-tag">F1.7 · MAIN WINDOW</div>
+    <h2 class="section-title">主窗口 <span class="italic">三栏布局</span></h2>
+    <p class="section-desc">
+      SwiftUI 主窗口采用三栏布局：左侧边栏（分类筛选 + 标签）、中间列表（剪贴板历史）、右侧详情面板（完整内容 + 一键处理）。顶部为搜索框 + 时间范围筛选 + 来源 App 筛选。
+    </p>
+    <div class="section-info">
+      <strong>对应 AC：</strong><code>AC-09</code> 搜索 &lt; 500ms · <code>AC-11</code> 跨语言搜索 · <code>AC-12</code> 来源 App 过滤 · <code>AC-13~17</code> 一键处理
+    </div>
+  </div>
+
+  <div class="mac-window">
+    <div class="mac-titlebar">
+      <div class="mac-dots"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+      <div class="mac-title">ClipMind — 剪贴板历史</div>
+      <div class="mac-toolbar">
+        <svg class="tool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <svg class="tool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      </div>
+    </div>
+    <div class="main-window">
+      <!-- 顶部工具栏 -->
+      <div class="main-toolbar">
+        <div class="toolbar-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" placeholder="自然语言搜索：上次那个窗口管理的报错..." value="窗口管理">
+        </div>
+        <div class="toolbar-filter">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span>时间范围：全部</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="toolbar-filter">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 15h6"/></svg>
+          <span>来源：所有 App</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="toolbar-actions">
+          <div class="tool-btn" title="设置" onclick="document.getElementById('settings').scrollIntoView({behavior:'smooth'})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 三栏内容 -->
+      <div class="main-content">
+        <!-- 左侧边栏 -->
+        <div class="sidebar">
+          <div class="sidebar-section">
+            <div class="sidebar-title">类型分类</div>
+            <div class="sidebar-item active">
+              <div class="left"><span class="dot" style="background:var(--accent-violet)"></span>全部</div>
+              <span class="count">128</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-violet)"></span>代码</div>
+              <span class="count">34</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-cyan)"></span>链接</div>
+              <span class="count">22</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-rose)"></span>报错</div>
+              <span class="count">18</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-blue)"></span>文章</div>
+              <span class="count">15</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-amber)"></span>待办清单</div>
+              <span class="count">9</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-emerald)"></span>会议纪要</div>
+              <span class="count">7</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-indigo)"></span>翻译素材</div>
+              <span class="count">8</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-orange)"></span>产品需求</div>
+              <span class="count">5</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-pink)"></span>API 文档</div>
+              <span class="count">6</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-blue)"></span>英文资料</div>
+              <span class="count">4</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--text-2)"></span>其他</div>
+              <span class="count">0</span>
+            </div>
+          </div>
+          <div class="sidebar-section">
+            <div class="sidebar-title">标签</div>
+            <div class="sidebar-tag"><span class="hash">#</span>swiftui</div>
+            <div class="sidebar-tag"><span class="hash">#</span>debug</div>
+            <div class="sidebar-tag"><span class="hash">#</span>周会</div>
+            <div class="sidebar-tag"><span class="hash">#</span>Q2迭代</div>
+            <div class="sidebar-tag"><span class="hash">#</span>论文</div>
+          </div>
+        </div>
+
+        <!-- 中间列表 -->
+        <div class="list-pane">
+          <div class="list-header">
+            <div class="title">搜索结果 · "窗口管理"</div>
+            <div class="count">5 条 · 234ms</div>
+          </div>
+          <div class="list-item active" onclick="selectListItem(this, 'item1')">
+            <div class="top">
+              <span class="type-tag tag-error">ERROR</span>
+              <span style="font-size:10px;color:var(--accent-violet)">98% 相关</span>
+            </div>
+            <div class="preview code">Thread 1: Fatal error: Unexpectedly found nil while unwrapping NSWindowController...</div>
+            <div class="meta">
+              <div class="source"><span class="app-icon" style="background:#0a0a0f"></span>Xcode · WindowManager.swift:87</div>
+              <span>12 分钟前</span>
+            </div>
+          </div>
+          <div class="list-item" onclick="selectListItem(this, 'item2')">
+            <div class="top">
+              <span class="type-tag tag-article">ARTICLE</span>
+              <span style="font-size:10px;color:var(--text-2)">84% 相关</span>
+            </div>
+            <div class="preview">SwiftUI 窗口生命周期问题：window management in SwiftUI requires NSWindowController...</div>
+            <div class="meta">
+              <div class="source"><span class="app-icon" style="background:#1e88e5"></span>Safari · stackoverflow.com</div>
+              <span>1 小时前</span>
+            </div>
+          </div>
+          <div class="list-item" onclick="selectListItem(this, 'item3')">
+            <div class="top">
+              <span class="type-tag tag-english_doc">ENGLISH_DOC</span>
+              <span style="font-size:10px;color:var(--text-2)">71% 相关</span>
+            </div>
+            <div class="preview">How to fix window controller error on macOS 14... use NSWindowController for sheet</div>
+            <div class="meta">
+              <div class="source"><span class="app-icon" style="background:#f59e0b"></span>Chrome · developer.apple.com</div>
+              <span>3 小时前</span>
+            </div>
+          </div>
+          <div class="list-item" onclick="selectListItem(this, 'item4')">
+            <div class="top">
+              <span class="type-tag tag-code">CODE</span>
+              <span style="font-size:10px;color:var(--text-2)">68% 相关</span>
+            </div>
+            <div class="preview code">let windowController = NSWindowController(window: myWindow)</div>
+            <div class="meta">
+              <div class="source"><span class="app-icon" style="background:#0a0a0f"></span>Xcode · AppDelegate.swift</div>
+              <span>昨天</span>
+            </div>
+          </div>
+          <div class="list-item" onclick="selectListItem(this, 'item5')">
+            <div class="top">
+              <span class="type-tag tag-meeting">MEETING</span>
+              <span style="font-size:10px;color:var(--text-2)">52% 相关</span>
+            </div>
+            <div class="preview">产品周会 - 窗口管理模块需在 06.25 前完成，张三负责...</div>
+            <div class="meta">
+              <div class="source"><span class="app-icon" style="background:#3370ff"></span>飞书 · 周会纪要</div>
+              <span>2 天前</span>
+            </div>
+          </div>
+          <div class="list-item" onclick="selectListItem(this, 'item6')">
+            <div class="top">
+              <span class="type-tag tag-link">LINK</span>
+              <span style="font-size:10px;color:var(--text-2)">45% 相关</span>
+            </div>
+            <div class="preview">developer.apple.com/documentation/appkit/nswindowcontroller</div>
+            <div class="meta">
+              <div class="source"><span class="app-icon" style="background:#1e88e5"></span>Safari · Apple Developer</div>
+              <span>3 天前</span>
+            </div>
+          </div>
+          <div class="list-item" onclick="selectListItem(this, 'item7')">
+            <div class="top">
+              <span class="type-tag tag-api_doc">API_DOC</span>
+              <span style="font-size:10px;color:var(--text-2)">38% 相关</span>
+            </div>
+            <div class="preview code">POST /api/v1/windows { "title": "string", "frame": [x,y,w,h] }</div>
+            <div class="meta">
+              <div class="source"><span class="app-icon" style="background:#f59e0b"></span>Chrome · api.example.com</div>
+              <span>3 天前</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧详情 -->
+        <div class="detail-pane">
+          <div class="detail-header">
+            <div class="detail-meta">
+              <span class="chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-rose)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                ERROR
+              </span>
+              <span class="chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-2)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                Xcode
+              </span>
+              <span class="chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-2)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                12 分钟前
+              </span>
+              <span class="chip">98% 搜索相关</span>
+            </div>
+            <div class="detail-title">NSWindowController 崩溃日志</div>
+            <div style="font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace">WindowManager.swift:87 · Thread 1</div>
+          </div>
+
+          <div class="detail-content">Thread 1: Fatal error: Unexpectedly found nil while unwrapping an Optional value
+  at ClipMind.WindowManager.showWindow(WindowManager.swift:87)
+  at ClipMind.AppDelegate.applicationDidFinishLaunching(_: AppDelegate.swift:42)
+  at UIKit.UIApplicationMain
+  NSWindowController not initialized before use</div>
+
+          <div style="font-size:12px;color:var(--text-2);margin-bottom:10px;font-weight:600">一键 AI 处理</div>
+          <div class="process-buttons">
+            <button class="process-btn" onclick="showProcessResult('summarize')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13l2 2 4-4"/></svg>
+              智能总结
+            </button>
+            <button class="process-btn" onclick="showProcessResult('translate')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg>
+              即时翻译
+            </button>
+            <button class="process-btn" onclick="showProcessResult('rewrite')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              智能改写
+            </button>
+            <button class="process-btn" onclick="showProcessResult('todo')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              提取待办
+            </button>
+          </div>
+
+          <div id="processResult" class="process-result">
+            <div class="header">
+              <span class="label" id="resultLabel">SUMMARY</span>
+              <span class="copy">复制结果</span>
+            </div>
+            <div class="content" id="resultContent"></div>
+          </div>
+
+          <div style="margin-top:16px;padding:12px;background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.2);border-radius:8px;font-size:11px;color:var(--text-2);line-height:1.6">
+            <strong style="color:var(--accent-violet)">💡 提示：</strong>点击上方任一处理按钮查看结果展示。所有处理结果会保存到该 ClipItem 对应字段，下次查看无需重新生成。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. 设置面板 ============ -->
+<section class="proto-section" id="settings">
+  <div class="section-header">
+    <div class="section-tag">F1.7 + F1.6 · SETTINGS</div>
+    <h2 class="section-title">设置 <span class="italic">面板</span></h2>
+    <p class="section-desc">
+      设置面板分三区：API Key 配置（多提供商 + 连接测试）、隐私设置（敏感识别 + 黑名单 + 自动清理）、通用设置（开机启动 + 全局快捷键 + 菜单栏图标样式）。
+    </p>
+    <div class="section-info">
+      <strong>对应 AC：</strong><code>AC-13~16</code> API Key 配置后处理可用 · <code>AC-17</code> 未配置时置灰 · <code>AC-20</code> 黑名单忽略 · <code>AC-21</code> 30 天清理 · <code>AC-22</code> 敏感开关可关
+    </div>
+  </div>
+
+  <div class="mac-window">
+    <div class="mac-titlebar">
+      <div class="mac-dots"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+      <div class="mac-title">ClipMind 设置</div>
+    </div>
+    <div class="settings-window">
+      <!-- 左侧导航 -->
+      <div class="settings-sidebar">
+        <div class="settings-nav-item active" data-pane="api">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg>
+          API Key 配置
+        </div>
+        <div class="settings-nav-item" data-pane="privacy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          隐私设置
+        </div>
+        <div class="settings-nav-item" data-pane="general">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          通用设置
+        </div>
+      </div>
+
+      <!-- 右侧内容 -->
+      <div class="settings-content">
+        <!-- API Key 配置 -->
+        <div class="settings-pane active" data-pane="api">
+          <div class="settings-section">
+            <div class="settings-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-violet)" stroke-width="2" style="width:16px;height:16px"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg>
+              LLM 提供商与 API Key
+            </div>
+            <div class="settings-section-desc">配置云端 LLM 提供商以启用一键处理（总结/翻译/改写/提取待办）。分类与搜索为本地模型，无需配置即可使用。</div>
+
+            <div class="form-group">
+              <label class="form-label">提供商</label>
+              <div class="select-wrap">
+                <select class="form-select">
+                  <option>OpenAI (GPT-4 / GPT-3.5)</option>
+                  <option>智谱 GLM (GLM-4 / GLM-3)</option>
+                  <option>通义千问 (Qwen-Max / Qwen-Plus)</option>
+                  <option>DeepSeek (DeepSeek-V3 / DeepSeek-Coder)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">API Key</label>
+              <div class="form-row">
+                <input type="password" class="form-input mono" value="sk-proj-abcdef1234567890abcdef1234567890" placeholder="sk-...">
+                <button class="input-action" onclick="testApiConnection(this)">测试连接</button>
+              </div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:6px;display:flex;align-items:center;gap:6px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-emerald)" stroke-width="2" style="width:12px;height:12px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <span style="color:var(--accent-emerald)">已加密保存到 Keychain · 上次验证：2026-07-12 14:20</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">API 端点（自动匹配）</label>
+              <input type="text" class="form-input mono" value="https://api.openai.com/v1/chat/completions" readonly style="opacity:0.7">
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2" style="width:16px;height:16px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              使用统计
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:12px">
+              <div style="padding:10px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;text-align:center">
+                <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--accent-violet);font-weight:500">128</div>
+                <div style="color:var(--text-2);font-size:10px">总捕获</div>
+              </div>
+              <div style="padding:10px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;text-align:center">
+                <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--accent-cyan);font-weight:500">47</div>
+                <div style="color:var(--text-2);font-size:10px">搜索次数</div>
+              </div>
+              <div style="padding:10px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;text-align:center">
+                <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--accent-amber);font-weight:500">23</div>
+                <div style="color:var(--text-2);font-size:10px">AI 处理</div>
+              </div>
+              <div style="padding:10px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;text-align:center">
+                <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--accent-emerald);font-weight:500">9</div>
+                <div style="color:var(--text-2);font-size:10px">敏感忽略</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 隐私设置 -->
+        <div class="settings-pane" data-pane="privacy">
+          <div class="settings-section">
+            <div class="settings-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-emerald)" stroke-width="2" style="width:16px;height:16px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              隐私保护
+            </div>
+            <div class="settings-section-desc">所有隐私保护项默认开启，首启即安全。</div>
+
+            <div class="toggle-row">
+              <div class="info">
+                <div class="title">敏感内容识别</div>
+                <div class="desc">自动识别密码 / Token / 验证码 / 银行卡 / 身份证，识别后不入库</div>
+              </div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="info">
+                <div class="title">应用黑名单</div>
+                <div class="desc">黑名单 App 中复制内容自动忽略，不入库不提示</div>
+              </div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="info">
+                <div class="title">自动清理</div>
+                <div class="desc">超过清理周期的历史条目自动删除，保护隐私</div>
+              </div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+
+            <div class="form-group" style="margin-top:14px">
+              <label class="form-label">清理周期</label>
+              <div class="select-wrap">
+                <select class="form-select">
+                  <option>7 天</option>
+                  <option>14 天</option>
+                  <option selected>30 天（默认）</option>
+                  <option>90 天</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-rose)" stroke-width="2" style="width:16px;height:16px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              应用黑名单管理
+            </div>
+            <div class="settings-section-desc">以下 App 的复制内容将自动忽略。默认预置 5 个敏感 App，可增删。</div>
+
+            <div class="blacklist-list">
+              <div class="blacklist-item">
+                <div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+                <div style="flex:1">
+                  <div class="name">1Password</div>
+                  <div class="bundle">com.agilebits.onepassword-os</div>
+                </div>
+                <span class="default">默认</span>
+                <span class="remove">×</span>
+              </div>
+              <div class="blacklist-item">
+                <div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div style="flex:1">
+                  <div class="name">钥匙串访问</div>
+                  <div class="bundle">com.apple.keychainaccess</div>
+                </div>
+                <span class="default">默认</span>
+                <span class="remove">×</span>
+              </div>
+              <div class="blacklist-item">
+                <div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+                <div style="flex:1">
+                  <div class="name">招商银行</div>
+                  <div class="bundle">com.cmbchina.*</div>
+                </div>
+                <span class="default">默认</span>
+                <span class="remove">×</span>
+              </div>
+              <div class="blacklist-item">
+                <div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+                <div style="flex:1">
+                  <div class="name">工商银行</div>
+                  <div class="bundle">com.icbc.*</div>
+                </div>
+                <span class="default">默认</span>
+                <span class="remove">×</span>
+              </div>
+              <div class="blacklist-item">
+                <div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+                <div style="flex:1">
+                  <div class="name">支付宝</div>
+                  <div class="bundle">com.alipay.*</div>
+                </div>
+                <span class="default">默认</span>
+                <span class="remove">×</span>
+              </div>
+            </div>
+            <button style="margin-top:10px;padding:8px 14px;background:transparent;border:1px dashed var(--border-strong);border-radius:8px;color:var(--text-1);font-size:12px;cursor:pointer;width:100%;font-family:inherit" onclick="this.innerHTML='+ 添加 App 到黑名单（点击选择正在运行的 App）'">
+              + 添加 App 到黑名单
+            </button>
+          </div>
+        </div>
+
+        <!-- 通用设置 -->
+        <div class="settings-pane" data-pane="general">
+          <div class="settings-section">
+            <div class="settings-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-amber)" stroke-width="2" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              启动与快捷键
+            </div>
+            <div class="settings-section-desc">配置 ClipMind 的启动行为与全局快捷键。</div>
+
+            <div class="toggle-row">
+              <div class="info">
+                <div class="title">开机启动</div>
+                <div class="desc">登录 macOS 时自动启动 ClipMind</div>
+              </div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+
+            <div class="form-group" style="margin-top:14px">
+              <label class="form-label">全局快捷键（唤起主窗口并聚焦搜索）</label>
+              <div class="form-row">
+                <input type="text" class="form-input mono" value="⌘ + ⇧ + V" readonly>
+                <button class="input-action">重新录制</button>
+              </div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:6px">默认 Cmd+Shift+V，可自定义</div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-violet)" stroke-width="2" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              菜单栏图标样式
+            </div>
+            <div class="settings-section-desc">自定义菜单栏常驻图标的视觉样式。</div>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+              <div style="padding:14px;background:var(--bg-2);border:2px solid var(--accent-violet);border-radius:10px;text-align:center;cursor:pointer">
+                <div style="width:32px;height:32px;border-radius:8px;background:var(--grad-primary);margin:0 auto 8px;display:flex;align-items:center;justify-content:center">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="width:16px;height:16px"><path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/></svg>
+                </div>
+                <div style="font-size:11px;color:var(--accent-violet);font-weight:600">渐变填充</div>
+              </div>
+              <div style="padding:14px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer">
+                <div style="width:32px;height:32px;border-radius:8px;background:var(--bg-3);border:1px solid var(--text-1);margin:0 auto 8px;display:flex;align-items:center;justify-content:center">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-1)" stroke-width="2.5" style="width:16px;height:16px"><path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/></svg>
+                </div>
+                <div style="font-size:11px;color:var(--text-1)">单色描边</div>
+              </div>
+              <div style="padding:14px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer">
+                <div style="width:32px;height:32px;border-radius:8px;background:var(--bg-3);margin:0 auto 8px;display:flex;align-items:center;justify-content:center">
+                  <span style="font-family:'Fraunces',serif;font-size:18px;color:var(--accent-violet);font-weight:600">C</span>
+                </div>
+                <div style="font-size:11px;color:var(--text-1)">字母图标</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-rose)" stroke-width="2" style="width:16px;height:16px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              危险区域
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button style="padding:8px 14px;background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);border-radius:8px;color:var(--accent-rose);font-size:12px;cursor:pointer;font-family:inherit">清空所有数据</button>
+              <button style="padding:8px 14px;background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);border-radius:8px;color:var(--accent-rose);font-size:12px;cursor:pointer;font-family:inherit">重置应用为初始状态</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. 首次启动引导 ============ -->
+<section class="proto-section" id="onboarding">
+  <div class="section-header">
+    <div class="section-tag">F1.7 · FIRST LAUNCH ONBOARDING</div>
+    <h2 class="section-title">首次启动 <span class="italic">引导</span></h2>
+    <p class="section-desc">
+      首次启动 .app 时引导用户完成基础配置：欢迎页 → 功能介绍 → 权限请求（辅助功能/通知）→ API Key 配置引导（可跳过）→ 隐私默认值提示 → 进入主界面。
+    </p>
+    <div class="section-info">
+      <strong>对应 AC：</strong><code>AC-24</code> 首次启动引导流程完整
+    </div>
+  </div>
+
+  <div class="mac-window">
+    <div class="mac-titlebar">
+      <div class="mac-dots"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+      <div class="mac-title">ClipMind 安装引导</div>
+    </div>
+    <div class="onboarding-window">
+      <!-- 进度条 -->
+      <div class="onboarding-progress">
+        <div class="progress-step done"><span class="num">✓</span>欢迎</div>
+        <div class="progress-line done"></div>
+        <div class="progress-step done"><span class="num">✓</span>权限请求</div>
+        <div class="progress-line done"></div>
+        <div class="progress-step active"><span class="num">3</span>API Key</div>
+        <div class="progress-line"></div>
+        <div class="progress-step"><span class="num">4</span>隐私默认</div>
+        <div class="progress-line"></div>
+        <div class="progress-step"><span class="num">5</span>完成</div>
+      </div>
+
+      <!-- 内容区 -->
+      <div class="onboarding-body">
+        <!-- Step 1: 欢迎 -->
+        <div class="onboarding-pane">
+          <div class="onboarding-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/>
+              <path d="M9 12h6M9 16h4"/>
+            </svg>
+          </div>
+          <h2 class="onboarding-title">欢迎使用 <span class="italic">ClipMind</span></h2>
+          <p class="onboarding-desc">
+            把 macOS 剪贴板升级为会自动分类、总结、搜索和复用的 AI 信息库。复制过的代码、链接、报错、文案、会议内容，都能被理解、被找回、被再次使用。
+          </p>
+          <div class="feature-grid">
+            <div class="feature-pill">
+              <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+              <div class="name">自动分类</div>
+              <div class="text">12 种类型智能识别</div>
+            </div>
+            <div class="feature-pill">
+              <div class="icon" style="background:rgba(34,211,238,0.15);color:var(--accent-cyan)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+              <div class="name">语义搜索</div>
+              <div class="text">说人话就能找到</div>
+            </div>
+            <div class="feature-pill">
+              <div class="icon" style="background:rgba(251,191,36,0.15);color:var(--accent-amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+              <div class="name">一键处理</div>
+              <div class="text">总结/翻译/改写/待办</div>
+            </div>
+            <div class="feature-pill">
+              <div class="icon" style="background:rgba(52,211,153,0.15);color:var(--accent-emerald)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              <div class="name">本地加密</div>
+              <div class="text">AES-256 默认保护</div>
+            </div>
+            <div class="feature-pill">
+              <div class="icon" style="background:rgba(251,113,133,0.15);color:var(--accent-rose)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div class="name">隐私优先</div>
+              <div class="text">敏感识别 + 黑名单</div>
+            </div>
+            <div class="feature-pill">
+              <div class="icon" style="background:rgba(129,140,248,0.15);color:var(--accent-indigo)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/></svg></div>
+              <div class="name">菜单栏常驻</div>
+              <div class="text">轻量入口 即开即用</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: 权限请求 -->
+        <div class="onboarding-pane active">
+          <div class="onboarding-icon" style="background:linear-gradient(135deg,#fb7185,#fbbf24)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <h2 class="onboarding-title">请求 <span class="italic">权限</span></h2>
+          <p class="onboarding-desc">
+            ClipMind 需要以下权限以提供完整功能。所有权限均可拒绝，拒绝后核心功能（分类、搜索、本地处理）仍可使用。
+          </p>
+
+          <div class="permission-card">
+            <div class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="info">
+              <div class="name">辅助功能权限（Accessibility）</div>
+              <div class="desc">用于获取前台 App bundleId，识别复制内容的来源 App。仅在复制时读取，不记录键盘输入。</div>
+            </div>
+            <span class="status granted">已授权</span>
+          </div>
+
+          <div class="permission-card">
+            <div class="icon" style="background:rgba(34,211,238,0.1);color:var(--accent-cyan)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="info">
+              <div class="name">通知权限（Notifications）</div>
+              <div class="desc">用于敏感内容忽略提示。仅在使用敏感识别功能时发送，不会推送广告或营销消息。</div>
+            </div>
+            <span class="status pending">待授权</span>
+          </div>
+
+          <div style="margin-top:12px;padding:10px 14px;background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.2);border-radius:8px;font-size:12px;color:var(--text-2);line-height:1.6">
+            <strong style="color:var(--accent-amber)">⚠ 说明：</strong>权限缺失不影响核心功能，但来源 App 会记录为 "unknown"，敏感忽略通知将不显示。
+          </div>
+        </div>
+
+        <!-- Step 3: API Key 配置引导 -->
+        <div class="onboarding-pane">
+          <div class="onboarding-icon" style="background:linear-gradient(135deg,#8b5cf6,#22d3ee)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/>
+            </svg>
+          </div>
+          <h2 class="onboarding-title">配置 <span class="italic">API Key</span>（可选）</h2>
+          <p class="onboarding-desc">
+            配置云端 LLM API Key 以启用智能总结、即时翻译、智能改写、提取待办四项一键处理能力。<strong style="color:var(--accent-cyan)">分类与搜索基于本地模型，无需 API Key 即可使用</strong>，可跳过此步骤稍后配置。
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">选择提供商</label>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+              <div style="padding:12px;background:rgba(139,92,246,0.08);border:2px solid var(--accent-violet);border-radius:10px;cursor:pointer">
+                <div style="font-size:13px;font-weight:600;color:var(--text-0);margin-bottom:2px">OpenAI</div>
+                <div style="font-size:11px;color:var(--text-2)">GPT-4 / GPT-3.5</div>
+              </div>
+              <div style="padding:12px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;cursor:pointer">
+                <div style="font-size:13px;font-weight:600;color:var(--text-0);margin-bottom:2px">智谱 GLM</div>
+                <div style="font-size:11px;color:var(--text-2)">GLM-4 / GLM-3</div>
+              </div>
+              <div style="padding:12px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;cursor:pointer">
+                <div style="font-size:13px;font-weight:600;color:var(--text-0);margin-bottom:2px">通义千问</div>
+                <div style="font-size:11px;color:var(--text-2)">Qwen-Max / Qwen-Plus</div>
+              </div>
+              <div style="padding:12px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;cursor:pointer">
+                <div style="font-size:13px;font-weight:600;color:var(--text-0);margin-bottom:2px">DeepSeek</div>
+                <div style="font-size:11px;color:var(--text-2)">DeepSeek-V3 / Coder</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">API Key</label>
+            <input type="password" class="form-input mono" placeholder="sk-..." style="width:100%">
+          </div>
+
+          <div style="margin-top:8px;padding:12px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.2);border-radius:8px;font-size:12px;color:var(--text-2);line-height:1.6">
+            <strong style="color:var(--accent-cyan)">🔒 安全说明：</strong>API Key 加密保存到 macOS Keychain（kSecAttrAccessibleWhenUnlocked），不会明文存储，不会上传到任何服务器。
+          </div>
+        </div>
+
+        <!-- Step 4: 隐私默认值提示 -->
+        <div class="onboarding-pane">
+          <div class="onboarding-icon" style="background:linear-gradient(135deg,#34d399,#22d3ee)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <h2 class="onboarding-title">隐私 <span class="italic">默认安全</span></h2>
+          <p class="onboarding-desc">
+            为了让 ClipMind 在首启即安全，以下隐私保护项已全部默认开启。你可以在设置中随时调整。
+          </p>
+
+          <div class="privacy-defaults">
+            <div class="title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.39 0 4.68.94 6.36 2.64"/></svg>
+              已为你开启的隐私保护
+            </div>
+            <ul>
+              <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><div><strong>敏感内容识别</strong> · 自动识别密码 / Token / 验证码 / 银行卡 / 身份证，识别后不入库</div></li>
+              <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><div><strong>应用黑名单</strong> · 1Password / 钥匙串 / 银行 / 支付宝 等敏感 App 自动忽略</div></li>
+              <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><div><strong>自动清理</strong> · 30 天前的剪贴历史自动删除，防止长期累积敏感数据</div></li>
+              <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><div><strong>本地加密存储</strong> · AES-256-GCM 加密，数据默认不出本机</div></li>
+              <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><div><strong>云端能力可选</strong> · 仅在你主动点击"一键处理"时调用云端 LLM，分类与搜索全本地</div></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Step 5: 完成 -->
+        <div class="onboarding-pane">
+          <div class="onboarding-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <h2 class="onboarding-title">一切就绪 <span class="italic">开始使用</span></h2>
+          <p class="onboarding-desc">
+            ClipMind 已配置完成，菜单栏将出现常驻图标。开始复制任何内容，体验 AI 剪贴板知识管家的强大能力。
+          </p>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:520px">
+            <div style="padding:16px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;text-align:center">
+              <div style="font-size:11px;color:var(--text-2);margin-bottom:6px">快捷键</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--accent-violet);font-weight:600">⌘ + ⇧ + V</div>
+              <div style="font-size:10px;color:var(--text-3);margin-top:4px">唤起主窗口</div>
+            </div>
+            <div style="padding:16px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;text-align:center">
+              <div style="font-size:11px;color:var(--text-2);margin-bottom:6px">菜单栏</div>
+              <div style="font-family:'Fraunces',serif;font-size:14px;color:var(--accent-cyan);font-weight:600">点击图标</div>
+              <div style="font-size:10px;color:var(--text-3);margin-top:4px">查看 popover</div>
+            </div>
+            <div style="padding:16px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;text-align:center">
+              <div style="font-size:11px;color:var(--text-2);margin-bottom:6px">开始复制</div>
+              <div style="font-family:'Fraunces',serif;font-size:14px;color:var(--accent-emerald);font-weight:600">Cmd + C</div>
+              <div style="font-size:10px;color:var(--text-3);margin-top:4px">自动捕获</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 引导底部按钮 -->
+      <div class="onboarding-footer">
+        <button class="btn-ghost" onclick="prevOnboardingStep()">← 上一步</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace">Step <span id="onbCurrent">3</span> / 5</span>
+          <button class="btn-primary" onclick="nextOnboardingStep()">
+            下一步
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. 一键处理结果展示 ============ -->
+<section class="proto-section" id="process">
+  <div class="section-header">
+    <div class="section-tag">F1.4 · ONE-CLICK AI PROCESS</div>
+    <h2 class="section-title">一键处理 <span class="italic">结果展示</span></h2>
+    <p class="section-desc">
+      选中任意 ClipItem 后，在详情面板点击处理按钮调用云端 LLM。四种处理类型：智能总结（3-5 句要点）、即时翻译（中英对照+技术术语保留）、智能改写（语气/精简/扩写）、提取待办（任务+负责人+截止时间）。
+    </p>
+    <div class="section-info">
+      <strong>对应 AC：</strong><code>AC-13</code> 智能总结 · <code>AC-14</code> 即时翻译 · <code>AC-15</code> 智能改写 3 模式 · <code>AC-16</code> 提取待办结构化
+    </div>
+  </div>
+
+  <div class="process-showcase">
+    <!-- 智能总结 -->
+    <div class="process-card">
+      <div class="head">
+        <div class="icon" style="background:rgba(139,92,246,0.15);color:var(--accent-violet)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13l2 2 4-4"/></svg>
+        </div>
+        <div class="name">智能总结</div>
+        <span class="badge">SUMMARIZE</span>
+      </div>
+      <div class="body">
+        <div class="input-block">
+<strong>输入（长文本 580 字）：</strong>
+本次产品周会主要讨论了 Q2 季度的产品迭代计划。会议于 6 月 18 日 14:00-15:30 举行，参会人员包括张三、李四、王五、赵六。会议议题包括：登录模块需在 06.25 前完成，张三负责；支付联调推迟到 06.28，李四跟进；王五负责下周用户调研问卷设计...
+        </div>
+        <div class="arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="output-block">
+          <div class="label">▸ 核心要点（5 句）</div>
+          <div>1. Q2 产品迭代评审会议确认登录、支付、调研三项关键任务。</div>
+          <div>2. 登录模块由张三负责，6 月 25 日前完成。</div>
+          <div>3. 支付联调推迟至 6 月 28 日，李四跟进。</div>
+          <div>4. 王五负责下周用户调研问卷设计。</div>
+          <div>5. 下次会议定于 7 月 2 日评审进度。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 即时翻译 -->
+    <div class="process-card">
+      <div class="head">
+        <div class="icon" style="background:rgba(34,211,238,0.15);color:var(--accent-cyan)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg>
+        </div>
+        <div class="name">即时翻译</div>
+        <span class="badge" style="background:rgba(34,211,238,0.15);color:var(--accent-cyan)">TRANSLATE</span>
+      </div>
+      <div class="body">
+        <div class="input-block">
+<strong>输入（英文资料）：</strong>
+The NSWindowController manages the window lifecycle in macOS AppKit. It coordinates with the window's root view controller...
+        </div>
+        <div class="arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="output-block">
+          <div class="label">▸ 中英对照（技术术语保留原文）</div>
+          <div class="pair">
+            <div class="en">The <span class="term">NSWindowController</span> manages the window lifecycle...</div>
+            <div class="zh"><span class="term">NSWindowController</span> 负责管理窗口的生命周期...</div>
+          </div>
+          <div class="pair">
+            <div class="en">It coordinates with the root view controller...</div>
+            <div class="zh">它与根视图控制器协调...</div>
+          </div>
+          <div style="margin-top:6px;font-size:10px;color:var(--accent-amber);font-family:'JetBrains Mono',monospace">ℹ 技术术语保留原文：NSWindowController / AppKit / root view controller</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 智能改写 -->
+    <div class="process-card">
+      <div class="head">
+        <div class="icon" style="background:rgba(251,191,36,0.15);color:var(--accent-amber)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <div class="name">智能改写</div>
+        <span class="badge" style="background:rgba(251,191,36,0.15);color:var(--accent-amber)">REWRITE · 3 MODES</span>
+      </div>
+      <div class="body">
+        <div class="input-block">
+<strong>输入：</strong>
+这个功能我觉得可以做得更好一点，就是用户体验这块还需要再优化下。
+        </div>
+        <div class="arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="output-block">
+          <div class="label">▸ 三种模式可选</div>
+          <div style="margin-bottom:8px"><strong style="color:var(--accent-amber)">① 调整语气（专业）：</strong>建议对该功能的用户体验进行优化，以提升整体使用感受。</div>
+          <div style="margin-bottom:8px"><strong style="color:var(--accent-violet)">② 精简：</strong>优化该功能的用户体验。</div>
+          <div><strong style="color:var(--accent-cyan)">③ 扩写：</strong>该功能在交互细节、视觉反馈与操作流畅度方面仍有提升空间，建议从用户调研出发，定位关键痛点并迭代优化。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 提取待办 -->
+    <div class="process-card">
+      <div class="head">
+        <div class="icon" style="background:rgba(52,211,153,0.15);color:var(--accent-emerald)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="name">提取待办</div>
+        <span class="badge" style="background:rgba(52,211,153,0.15);color:var(--accent-emerald)">EXTRACT_TODO</span>
+      </div>
+      <div class="body">
+        <div class="input-block">
+<strong>输入（会议纪要）：</strong>
+张三负责登录模块 06.25 前完成，李四跟进支付联调 06.28，王五做用户调研下周交...
+        </div>
+        <div class="arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="output-block">
+          <div class="label">▸ 结构化任务列表</div>
+          <div class="todo-item">
+            <div class="check-box"></div>
+            <div class="task">登录模块完成</div>
+            <span class="assignee">@张三</span>
+            <span class="due">06.25</span>
+          </div>
+          <div class="todo-item">
+            <div class="check-box"></div>
+            <div class="task">支付联调跟进</div>
+            <span class="assignee">@李四</span>
+            <span class="due">06.28</span>
+          </div>
+          <div class="todo-item">
+            <div class="check-box"></div>
+            <div class="task">用户调研问卷</div>
+            <span class="assignee">@王五</span>
+            <span class="due">下周</span>
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace">JSON 结构化输出 · 含 task/assignee/dueDate 三字段</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;padding:14px 16px;background:rgba(251,191,36,0.05);border-left:3px solid var(--accent-amber);border-radius:0 8px 8px 0;font-size:13px;color:var(--text-1);line-height:1.7">
+    <strong style="color:var(--accent-amber)">⚠ 未配置 API Key 时：</strong>所有处理按钮置灰不可点击，或点击后弹窗提示"需配置 API Key"。分类与搜索基于本地嵌入模型，无需 API Key 即可使用。
+  </div>
+</section>
+
+<!-- ============ 6. 敏感内容识别提示 ============ -->
+<section class="proto-section" id="sensitive">
+  <div class="section-header">
+    <div class="section-tag">F1.6 · SENSITIVE CONTENT</div>
+    <h2 class="section-title">敏感内容 <span class="italic">识别提示</span></h2>
+    <p class="section-desc">
+      复制密码 / Token / 验证码 / 银行卡 / 身份证时，ClipMind 自动识别为敏感内容并忽略，弹出 macOS 通知提示"已忽略敏感内容"。应用黑名单中的 App 复制内容则静默忽略，不入库不提示。
+    </p>
+    <div class="section-info">
+      <strong>对应 AC：</strong><code>AC-08</code> 密码 Token 识别并忽略 · <code>AC-20</code> 黑名单 App 自动忽略 · <code>AC-22</code> 敏感开关可关闭
+    </div>
+  </div>
+
+  <div class="sensitive-demo">
+    <!-- 敏感内容识别 -->
+    <div class="sensitive-card">
+      <div class="head">
+        <div class="icon" style="background:rgba(251,113,133,0.15);color:var(--accent-rose)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="name">敏感内容识别 → 通知提示</div>
+      </div>
+      <div class="body">
+        <div class="sensitive-flow">
+          <div class="step danger"><span class="num">1</span>复制 Token</div>
+          <div class="arrow">→</div>
+          <div class="step danger"><span class="num">2</span>正则匹配</div>
+          <div class="arrow">→</div>
+          <div class="step success"><span class="num">3</span>不入库</div>
+          <div class="arrow">→</div>
+          <div class="step success"><span class="num">4</span>弹通知</div>
+        </div>
+
+        <div class="mac-notification">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/><path d="M9 12h6M9 16h4"/></svg>
+          </div>
+          <div class="content">
+            <div class="title">ClipMind · 隐私保护 <span class="time">刚刚</span></div>
+            <div class="text">已忽略敏感内容（Token 格式），未写入数据库。<br>内容片段：<span class="highlight">sk-proj-abc***</span></div>
+          </div>
+        </div>
+
+        <div class="mac-notification">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/><path d="M9 12h6M9 16h4"/></svg>
+          </div>
+          <div class="content">
+            <div class="title">ClipMind · 隐私保护 <span class="time">2 分钟前</span></div>
+            <div class="text">已忽略敏感内容（验证码格式），未写入数据库。<br>内容片段：<span class="highlight">123456</span></div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;padding:12px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px">
+          <div style="font-size:11px;font-weight:600;color:var(--text-1);margin-bottom:8px;font-family:'JetBrains Mono',monospace">▸ 6 种敏感识别模式</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;color:var(--text-2)">
+            <div>• 密码模式 <code style="color:var(--accent-amber);font-family:'JetBrains Mono',monospace;font-size:10px">password=xxx</code></div>
+            <div>• Token 格式 <code style="color:var(--accent-amber);font-family:'JetBrains Mono',monospace;font-size:10px">sk-/ghp_/Bearer</code></div>
+            <div>• 验证码 <code style="color:var(--accent-amber);font-family:'JetBrains Mono',monospace;font-size:10px">4-8 位纯数字</code></div>
+            <div>• 银行卡号 <code style="color:var(--accent-amber);font-family:'JetBrains Mono',monospace;font-size:10px">16-19 位 Luhn</code></div>
+            <div>• 身份证号 <code style="color:var(--accent-amber);font-family:'JetBrains Mono',monospace;font-size:10px">18 位校验</code></div>
+            <div>• 敏感关键词 <code style="color:var(--accent-amber);font-family:'JetBrains Mono',monospace;font-size:10px">password/secret/key</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 应用黑名单 -->
+    <div class="sensitive-card">
+      <div class="head">
+        <div class="icon" style="background:rgba(138,138,153,0.15);color:var(--text-1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        </div>
+        <div class="name">应用黑名单 → 静默忽略</div>
+      </div>
+      <div class="body">
+        <div class="sensitive-flow">
+          <div class="step danger"><span class="num">1</span>黑名单 App 内复制</div>
+          <div class="arrow">→</div>
+          <div class="step danger"><span class="num">2</span>检查 bundleId</div>
+          <div class="arrow">→</div>
+          <div class="step success"><span class="num">3</span>静默忽略</div>
+          <div class="arrow">→</div>
+          <div class="step" style="color:var(--text-3)"><span class="num">4</span>不提示不入库</div>
+        </div>
+
+        <div style="padding:12px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--text-1);line-height:1.7">
+          <strong style="color:var(--accent-cyan)">与敏感识别的区别：</strong>敏感识别会弹出通知提示用户；黑名单 App 复制完全静默，不通知不入库，适合密码管理器、银行 App 等始终敏感的场景。
+        </div>
+
+        <div style="font-size:11px;font-weight:600;color:var(--text-1);margin-bottom:8px;font-family:'JetBrains Mono',monospace">▸ 默认黑名单（5 个预置）</div>
+        <div class="blacklist-apps">
+          <div class="blacklist-app">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <div class="name">1Password</div>
+            <span class="status">默认</span>
+          </div>
+          <div class="blacklist-app">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div class="name">钥匙串访问</div>
+            <span class="status">默认</span>
+          </div>
+          <div class="blacklist-app">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+            <div class="name">招商银行</div>
+            <span class="status">默认</span>
+          </div>
+          <div class="blacklist-app">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+            <div class="name">工商银行</div>
+            <span class="status">默认</span>
+          </div>
+          <div class="blacklist-app">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <div class="name">支付宝</div>
+            <span class="status">默认</span>
+          </div>
+          <div class="blacklist-app" style="border-style:dashed;background:transparent">
+            <div class="icon" style="background:transparent"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
+            <div class="name" style="color:var(--text-3)">添加 App</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;padding:10px 12px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-size:11px;color:var(--text-2);line-height:1.6">
+          <strong style="color:var(--accent-emerald)">✓ 用户可增删：</strong>默认预置 5 个敏感 App，用户可在设置中添加正在运行的 App，或删除预置项。所有更改立即生效。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 页脚 ============ -->
+<footer>
+  <div class="footer-content">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/>
+          <path d="M9 12h6M9 16h4"/>
+        </svg>
+      </div>
+      ClipMind
+    </div>
+    <p>
+      ClipMind 初赛 MVP 视觉原型 · 基于 F1 设计规范 v1.3<br>
+      覆盖 F1.1-F1.7 全部功能：剪贴板监听、12 种自动分类、自然语言语义搜索、一键 AI 处理、本地加密存储、隐私保护、菜单栏 + 主窗口交互
+    </p>
+    <div class="meta">
+      &gt; 最后更新：2026-07-12 | 版本：v1.0（基于设计规范 v1.3）<br>
+      TRAE AI 创造力大赛 · 初赛参赛作品 · 赛道：学习工作
+    </div>
+  </div>
+</footer>
+
+<script>
+  // 菜单栏 Popover 切换
+  const menubarIcon = document.getElementById('menubarIcon');
+  const popover = document.getElementById('popover');
+  let popoverVisible = true;
+  menubarIcon.addEventListener('click', () => {
+    popoverVisible = !popoverVisible;
+    popover.style.display = popoverVisible ? 'block' : 'none';
+    menubarIcon.classList.toggle('active', popoverVisible);
+  });
+
+  // 主窗口：列表项切换
+  function selectListItem(el, itemId) {
+    document.querySelectorAll('.list-item').forEach(item => item.classList.remove('active'));
+    el.classList.add('active');
+    const detailContent = document.querySelector('.detail-content');
+    const detailTitle = document.querySelector('.detail-title');
+    const detailMeta = document.querySelector('.detail-meta');
+    const items = {
+      item1: { tag: 'tag-error', tagText: 'ERROR', iconStroke: 'var(--accent-rose)', title: 'NSWindowController 崩溃日志', source: 'Xcode', time: '12 分钟前', content: 'Thread 1: Fatal error: Unexpectedly found nil while unwrapping an Optional value\n  at ClipMind.WindowManager.showWindow(WindowManager.swift:87)\n  at ClipMind.AppDelegate.applicationDidFinishLaunching(_: AppDelegate.swift:42)\n  NSWindowController not initialized before use' },
+      item2: { tag: 'tag-article', tagText: 'ARTICLE', iconStroke: 'var(--accent-blue)', title: 'SwiftUI 窗口生命周期问题', source: 'Safari', time: '1 小时前', content: 'SwiftUI 窗口生命周期问题：window management in SwiftUI requires NSWindowController...\n\nWhen working with SwiftUI on macOS, you need to bridge to AppKit for advanced window management. The NSWindowController is the key component...' },
+      item3: { tag: 'tag-english_doc', tagText: 'ENGLISH_DOC', iconStroke: 'var(--accent-blue)', title: 'How to fix window controller error', source: 'Chrome', time: '3 小时前', content: 'How to fix window controller error on macOS 14...\n\nTo resolve NSWindowController issues on macOS Sonoma, use NSWindowController for sheet presentation instead of direct window manipulation...' },
+      item4: { tag: 'tag-code', tagText: 'CODE', iconStroke: 'var(--accent-violet)', title: 'NSWindowController 初始化代码', source: 'Xcode', time: '昨天', content: 'let windowController = NSWindowController(window: myWindow)\nwindowController.showWindow(self)\n\nguard let window = windowController.window else {\n    fatalError("Window not initialized")\n}' },
+      item5: { tag: 'tag-meeting', tagText: 'MEETING', iconStroke: 'var(--accent-emerald)', title: '产品周会 - 窗口管理模块', source: '飞书', time: '2 天前', content: '产品周会 06.18\n参会：张三、李四、王五\n\n议题：\n1. 窗口管理模块需在 06.25 前完成，张三负责\n2. 支付联调推迟到 06.28，李四跟进\n3. 王五负责下周用户调研问卷设计' },
+      item6: { tag: 'tag-link', tagText: 'LINK', iconStroke: 'var(--accent-cyan)', title: 'NSWindowController - Apple Developer', source: 'Safari', time: '3 天前', content: 'developer.apple.com/documentation/appkit/nswindowcontroller\n\nA controller that manages a window, usually a window loaded from a nib file.\n\nDeclaration:\nclass NSWindowController : NSResponder' },
+      item7: { tag: 'tag-api_doc', tagText: 'API_DOC', iconStroke: 'var(--accent-pink)', title: 'POST /api/v1/windows', source: 'Chrome', time: '3 天前', content: 'POST /api/v1/windows\nContent-Type: application/json\n\nRequest Body:\n{\n  "title": "string",\n  "frame": [x, y, width, height],\n  "visible": true\n}\n\nResponse:\n{\n  "id": "win-001",\n  "status": "created"\n}' }
+    };
+    const data = items[itemId] || items.item1;
+    detailTitle.textContent = data.title;
+    detailMeta.innerHTML = '<span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="' + data.iconStroke + '" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>' + data.tagText + '</span><span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text-2)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>' + data.source + '</span><span class="chip">' + data.time + '</span>';
+    detailContent.textContent = data.content;
+    document.getElementById('processResult').classList.remove('show');
+  }
+
+  // 一键处理结果展示
+  function showProcessResult(type) {
+    const result = document.getElementById('processResult');
+    const label = document.getElementById('resultLabel');
+    const content = document.getElementById('resultContent');
+    const results = {
+      summarize: { label: 'SUMMARY · 智能总结', content: '1. 该错误为 NSWindowController 强制解包时 Optional 值为 nil。\n2. 发生位置：WindowManager.swift:87，由 applicationDidFinishLaunching 触发。\n3. 根因：window 属性在 showWindow 调用前未初始化。\n4. 建议：使用 if let / guard let 安全解包，或在 init 中确保 window 已实例化。\n5. 影响：App 启动即崩溃，需立即修复。' },
+      translate: { label: 'TRANSLATION · 即时翻译', content: '【原文】Thread 1: Fatal error: Unexpectedly found nil while unwrapping an Optional value\n\n【译文】线程 1：致命错误：在解包 Optional 值时发现 nil\n\n【原文】NSWindowController not initialized before use\n\n【译文】使用前 NSWindowController 未初始化\n\nℹ 技术术语保留原文：Thread 1 / Fatal error / Optional / NSWindowController' },
+      rewrite: { label: 'REWRITE · 智能改写（精简模式）', content: '【精简版】\nNSWindowController 在使用前未初始化，导致 Thread 1 致命错误：解包 Optional 时发现 nil。位置：WindowManager.swift:87。建议使用安全解包修复。' },
+      todo: { label: 'TODO · 提取待办', content: '☐ 修复 NSWindowController 初始化顺序 · @张三 · 今日\n☐ 添加 window 属性的 nil 检查 · @张三 · 明日\n☐ 补充 NSWindowController 单元测试 · @李四 · 本周\n☐ 评审启动流程安全性 · @王五 · 下周\n\nℹ JSON 结构化输出，含 task / assignee / dueDate 三字段' }
+    };
+    const data = results[type];
+    label.textContent = data.label;
+    content.textContent = data.content;
+    content.style.whiteSpace = 'pre-wrap';
+    result.classList.add('show');
+  }
+
+  // 设置面板切换
+  document.querySelectorAll('.settings-nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const targetPane = item.dataset.pane;
+      document.querySelectorAll('.settings-nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.settings-pane').forEach(p => p.classList.remove('active'));
+      item.classList.add('active');
+      document.querySelector('.settings-pane[data-pane="' + targetPane + '"]').classList.add('active');
+    });
+  });
+
+  // API 连接测试
+  function testApiConnection(btn) {
+    btn.textContent = '测试中...';
+    btn.style.opacity = '0.6';
+    setTimeout(() => {
+      btn.textContent = '✓ 连接成功';
+      btn.classList.add('success');
+      btn.style.opacity = '1';
+      setTimeout(() => {
+        btn.textContent = '测试连接';
+        btn.classList.remove('success');
+      }, 3000);
+    }, 1200);
+  }
+
+  // 首启引导步骤切换
+  let onbStep = 2;
+  function updateOnboardingUI() {
+    const panes = document.querySelectorAll('.onboarding-pane');
+    const steps = document.querySelectorAll('.progress-step');
+    const lines = document.querySelectorAll('.progress-line');
+    panes.forEach((p, i) => p.classList.toggle('active', i === onbStep));
+    steps.forEach((s, i) => {
+      s.classList.remove('active', 'done');
+      if (i < onbStep) s.classList.add('done');
+      else if (i === onbStep) s.classList.add('active');
+    });
+    lines.forEach((l, i) => l.classList.toggle('done', i < onbStep));
+    document.getElementById('onbCurrent').textContent = onbStep + 1;
+  }
+  function nextOnboardingStep() {
+    if (onbStep < 4) { onbStep++; updateOnboardingUI(); }
+    else { alert('已完成引导！即将进入主界面...'); }
+  }
+  function prevOnboardingStep() {
+    if (onbStep > 0) { onbStep--; updateOnboardingUI(); }
+  }
+
+  // 平滑滚动
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href === '#') return;
+      e.preventDefault();
+      const target = document.querySelector(href);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+</body>
+</html>
