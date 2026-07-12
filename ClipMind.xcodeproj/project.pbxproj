@@ -1,0 +1,414 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		05B1E5EEBAE930366AC343DC /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = B8017DD8BFC190D59A3A5AA6 /* SQLite */; };
+		9F60A77B902552D7481B2EB2 /* ClipMindApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEAD6A3DC6A94528FD16BF3C /* ClipMindApp.swift */; };
+		BA7754C5642A7356E27B8C13 /* ClipMindUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37023D2FCB531B633F999B04 /* ClipMindUITests.swift */; };
+		CA982445FAC93217B189F234 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = 3D8DE6DF230DD5FA5003DF8C /* SQLite */; };
+		FDFD1191DD1C38DB7463F418 /* ClipMindTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0412DC7CC9253A3BC8D4AC05 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5C174BC8F7E70EB2632F70F4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F4603E25DDE20D14CBECE875;
+			remoteInfo = ClipMind;
+		};
+		5BDDD8EEE78F7F18AD86F24B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5C174BC8F7E70EB2632F70F4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F4603E25DDE20D14CBECE875;
+			remoteInfo = ClipMind;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		052A1740B48ABE615B8D629B /* ClipMind.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClipMind.entitlements; sourceTree = "<group>"; };
+		37023D2FCB531B633F999B04 /* ClipMindUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMindUITests.swift; sourceTree = "<group>"; };
+		6576BED0E0B2C6AB913ADB44 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		8EB3FAD2DCAE5F4E00347288 /* ClipMind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipMind.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A6E4A4AD7537A6295717721E /* ClipMindTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClipMindTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B739B9DE44919A153E4EDF94 /* ClipMindUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClipMindUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEAD6A3DC6A94528FD16BF3C /* ClipMindApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMindApp.swift; sourceTree = "<group>"; };
+		F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMindTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		757A7D9E4A8580162D2CE14E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CA982445FAC93217B189F234 /* SQLite in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8C97BCD3EEDE63B50ED82E1E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				05B1E5EEBAE930366AC343DC /* SQLite in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		35ED07E0D9B33A08A98D6AFF = {
+			isa = PBXGroup;
+			children = (
+				F3D86ADB4053FDD690336998 /* ClipMind */,
+				A5F5D1821FBC91029EB7C3C1 /* ClipMindTests */,
+				CF0F878E167271BC52B32350 /* ClipMindUITests */,
+				F3DE53FA4307B4426DB2DA25 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A5F5D1821FBC91029EB7C3C1 /* ClipMindTests */ = {
+			isa = PBXGroup;
+			children = (
+				F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */,
+			);
+			path = ClipMindTests;
+			sourceTree = "<group>";
+		};
+		CF0F878E167271BC52B32350 /* ClipMindUITests */ = {
+			isa = PBXGroup;
+			children = (
+				37023D2FCB531B633F999B04 /* ClipMindUITests.swift */,
+			);
+			path = ClipMindUITests;
+			sourceTree = "<group>";
+		};
+		D4A47BEB7E63C5857DF0423D /* App */ = {
+			isa = PBXGroup;
+			children = (
+				CEAD6A3DC6A94528FD16BF3C /* ClipMindApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		F3D86ADB4053FDD690336998 /* ClipMind */ = {
+			isa = PBXGroup;
+			children = (
+				D4A47BEB7E63C5857DF0423D /* App */,
+				FF8BDF593D3B9D1B0C745CD8 /* Resources */,
+			);
+			path = ClipMind;
+			sourceTree = "<group>";
+		};
+		F3DE53FA4307B4426DB2DA25 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8EB3FAD2DCAE5F4E00347288 /* ClipMind.app */,
+				A6E4A4AD7537A6295717721E /* ClipMindTests.xctest */,
+				B739B9DE44919A153E4EDF94 /* ClipMindUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FF8BDF593D3B9D1B0C745CD8 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				052A1740B48ABE615B8D629B /* ClipMind.entitlements */,
+				6576BED0E0B2C6AB913ADB44 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C505CA079699626DD47ED670 /* ClipMindTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 97DF9E5E35A515B2840AD1A8 /* Build configuration list for PBXNativeTarget "ClipMindTests" */;
+			buildPhases = (
+				660906D56DFE89002EB76AA2 /* Sources */,
+				757A7D9E4A8580162D2CE14E /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BAEFB3864ADB21A8D2E35394 /* PBXTargetDependency */,
+			);
+			name = ClipMindTests;
+			packageProductDependencies = (
+				3D8DE6DF230DD5FA5003DF8C /* SQLite */,
+			);
+			productName = ClipMindTests;
+			productReference = A6E4A4AD7537A6295717721E /* ClipMindTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D31B9AC58DC704C1839415A1 /* ClipMindUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 61671D2546179FE226FBF03A /* Build configuration list for PBXNativeTarget "ClipMindUITests" */;
+			buildPhases = (
+				87CD59CB82EE0C22E40CF0EA /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				30349127EC17C0C1FAEE702B /* PBXTargetDependency */,
+			);
+			name = ClipMindUITests;
+			productName = ClipMindUITests;
+			productReference = B739B9DE44919A153E4EDF94 /* ClipMindUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		F4603E25DDE20D14CBECE875 /* ClipMind */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 04F892091D57076F46D3464C /* Build configuration list for PBXNativeTarget "ClipMind" */;
+			buildPhases = (
+				04D5ECBB726B71E914CE511E /* Sources */,
+				8C97BCD3EEDE63B50ED82E1E /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ClipMind;
+			packageProductDependencies = (
+				B8017DD8BFC190D59A3A5AA6 /* SQLite */,
+			);
+			productName = ClipMind;
+			productReference = 8EB3FAD2DCAE5F4E00347288 /* ClipMind.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5C174BC8F7E70EB2632F70F4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					D31B9AC58DC704C1839415A1 = {
+						TestTargetID = F4603E25DDE20D14CBECE875;
+					};
+				};
+			};
+			buildConfigurationList = C325F1D4EEB829FD55FC49BB /* Build configuration list for PBXProject "ClipMind" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = 35ED07E0D9B33A08A98D6AFF;
+			packageReferences = (
+				CDAD4EE00300A24A48ECE753 /* XCRemoteSwiftPackageReference "SQLite.swift" */,
+			);
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F4603E25DDE20D14CBECE875 /* ClipMind */,
+				C505CA079699626DD47ED670 /* ClipMindTests */,
+				D31B9AC58DC704C1839415A1 /* ClipMindUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		04D5ECBB726B71E914CE511E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9F60A77B902552D7481B2EB2 /* ClipMindApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		660906D56DFE89002EB76AA2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDFD1191DD1C38DB7463F418 /* ClipMindTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87CD59CB82EE0C22E40CF0EA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA7754C5642A7356E27B8C13 /* ClipMindUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		30349127EC17C0C1FAEE702B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F4603E25DDE20D14CBECE875 /* ClipMind */;
+			targetProxy = 0412DC7CC9253A3BC8D4AC05 /* PBXContainerItemProxy */;
+		};
+		BAEFB3864ADB21A8D2E35394 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F4603E25DDE20D14CBECE875 /* ClipMind */;
+			targetProxy = 5BDDD8EEE78F7F18AD86F24B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2CA87C1D3D68F32A794BA462 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				TEST_TARGET_NAME = ClipMind;
+			};
+			name = Release;
+		};
+		3BFA54CBC46BDFD925BDA9F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ClipMind/Resources/ClipMind.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = ClipMind/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+			};
+			name = Debug;
+		};
+		47C59EABE1C03401BA99BC84 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ClipMind/Resources/ClipMind.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = ClipMind/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+			};
+			name = Release;
+		};
+		76EA24B9FC675E1719217EA8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clipmind.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.7;
+			};
+			name = Debug;
+		};
+		8D32D79F6F36250E0F32A74C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ClipMind.app/Contents/MacOS/ClipMind";
+			};
+			name = Release;
+		};
+		B0F57935BDD2FEB31729C15B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clipmind.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.7;
+			};
+			name = Release;
+		};
+		C0A59EFA442BD8A8FF5699CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ClipMind.app/Contents/MacOS/ClipMind";
+			};
+			name = Debug;
+		};
+		E62AA310946487C7C3816B8F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				TEST_TARGET_NAME = ClipMind;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		04F892091D57076F46D3464C /* Build configuration list for PBXNativeTarget "ClipMind" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3BFA54CBC46BDFD925BDA9F1 /* Debug */,
+				47C59EABE1C03401BA99BC84 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		61671D2546179FE226FBF03A /* Build configuration list for PBXNativeTarget "ClipMindUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E62AA310946487C7C3816B8F /* Debug */,
+				2CA87C1D3D68F32A794BA462 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		97DF9E5E35A515B2840AD1A8 /* Build configuration list for PBXNativeTarget "ClipMindTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0A59EFA442BD8A8FF5699CD /* Debug */,
+				8D32D79F6F36250E0F32A74C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C325F1D4EEB829FD55FC49BB /* Build configuration list for PBXProject "ClipMind" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				76EA24B9FC675E1719217EA8 /* Debug */,
+				B0F57935BDD2FEB31729C15B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CDAD4EE00300A24A48ECE753 /* XCRemoteSwiftPackageReference "SQLite.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stephencelis/SQLite.swift.git";
+			requirement = {
+				kind = exactVersion;
+				version = 0.15.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3D8DE6DF230DD5FA5003DF8C /* SQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CDAD4EE00300A24A48ECE753 /* XCRemoteSwiftPackageReference "SQLite.swift" */;
+			productName = SQLite;
+		};
+		B8017DD8BFC190D59A3A5AA6 /* SQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CDAD4EE00300A24A48ECE753 /* XCRemoteSwiftPackageReference "SQLite.swift" */;
+			productName = SQLite;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 5C174BC8F7E70EB2632F70F4 /* Project object */;
+}
