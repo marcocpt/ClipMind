@@ -1793,6 +1793,498 @@
     .popover-wrap { padding-right: 0; justify-content: center; }
     .popover { width: 100%; max-width: 380px; }
   }
+
+  /* ===================== 空状态 UI ===================== */
+  .empty-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .empty-state.show { display: flex; }
+  .empty-state .empty-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: var(--bg-2);
+    border: 1px dashed var(--border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-3);
+    margin-bottom: 14px;
+  }
+  .empty-state .empty-icon svg { width: 24px; height: 24px; }
+  .empty-state .empty-title {
+    font-size: 13px;
+    color: var(--text-1);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .empty-state .empty-hint {
+    font-size: 11px;
+    color: var(--text-3);
+    line-height: 1.6;
+    max-width: 240px;
+  }
+  .popover-list .empty-state { padding: 56px 16px; }
+  .popover-list.has-empty .popover-item { display: none; }
+  .list-pane .empty-state { padding: 80px 20px; }
+  .list-pane.has-empty .list-item:not(.empty-state) { display: none; }
+  .list-pane.has-empty .list-header { display: flex; }
+
+  /* ===================== AI 处理加载状态 ===================== */
+  .process-result.loading {
+    border-color: rgba(139, 92, 246, 0.4);
+    background: rgba(139, 92, 246, 0.05);
+    display: block;
+  }
+  .process-result.loading .header { border-bottom-color: rgba(139, 92, 246, 0.2); }
+  .process-result .loading-box {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+    font-size: 13px;
+    color: var(--text-1);
+  }
+  .process-result.loading .loading-box { display: flex; }
+  .process-result.loading .content { display: none; }
+  .process-result.loading .error-box { display: none; }
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(139, 92, 246, 0.2);
+    border-top-color: var(--accent-violet);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .process-buttons.loading .process-btn {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .process-buttons.loading .process-btn.danger { opacity: 0.5; }
+
+  /* ===================== API 调用失败状态 ===================== */
+  .process-result.error {
+    border-color: rgba(251, 113, 133, 0.4);
+    background: rgba(251, 113, 133, 0.04);
+    display: block;
+  }
+  .process-result.error .header { border-bottom-color: rgba(251, 113, 133, 0.2); }
+  .process-result.error .label { color: var(--accent-rose); }
+  .process-result.error .content { display: none; }
+  .process-result.error .loading-box { display: none; }
+  .process-result .error-box {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .process-result.error .error-box { display: flex; }
+  .error-card {
+    padding: 12px;
+    background: rgba(251, 113, 133, 0.08);
+    border: 1px solid rgba(251, 113, 133, 0.3);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-1);
+    line-height: 1.6;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .error-card svg {
+    width: 16px;
+    height: 16px;
+    color: var(--accent-rose);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .error-card .err-title {
+    font-weight: 600;
+    color: var(--accent-rose);
+    margin-bottom: 4px;
+  }
+  .error-card .err-detail {
+    font-size: 11px;
+    color: var(--text-2);
+    font-family: 'JetBrains Mono', monospace;
+    word-break: break-all;
+  }
+  .retry-btn {
+    align-self: flex-start;
+    padding: 7px 14px;
+    background: rgba(251, 113, 133, 0.1);
+    border: 1px solid rgba(251, 113, 133, 0.3);
+    border-radius: 6px;
+    color: var(--accent-rose);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .retry-btn:hover { background: rgba(251, 113, 133, 0.2); }
+  .retry-btn svg { width: 12px; height: 12px; }
+  .process-btn.danger {
+    border-color: rgba(251, 113, 133, 0.3);
+    color: var(--accent-rose);
+  }
+  .process-btn.danger:hover {
+    border-color: var(--accent-rose);
+    background: rgba(251, 113, 133, 0.08);
+    color: var(--accent-rose);
+  }
+
+  /* ===================== 图片缩略图 (AC-02) ===================== */
+  .tag-image { background: rgba(52, 211, 153, 0.15); color: var(--accent-emerald); }
+  .tag-file { background: rgba(96, 165, 250, 0.15); color: var(--accent-blue); }
+
+  .popover-item.image { align-items: center; }
+  .popover-item.image .thumb-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 7px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 50%, #34d399 100%);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .popover-item.image .thumb-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0,0,0,0.2) 0%, transparent 50%);
+  }
+  .popover-item.image .thumb-wrap svg {
+    width: 18px;
+    height: 18px;
+    color: rgba(255,255,255,0.9);
+    z-index: 1;
+  }
+  .popover-item.image .preview {
+    font-family: inherit;
+    color: var(--text-1);
+    font-weight: 500;
+    -webkit-line-clamp: 1;
+  }
+
+  .list-item.image .preview {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-family: inherit;
+    -webkit-line-clamp: 1;
+  }
+  .list-item.image .thumb-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 7px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 50%, #34d399 100%);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .list-item.image .thumb-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0,0,0,0.2) 0%, transparent 50%);
+  }
+  .list-item.image .thumb-wrap svg {
+    width: 20px;
+    height: 20px;
+    color: rgba(255,255,255,0.9);
+    z-index: 1;
+  }
+  .list-item.image .preview-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-1);
+    font-weight: 500;
+  }
+
+  /* 详情面板图片原图预览 */
+  .detail-image-preview {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .detail-image-preview.show { display: block; }
+  .detail-image-preview .preview-title {
+    font-size: 11px;
+    color: var(--text-2);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .detail-image-preview .preview-img {
+    width: 100%;
+    height: 180px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 50%, #34d399 100%);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+  }
+  .detail-image-preview .preview-img::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0,0,0,0.2) 0%, transparent 50%);
+  }
+  .detail-image-preview .preview-img .img-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255,255,255,0.9);
+  }
+  .detail-image-preview .preview-img .img-icon svg { width: 36px; height: 36px; }
+  .detail-image-preview .preview-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ===================== 文件路径 (AC-03) ===================== */
+  .popover-item.file .icon-wrap {
+    background: rgba(96, 165, 250, 0.1);
+    border-color: rgba(96, 165, 250, 0.3);
+  }
+  .popover-item.file .preview {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 1;
+    display: block;
+  }
+
+  .list-item.file .preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    -webkit-line-clamp: 1;
+  }
+  .list-item.file .file-icon-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--accent-blue);
+  }
+  .list-item.file .file-icon-sm svg { width: 16px; height: 16px; }
+  .list-item.file .preview .file-path-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+
+  /* 详情面板文件路径列表 */
+  .detail-file-list {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .detail-file-list.show { display: block; }
+  .detail-file-list .list-title {
+    font-size: 11px;
+    color: var(--text-2);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .file-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .file-row:last-child { margin-bottom: 0; }
+  .file-row .file-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--accent-blue);
+  }
+  .file-row .file-icon svg { width: 14px; height: 14px; }
+  .file-row .file-info { flex: 1; min-width: 0; }
+  .file-row .file-path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 2px;
+  }
+  .file-row .file-meta {
+    font-size: 10px;
+    color: var(--text-3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ===================== 演示控件 ===================== */
+  .demo-controls {
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: rgba(139, 92, 246, 0.04);
+    border: 1px dashed rgba(139, 92, 246, 0.25);
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .demo-controls .demo-label {
+    font-size: 11px;
+    color: var(--accent-violet);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    margin-right: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .demo-btn {
+    padding: 5px 11px;
+    background: var(--bg-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    color: var(--text-1);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .demo-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--accent-violet);
+    color: var(--accent-violet);
+  }
+  .demo-btn.active {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: var(--accent-violet);
+    color: var(--accent-violet);
+  }
+
+  /* ===================== 未配置 API Key 置灰示例 (AC-17) ===================== */
+  .apikey-disabled-example {
+    margin-top: 20px;
+    padding: 18px;
+    background: linear-gradient(145deg, rgba(26, 26, 40, 0.6), rgba(20, 20, 31, 0.6));
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    backdrop-filter: blur(20px);
+  }
+  .apikey-disabled-example .example-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .apikey-disabled-example .example-header .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--accent-amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .apikey-disabled-example .example-header .icon svg { width: 14px; height: 14px; }
+  .apikey-disabled-example .example-header .name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-0);
+  }
+  .apikey-disabled-example .example-header .badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--accent-amber);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: auto;
+  }
+  .apikey-disabled-example .process-buttons {
+    margin-bottom: 12px;
+  }
+  .apikey-disabled-example .example-hint {
+    padding: 10px 12px;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--accent-amber);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.6;
+  }
+  .apikey-disabled-example .example-hint svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
 </style>
 </head>
 <body>
@@ -1818,7 +2310,7 @@
     <li><a href="#process">一键处理</a></li>
     <li><a href="#sensitive">隐私保护</a></li>
   </ul>
-  <span class="version-badge">v1.0 · MVP</span>
+  <span class="version-badge">v1.1 · MVP</span>
 </nav>
 
 <!-- 头部 -->
@@ -1831,7 +2323,7 @@
   <p class="subtitle">
     基于 F1 设计规范 v1.3 的 UI 视觉原型，展示菜单栏 Popover、主窗口三栏布局、设置面板、首启引导、一键处理结果与敏感内容识别提示六大模块。
   </p>
-  <div class="meta">&gt; 最后更新：2026-07-12 | 版本：v1.0（基于设计规范 v1.3）</div>
+  <div class="meta">&gt; 最后更新：2026-07-12 | 版本：v1.1（基于设计规范 v1.3）</div>
 </header>
 
 <!-- ============ 1. 菜单栏 Popover ============ -->
@@ -1982,7 +2474,35 @@
               <div class="meta"><span>Preview</span><span>attention.pdf</span></div>
             </div>
           </div>
-          <!-- 8. 敏感(已忽略) -->
+          <!-- 8. 图片 (AC-02) -->
+          <div class="popover-item image">
+            <div class="thumb-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </div>
+            <div class="info">
+              <div class="top">
+                <span class="type-tag tag-image">IMAGE</span>
+                <span style="font-size:10px;color:var(--text-3)">5 小时前</span>
+              </div>
+              <div class="preview">截图_2026-07-12.png</div>
+              <div class="meta"><span>截图</span><span>1920×1080 · 248KB</span></div>
+            </div>
+          </div>
+          <!-- 9. 文件路径 (AC-03) -->
+          <div class="popover-item file">
+            <div class="icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="info">
+              <div class="top">
+                <span class="type-tag tag-file">FILE</span>
+                <span style="font-size:10px;color:var(--text-3)">6 小时前</span>
+              </div>
+              <div class="preview">/Users/dengdeng/Working/Competition/ClipMind/README.md</div>
+              <div class="meta"><span>Finder</span><span>Markdown · 4.2KB</span></div>
+            </div>
+          </div>
+          <!-- 10. 敏感(已忽略) -->
           <div class="popover-item" style="opacity:0.55">
             <div class="icon-wrap" style="background:rgba(251,113,133,0.1);border-color:rgba(251,113,133,0.3)">
               <svg viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -1995,6 +2515,22 @@
               <div class="preview" style="color:var(--text-3);font-style:italic">••••••••••••（Token 格式，未入库）</div>
               <div class="meta"><span>1Password</span><span>已自动忽略</span></div>
             </div>
+          </div>
+          <!-- 空状态：首次安装未复制任何内容 -->
+          <div class="empty-state" id="popoverEmptyFirst">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/><path d="M9 12h6M9 16h4"/></svg>
+            </div>
+            <div class="empty-title">还没有剪贴内容</div>
+            <div class="empty-hint">复制任意内容即可开始，ClipMind 会自动捕获并分类</div>
+          </div>
+          <!-- 空状态：搜索无结果 -->
+          <div class="empty-state" id="popoverEmptySearch">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+            <div class="empty-title">未找到匹配项</div>
+            <div class="empty-hint">试试其他关键词，或清除筛选条件</div>
           </div>
         </div>
         <div class="popover-footer">
@@ -2011,7 +2547,13 @@
     </div>
 
     <div class="menubar-hint">
-      <strong>交互提示：</strong>点击上方菜单栏中紫色高亮的 <strong>ClipMind</strong> 图标可切换 popover 显示状态。Popover 展示最近 8 条剪贴内容，覆盖 12 种分类中的 8 种典型类型；底部按钮可跳转到主窗口或设置面板。
+      <strong>交互提示：</strong>点击上方菜单栏中紫色高亮的 <strong>ClipMind</strong> 图标可切换 popover 显示状态。Popover 展示最近 10 条剪贴内容，覆盖 12 种分类中的 10 种典型类型（含 AC-02 图片、AC-03 文件路径）；底部按钮可跳转到主窗口或设置面板。
+    </div>
+    <div class="demo-controls">
+      <span class="demo-label">空状态演示</span>
+      <button class="demo-btn active" onclick="showPopoverEmpty('none')">正常列表</button>
+      <button class="demo-btn" onclick="showPopoverEmpty('first')">首次安装空态</button>
+      <button class="demo-btn" onclick="showPopoverEmpty('search')">搜索无结果</button>
     </div>
   </div>
 </section>
@@ -2113,6 +2655,14 @@
               <span class="count">4</span>
             </div>
             <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-emerald)"></span>图片 (AC-02)</div>
+              <span class="count">3</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="left"><span class="dot" style="background:var(--accent-blue)"></span>文件路径 (AC-03)</div>
+              <span class="count">2</span>
+            </div>
+            <div class="sidebar-item">
               <div class="left"><span class="dot" style="background:var(--text-2)"></span>其他</div>
               <span class="count">0</span>
             </div>
@@ -2131,7 +2681,7 @@
         <div class="list-pane">
           <div class="list-header">
             <div class="title">搜索结果 · "窗口管理"</div>
-            <div class="count">5 条 · 234ms</div>
+            <div class="count">9 条 · 234ms</div>
           </div>
           <div class="list-item active" onclick="selectListItem(this, 'item1')">
             <div class="top">
@@ -2210,6 +2760,62 @@
               <span>3 天前</span>
             </div>
           </div>
+          <div class="list-item image" onclick="selectListItem(this, 'item8')">
+            <div class="top">
+              <span class="type-tag tag-image">IMAGE</span>
+              <span style="font-size:10px;color:var(--text-2)">32% 相关</span>
+            </div>
+            <div class="preview">
+              <div class="thumb-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              </div>
+              <div class="preview-text">窗口管理_设计稿.png</div>
+            </div>
+            <div class="meta">
+              <div class="source"><span class="app-icon" style="background:#34d399"></span>截图 · 1920×1080</div>
+              <span>4 天前</span>
+            </div>
+          </div>
+          <div class="list-item file" onclick="selectListItem(this, 'item9')">
+            <div class="top">
+              <span class="type-tag tag-file">FILE</span>
+              <span style="font-size:10px;color:var(--text-2)">28% 相关</span>
+            </div>
+            <div class="preview">
+              <div class="file-icon-sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="file-path-text">/Users/dengdeng/Working/Competition/ClipMind/Sources/WindowManager.swift</div>
+            </div>
+            <div class="meta">
+              <div class="source"><span class="app-icon" style="background:#60a5fa"></span>Finder · Swift 源文件</div>
+              <span>5 天前</span>
+            </div>
+          </div>
+          <!-- 空状态：暂无剪贴记录（清空数据后） -->
+          <div class="empty-state" id="listEmptyNoData">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </div>
+            <div class="empty-title">暂无剪贴记录</div>
+            <div class="empty-hint">剪贴板历史为空，复制任意内容即可自动捕获</div>
+          </div>
+          <!-- 空状态：时间筛选无匹配 -->
+          <div class="empty-state" id="listEmptyNoMatch">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="empty-title">该时间段无匹配记录</div>
+            <div class="empty-hint">尝试调整时间范围筛选条件</div>
+          </div>
+          <!-- 空状态：搜索无结果 -->
+          <div class="empty-state" id="listEmptySearch">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+            <div class="empty-title">未找到匹配项</div>
+            <div class="empty-hint">试试其他关键词，或清除搜索条件</div>
+          </div>
         </div>
 
         <!-- 右侧详情 -->
@@ -2240,6 +2846,54 @@
   at UIKit.UIApplicationMain
   NSWindowController not initialized before use</div>
 
+          <!-- 图片原图预览区 (AC-02) -->
+          <div class="detail-image-preview" id="detailImagePreview">
+            <div class="preview-title">▸ 图片原图预览</div>
+            <div class="preview-img">
+              <div class="img-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              </div>
+            </div>
+            <div class="preview-meta">
+              <span>1920 × 1080</span>
+              <span>248 KB</span>
+              <span>PNG</span>
+              <span id="imgFileName">截图_2026-07-12.png</span>
+            </div>
+          </div>
+
+          <!-- 文件路径列表 (AC-03) -->
+          <div class="detail-file-list" id="detailFileList">
+            <div class="list-title">▸ 文件路径列表</div>
+            <div class="file-row">
+              <div class="file-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="file-info">
+                <div class="file-path" id="fileRowPath">/Users/dengdeng/Working/Competition/ClipMind/README.md</div>
+                <div class="file-meta">Markdown · 4.2KB · 修改于 2026-07-12</div>
+              </div>
+            </div>
+            <div class="file-row">
+              <div class="file-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="file-info">
+                <div class="file-path">/Users/dengdeng/Working/Competition/ClipMind/Sources/WindowManager.swift</div>
+                <div class="file-meta">Swift 源文件 · 12.8KB · 修改于 2026-07-10</div>
+              </div>
+            </div>
+            <div class="file-row">
+              <div class="file-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="file-info">
+                <div class="file-path">/Users/dengdeng/Working/Competition/ClipMind/docs/设计规范.md</div>
+                <div class="file-meta">Markdown · 18.5KB · 修改于 2026-07-08</div>
+              </div>
+            </div>
+          </div>
+
           <div style="font-size:12px;color:var(--text-2);margin-bottom:10px;font-weight:600">一键 AI 处理</div>
           <div class="process-buttons">
             <button class="process-btn" onclick="showProcessResult('summarize')">
@@ -2258,6 +2912,10 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
               提取待办
             </button>
+            <button class="process-btn danger" style="grid-column:1 / -1" onclick="showProcessError('network')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+              模拟 API 失败
+            </button>
           </div>
 
           <div id="processResult" class="process-result">
@@ -2265,7 +2923,24 @@
               <span class="label" id="resultLabel">SUMMARY</span>
               <span class="copy">复制结果</span>
             </div>
+            <div class="loading-box">
+              <div class="spinner"></div>
+              <span>AI 处理中...</span>
+            </div>
             <div class="content" id="resultContent"></div>
+            <div class="error-box">
+              <div class="error-card">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                <div>
+                  <div class="err-title" id="errTitle">网络异常，请重试</div>
+                  <div class="err-detail" id="errDetail">Error: Request timeout (30s) · api.openai.com</div>
+                </div>
+              </div>
+              <button class="retry-btn" onclick="retryLastProcess()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                重试
+              </button>
+            </div>
           </div>
 
           <div style="margin-top:16px;padding:12px;background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.2);border-radius:8px;font-size:11px;color:var(--text-2);line-height:1.6">
@@ -2274,6 +2949,13 @@
         </div>
       </div>
     </div>
+  </div>
+  <div class="demo-controls">
+    <span class="demo-label">列表空状态演示</span>
+    <button class="demo-btn active" onclick="showListEmpty('none')">正常列表</button>
+    <button class="demo-btn" onclick="showListEmpty('noData')">清空数据后</button>
+    <button class="demo-btn" onclick="showListEmpty('noMatch')">时间筛选无匹配</button>
+    <button class="demo-btn" onclick="showListEmpty('search')">搜索无结果</button>
   </div>
 </section>
 
@@ -2940,6 +3622,39 @@ The NSWindowController manages the window lifecycle in macOS AppKit. It coordina
   <div style="margin-top:20px;padding:14px 16px;background:rgba(251,191,36,0.05);border-left:3px solid var(--accent-amber);border-radius:0 8px 8px 0;font-size:13px;color:var(--text-1);line-height:1.7">
     <strong style="color:var(--accent-amber)">⚠ 未配置 API Key 时：</strong>所有处理按钮置灰不可点击，或点击后弹窗提示"需配置 API Key"。分类与搜索基于本地嵌入模型，无需 API Key 即可使用。
   </div>
+
+  <!-- AC-17 未配置 API Key 置灰状态示例 -->
+  <div class="apikey-disabled-example">
+    <div class="example-header">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div class="name">未配置 API Key 状态示例</div>
+      <span class="badge">AC-17</span>
+    </div>
+    <div class="process-buttons">
+      <button class="process-btn disabled">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13l2 2 4-4"/></svg>
+        智能总结
+      </button>
+      <button class="process-btn disabled">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg>
+        即时翻译
+      </button>
+      <button class="process-btn disabled">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        智能改写
+      </button>
+      <button class="process-btn disabled">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        提取待办
+      </button>
+    </div>
+    <div class="example-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <span>需配置 API Key · 4 个处理按钮全部置灰，hover 无响应。点击会提示"请在设置中配置 API Key 后使用此功能"。</span>
+    </div>
+  </div>
 </section>
 
 <!-- ============ 6. 敏感内容识别提示 ============ -->
@@ -3090,7 +3805,7 @@ The NSWindowController manages the window lifecycle in macOS AppKit. It coordina
       覆盖 F1.1-F1.7 全部功能：剪贴板监听、12 种自动分类、自然语言语义搜索、一键 AI 处理、本地加密存储、隐私保护、菜单栏 + 主窗口交互
     </p>
     <div class="meta">
-      &gt; 最后更新：2026-07-12 | 版本：v1.0（基于设计规范 v1.3）<br>
+      &gt; 最后更新：2026-07-12 | 版本：v1.1（基于设计规范 v1.3）<br>
       TRAE AI 创造力大赛 · 初赛参赛作品 · 赛道：学习工作
     </div>
   </div>
@@ -3114,6 +3829,8 @@ The NSWindowController manages the window lifecycle in macOS AppKit. It coordina
     const detailContent = document.querySelector('.detail-content');
     const detailTitle = document.querySelector('.detail-title');
     const detailMeta = document.querySelector('.detail-meta');
+    const detailImagePreview = document.getElementById('detailImagePreview');
+    const detailFileList = document.getElementById('detailFileList');
     const items = {
       item1: { tag: 'tag-error', tagText: 'ERROR', iconStroke: 'var(--accent-rose)', title: 'NSWindowController 崩溃日志', source: 'Xcode', time: '12 分钟前', content: 'Thread 1: Fatal error: Unexpectedly found nil while unwrapping an Optional value\n  at ClipMind.WindowManager.showWindow(WindowManager.swift:87)\n  at ClipMind.AppDelegate.applicationDidFinishLaunching(_: AppDelegate.swift:42)\n  NSWindowController not initialized before use' },
       item2: { tag: 'tag-article', tagText: 'ARTICLE', iconStroke: 'var(--accent-blue)', title: 'SwiftUI 窗口生命周期问题', source: 'Safari', time: '1 小时前', content: 'SwiftUI 窗口生命周期问题：window management in SwiftUI requires NSWindowController...\n\nWhen working with SwiftUI on macOS, you need to bridge to AppKit for advanced window management. The NSWindowController is the key component...' },
@@ -3121,20 +3838,42 @@ The NSWindowController manages the window lifecycle in macOS AppKit. It coordina
       item4: { tag: 'tag-code', tagText: 'CODE', iconStroke: 'var(--accent-violet)', title: 'NSWindowController 初始化代码', source: 'Xcode', time: '昨天', content: 'let windowController = NSWindowController(window: myWindow)\nwindowController.showWindow(self)\n\nguard let window = windowController.window else {\n    fatalError("Window not initialized")\n}' },
       item5: { tag: 'tag-meeting', tagText: 'MEETING', iconStroke: 'var(--accent-emerald)', title: '产品周会 - 窗口管理模块', source: '飞书', time: '2 天前', content: '产品周会 06.18\n参会：张三、李四、王五\n\n议题：\n1. 窗口管理模块需在 06.25 前完成，张三负责\n2. 支付联调推迟到 06.28，李四跟进\n3. 王五负责下周用户调研问卷设计' },
       item6: { tag: 'tag-link', tagText: 'LINK', iconStroke: 'var(--accent-cyan)', title: 'NSWindowController - Apple Developer', source: 'Safari', time: '3 天前', content: 'developer.apple.com/documentation/appkit/nswindowcontroller\n\nA controller that manages a window, usually a window loaded from a nib file.\n\nDeclaration:\nclass NSWindowController : NSResponder' },
-      item7: { tag: 'tag-api_doc', tagText: 'API_DOC', iconStroke: 'var(--accent-pink)', title: 'POST /api/v1/windows', source: 'Chrome', time: '3 天前', content: 'POST /api/v1/windows\nContent-Type: application/json\n\nRequest Body:\n{\n  "title": "string",\n  "frame": [x, y, width, height],\n  "visible": true\n}\n\nResponse:\n{\n  "id": "win-001",\n  "status": "created"\n}' }
+      item7: { tag: 'tag-api_doc', tagText: 'API_DOC', iconStroke: 'var(--accent-pink)', title: 'POST /api/v1/windows', source: 'Chrome', time: '3 天前', content: 'POST /api/v1/windows\nContent-Type: application/json\n\nRequest Body:\n{\n  "title": "string",\n  "frame": [x, y, width, height],\n  "visible": true\n}\n\nResponse:\n{\n  "id": "win-001",\n  "status": "created"\n}' },
+      item8: { tag: 'tag-image', tagText: 'IMAGE', iconStroke: 'var(--accent-emerald)', title: '窗口管理_设计稿.png', source: '截图', time: '4 天前', content: '图片文件：窗口管理_设计稿.png\n分辨率：1920 × 1080\n大小：248 KB\n格式：PNG\n来源 App：截图工具\n说明：窗口管理模块的 UI 设计稿，包含主窗口三栏布局示意', imageName: '窗口管理_设计稿.png' },
+      item9: { tag: 'tag-file', tagText: 'FILE', iconStroke: 'var(--accent-blue)', title: 'WindowManager.swift', source: 'Finder', time: '5 天前', content: '文件路径：/Users/dengdeng/Working/Competition/ClipMind/Sources/WindowManager.swift\n类型：Swift 源文件\n大小：12.8 KB\n修改时间：2026-07-10\n来源 App：Finder', filePath: '/Users/dengdeng/Working/Competition/ClipMind/Sources/WindowManager.swift' }
     };
     const data = items[itemId] || items.item1;
     detailTitle.textContent = data.title;
     detailMeta.innerHTML = '<span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="' + data.iconStroke + '" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>' + data.tagText + '</span><span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text-2)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>' + data.source + '</span><span class="chip">' + data.time + '</span>';
     detailContent.textContent = data.content;
-    document.getElementById('processResult').classList.remove('show');
+    // 图片预览区显隐
+    if (itemId === 'item8') {
+      detailImagePreview.classList.add('show');
+      document.getElementById('imgFileName').textContent = data.imageName;
+    } else {
+      detailImagePreview.classList.remove('show');
+    }
+    // 文件路径列表显隐
+    if (itemId === 'item9') {
+      detailFileList.classList.add('show');
+      document.getElementById('fileRowPath').textContent = data.filePath;
+    } else {
+      detailFileList.classList.remove('show');
+    }
+    // 重置处理结果状态
+    const processResult = document.getElementById('processResult');
+    processResult.classList.remove('show', 'loading', 'error');
+    document.querySelector('.process-buttons').classList.remove('loading');
   }
 
-  // 一键处理结果展示
+  // 一键处理结果展示（带 loading 状态）
+  let lastProcessType = null;
+  let processTimer = null;
   function showProcessResult(type) {
     const result = document.getElementById('processResult');
     const label = document.getElementById('resultLabel');
     const content = document.getElementById('resultContent');
+    const buttons = document.querySelector('.process-buttons');
     const results = {
       summarize: { label: 'SUMMARY · 智能总结', content: '1. 该错误为 NSWindowController 强制解包时 Optional 值为 nil。\n2. 发生位置：WindowManager.swift:87，由 applicationDidFinishLaunching 触发。\n3. 根因：window 属性在 showWindow 调用前未初始化。\n4. 建议：使用 if let / guard let 安全解包，或在 init 中确保 window 已实例化。\n5. 影响：App 启动即崩溃，需立即修复。' },
       translate: { label: 'TRANSLATION · 即时翻译', content: '【原文】Thread 1: Fatal error: Unexpectedly found nil while unwrapping an Optional value\n\n【译文】线程 1：致命错误：在解包 Optional 值时发现 nil\n\n【原文】NSWindowController not initialized before use\n\n【译文】使用前 NSWindowController 未初始化\n\nℹ 技术术语保留原文：Thread 1 / Fatal error / Optional / NSWindowController' },
@@ -3142,10 +3881,119 @@ The NSWindowController manages the window lifecycle in macOS AppKit. It coordina
       todo: { label: 'TODO · 提取待办', content: '☐ 修复 NSWindowController 初始化顺序 · @张三 · 今日\n☐ 添加 window 属性的 nil 检查 · @张三 · 明日\n☐ 补充 NSWindowController 单元测试 · @李四 · 本周\n☐ 评审启动流程安全性 · @王五 · 下周\n\nℹ JSON 结构化输出，含 task / assignee / dueDate 三字段' }
     };
     const data = results[type];
+    lastProcessType = type;
+    // 清除可能的错误态
+    result.classList.remove('error');
+    // 进入 loading 态
     label.textContent = data.label;
-    content.textContent = data.content;
-    content.style.whiteSpace = 'pre-wrap';
-    result.classList.add('show');
+    result.classList.add('show', 'loading');
+    buttons.classList.add('loading');
+    content.textContent = '';
+    if (processTimer) clearTimeout(processTimer);
+    processTimer = setTimeout(() => {
+      // 显示结果
+      content.textContent = data.content;
+      content.style.whiteSpace = 'pre-wrap';
+      result.classList.remove('loading');
+      buttons.classList.remove('loading');
+    }, 1500);
+  }
+
+  // 模拟 API 失败状态
+  function showProcessError(errType) {
+    const result = document.getElementById('processResult');
+    const label = document.getElementById('resultLabel');
+    const errTitle = document.getElementById('errTitle');
+    const errDetail = document.getElementById('errDetail');
+    const buttons = document.querySelector('.process-buttons');
+    const errors = {
+      network: { title: '网络异常，请重试', detail: 'Error: Request timeout (30s) · api.openai.com', label: 'ERROR · 网络异常' },
+      auth: { title: 'API Key 无效，请检查配置', detail: 'Error: 401 Unauthorized · Invalid API Key', label: 'ERROR · 鉴权失败' },
+      rate: { title: '请求过于频繁，请稍后再试', detail: 'Error: 429 Too Many Requests · Rate limit exceeded', label: 'ERROR · 限流' }
+    };
+    const err = errors[errType] || errors.network;
+    // 进入 loading 态 1 秒，然后显示错误
+    label.textContent = 'PROCESSING...';
+    result.classList.add('show', 'loading');
+    buttons.classList.add('loading');
+    if (processTimer) clearTimeout(processTimer);
+    processTimer = setTimeout(() => {
+      result.classList.remove('loading');
+      buttons.classList.remove('loading');
+      label.textContent = err.label;
+      errTitle.textContent = err.title;
+      errDetail.textContent = err.detail;
+      result.classList.add('error');
+    }, 1000);
+  }
+
+  // 重试上次处理
+  function retryLastProcess() {
+    const result = document.getElementById('processResult');
+    result.classList.remove('error');
+    if (lastProcessType) {
+      showProcessResult(lastProcessType);
+    } else {
+      showProcessResult('summarize');
+    }
+  }
+
+  // popover 空状态切换
+  function showPopoverEmpty(state) {
+    const popoverList = document.querySelector('.popover-list');
+    const emptyFirst = document.getElementById('popoverEmptyFirst');
+    const emptySearch = document.getElementById('popoverEmptySearch');
+    // 切换按钮高亮
+    event.target.parentElement.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    // 隐藏所有空状态
+    emptyFirst.classList.remove('show');
+    emptySearch.classList.remove('show');
+    popoverList.classList.remove('has-empty');
+    if (state === 'first') {
+      popoverList.classList.add('has-empty');
+      emptyFirst.classList.add('show');
+    } else if (state === 'search') {
+      popoverList.classList.add('has-empty');
+      emptySearch.classList.add('show');
+    }
+  }
+
+  // 主窗口列表空状态切换
+  function showListEmpty(state) {
+    const listPane = document.querySelector('.list-pane');
+    const emptyNoData = document.getElementById('listEmptyNoData');
+    const emptyNoMatch = document.getElementById('listEmptyNoMatch');
+    const emptySearch = document.getElementById('listEmptySearch');
+    const listHeader = document.querySelector('.list-header .title');
+    const listCount = document.querySelector('.list-header .count');
+    // 切换按钮高亮
+    event.target.parentElement.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    // 隐藏所有空状态
+    emptyNoData.classList.remove('show');
+    emptyNoMatch.classList.remove('show');
+    emptySearch.classList.remove('show');
+    listPane.classList.remove('has-empty');
+    if (state === 'none') {
+      listHeader.textContent = '搜索结果 · "窗口管理"';
+      listCount.textContent = '9 条 · 234ms';
+    } else {
+      listPane.classList.add('has-empty');
+      if (state === 'noData') {
+        listHeader.textContent = '剪贴板历史';
+        listCount.textContent = '0 条';
+        emptyNoData.classList.add('show');
+      } else if (state === 'noMatch') {
+        listHeader.textContent = '时间筛选：近 1 小时';
+        listCount.textContent = '0 条';
+        emptyNoMatch.classList.add('show');
+      } else if (state === 'search') {
+        listHeader.textContent = '搜索结果 · "不存在的关键词"';
+        listCount.textContent = '0 条 · 88ms';
+        emptySearch.classList.add('show');
+      }
+    }
   }
 
   // 设置面板切换
@@ -3207,6 +4055,9 @@ The NSWindowController manages the window lifecycle in macOS AppKit. It coordina
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
+
+  // 附带 1：首启引导初始状态同步 - 让 HTML 默认状态与 onbStep 同步
+  updateOnboardingUI();
 </script>
 </body>
 </html>
