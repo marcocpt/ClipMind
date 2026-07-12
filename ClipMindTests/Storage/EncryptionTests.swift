@@ -36,9 +36,8 @@ final class EncryptionTests: XCTestCase {
 
         // 读取数据库文件原始字节，确认敏感文本不在文件中
         let fileData = try Data(contentsOf: dbPath)
-        let fileBytes = String(decoding: fileData, as: UTF8.self)
         XCTAssertFalse(
-            fileBytes.contains(sensitiveText),
+            containsPlaintext(fileData, sensitiveText),
             "content_blob 中的敏感文本应该被加密，不应在数据库文件中明文出现"
         )
     }
@@ -61,7 +60,6 @@ final class EncryptionTests: XCTestCase {
         try store.save(item)
 
         let fileData = try Data(contentsOf: dbPath)
-        let fileBytes = String(decoding: fileData, as: UTF8.self)
 
         // 浮点数的二进制表示不应在文件中以明文形式可识别
         // 由于浮点数二进制表示可能不直观，这里使用 SQLite.swift 直接读取原始 BLOB 验证
@@ -83,7 +81,7 @@ final class EncryptionTests: XCTestCase {
         }
 
         // 整个文件中也不应包含敏感文本
-        XCTAssertFalse(fileBytes.contains("0.123"))
+        XCTAssertFalse(containsPlaintext(fileData, "0.123"))
     }
 
     func testDatabaseFileStructureIsSQLite() throws {
@@ -129,9 +127,8 @@ final class EncryptionTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(blob.count, 28, "加密内容至少 28 字节")
 
             // 密文不应包含明文标记
-            let blobString = String(decoding: blob, as: UTF8.self)
             XCTAssertFalse(
-                blobString.contains(plaintext),
+                containsPlaintext(blob, plaintext),
                 "content_blob 不应包含明文标记"
             )
 
@@ -141,6 +138,12 @@ final class EncryptionTests: XCTestCase {
     }
 
     // MARK: - 私有辅助
+
+    /// 在二进制数据中搜索明文字节模式，用于验证密文中不含明文标记。
+    /// 直接基于 Data.range(of:) 进行字节级匹配，避免字符串编码转换。
+    private func containsPlaintext(_ data: Data, _ plaintext: String) -> Bool {
+        data.range(of: Data(plaintext.utf8)) != nil
+    }
 
     private func floatsToBinary(_ floats: [Float]) -> Data {
         var data = Data()
