@@ -1,4 +1,4 @@
-> 最后更新：2026-07-12 | 版本：v1.1
+> 最后更新：2026-07-12 | 版本：v1.2
 
 # ClipMind 初赛 MVP 设计规范
 
@@ -242,7 +242,7 @@ flowchart TD
 flowchart TD
     A[剪贴板条目捕获完成] --> B[调用本地嵌入模型]
     B --> C[生成内容向量 embedding]
-    C --> D[向量与 12 类型向量匹配]
+    C --> D[向量与 11 种入库类型向量匹配]
     
     D --> D1{匹配最高分 >= 阈值?}
     D1 -- 是 --> E[选择最高分类型]
@@ -683,7 +683,7 @@ class LocalEmbeddingService: EmbeddingService {
     }
     
     func classify(content: String, embedding: [Float]) async throws -> ContentType {
-        // 1. 与 12 类型向量计算余弦相似度
+        // 1. 与 11 种入库类型向量计算余弦相似度
         // 2. 返回最高分类型（低于阈值返回 .other）
     }
 }
@@ -1063,14 +1063,15 @@ struct DebugConfig {
 
 #### F1.2 自动分类
 
-**AC-05：12 种类型自动分类准确率 ≥ 80%**
+**AC-05：11 种入库类型自动分类准确率 ≥ 80%**
 
-- **场景**：使用测试集（每种类型 20 条样本，共 240 条）批量测试分类
-- **预期**：分类准确率 ≥ 80%（≥ 192 条正确）
+- **场景**：使用分类测试集（11 种入库类型，每种 20 条样本，共 220 条）批量测试分类
+- **预期**：分类准确率 ≥ 80%（≥ 176 条正确）
 - **验证方式**：
-  - 自动化：XCTest `testClassificationAccuracy()`，加载测试集，调用 `LocalEmbeddingService.classify()`，统计准确率，断言 ≥ 0.80
-  - 测试集位置：`ClipMindTests/Fixtures/classification_samples.json`
-  - 测试集准备：测试集（240 条，每种类型 20 条）由开发者创建，Phase 1 开始前完成，标注方式为人工标注正确类型，标注质量通过双人交叉抽查 10% 样本
+  - 自动化：XCTest `testClassificationAccuracy()`，加载分类测试集，调用 `LocalEmbeddingService.classify()`，统计准确率，断言 ≥ 0.80
+  - 测试集位置：`ClipMindTests/Fixtures/classification_samples.json`（11 种入库类型 × 20 条 = 220 条）
+  - 敏感内容测试集：`ClipMindTests/Fixtures/sensitive_samples.json`（20 条），由 AC-08 的 SensitiveDetector 单独测试覆盖，不进入 classify() 管线
+  - 测试集准备：分类测试集（220 条）与敏感测试集（20 条）均由开发者创建，Phase 1 开始前完成，标注方式为人工标注正确类型，标注质量通过双人交叉抽查 10% 样本
 
 **AC-06：代码片段被识别为 code 类型**
 
@@ -1091,7 +1092,7 @@ struct DebugConfig {
 - **场景**：用户复制 `sk-proj-abcdef1234567890abcdef1234567890abcdef`
 - **预期**：识别为敏感内容后不入库，弹出通知提示"已忽略敏感内容"
 - **验证方式**：
-  - 自动化：XCTest 调用 `SensitiveDetector.detect("sk-proj-...")`，断言返回 `isSensitive == true`；调用 `EncryptedStore.save()`，断言数据库无新增记录
+  - 自动化：XCTest 调用 `SensitiveDetector.detect("sk-proj-...")`，断言返回 `true`；调用 `EncryptedStore.save()`，断言数据库无新增记录
   - 手动：复制 Token，观察通知弹出
 
 #### F1.3 自然语言语义搜索
@@ -1187,7 +1188,7 @@ struct DebugConfig {
 - **场景**：用户复制内容、搜索、本地分类全流程
 - **预期**：除用户主动点击"一键处理"调用云端 LLM 外，所有数据停留在本机
 - **验证方式**：
-  - 自动化：在 XCTest 中通过自定义 URLProtocol 拦截所有出站请求，断言请求 URL 仅命中 LLM API 域名白名单（openai.com / zhipu.ai / tongyi.aliyun.com / deepseek.com）
+  - 自动化：在 XCTest 中通过自定义 URLProtocol 拦截所有出站请求，断言请求 URL 仅命中 LLM API 域名白名单（api.openai.com / open.bigmodel.cn / dashscope.aliyuncs.com / api.deepseek.com，与 5.2.4 节实际 API 端点一致）
   - 手动：用 Charles/Proxyman 抓包验证
 
 #### F1.6 隐私保护
@@ -1356,12 +1357,9 @@ ClipMindTests/
     {
       "content": "https://developer.apple.com/documentation/swiftui",
       "expected_type": "link"
-    },
-    {
-      "content": "sk-proj-abcdef1234567890abcdef1234567890",
-      "expected_type": "sensitive"
     }
-    // ... 每种类型 20 条，共 240 条
+    // ... 11 种入库类型，每种 20 条，共 220 条
+    // 注：敏感内容样本（sensitive）单独存放于 sensitive_samples.json，由 AC-08 SensitiveDetector 测试覆盖
   ]
 }
 ```
@@ -1621,9 +1619,9 @@ swiftlint lint --strict
 |--------|------|
 | LocalEmbeddingService.swift | Core ML/MLX 本地嵌入模型封装 |
 | 嵌入模型文件 | all-MiniLM-L6-v2 转换为 .mlmodelc |
-| ClassificationService.swift | 12 类型向量匹配分类 |
+| ClassificationService.swift | 11 种入库类型向量匹配分类 |
 | SearchService.swift | 余弦相似度搜索 + Top-N |
-| 分类测试集 | 240 条样本（每种类型 20 条） |
+| 分类测试集 | 220 条样本（11 种入库类型 × 20 条）+ 20 条敏感样本（sensitive_samples.json） |
 | 搜索测试集 | 50 个查询 + 标注答案 |
 | popover 分类标签 UI | 类型标签展示 |
 | 主窗口搜索框 UI | 搜索输入 + 结果展示 |
@@ -1831,3 +1829,4 @@ flowchart LR
 |------|------|---------|
 | v1.0 | 2026-07-12 | 初始版本，初赛 MVP 设计规范，覆盖 F1.1-F1.7 全部功能，包含 25 条 AC、5 阶段拆分、12 种分类类型、3 个状态机、9 个用户流程图 |
 | v1.1 | 2026-07-12 | 修复 3 轮审查发现的 13 项必须修复问题 + YAGNI 清理 |
+| v1.2 | 2026-07-12 | 修复第二轮审查：AC-19 域名白名单与实际 API 端点对齐；AC-05 分类测试集改为 11 种入库类型 220 条 + 敏感样本独立 20 条；统一 11 种入库类型表述 |
