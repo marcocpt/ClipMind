@@ -11,7 +11,7 @@ struct ClipMindApp: App {
         .defaultSize(width: 900, height: 600)
 
         Settings {
-            EmptyView()
+            SettingsView()
         }
     }
 }

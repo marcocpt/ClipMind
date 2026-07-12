@@ -73,7 +73,11 @@ struct MainWindow: View {
         }
     }
 
+    /// 打开设置面板。
+    ///
+    /// 通过 macOS 13 的 `showSettingsWindow:` 选择器触发 SwiftUI Settings 场景。
+    /// 部署目标为 macOS 13.0，无需降级到已废弃的 `showPreferencesWindow:`。
     private func openSettings() {
-        // 将在 T2.6 实现
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 }
