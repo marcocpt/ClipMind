@@ -93,15 +93,25 @@ final class EncryptedStore {
     }
 
     /// 语义搜索：加载所有 embeddings → 计算余弦相似度 → 返回 Top-N
-    func search(query: [Float], limit: Int = 5) throws -> [ClipItem] {
+    /// - Parameters:
+    ///   - query: 查询向量
+    ///   - limit: 返回结果数量
+    ///   - sourceApp: 可选来源 App 过滤（bundle ID 或 appName）
+    /// - Returns: 按相似度降序排列的 ClipItem 数组
+    func search(query: [Float], limit: Int = 5, sourceApp: String? = nil) throws -> [ClipItem] {
         guard !query.isEmpty else { return [] }
 
         let queryNorm = sqrt(query.reduce(Float(0)) { $0 + $1 * $1 })
         guard queryNorm > 0 else { return [] }
 
-        let dbQuery = clips
-            .select(idColumn, contentBlob, embeddingsBlob)
+        var dbQuery = clips
+            .select(idColumn, contentBlob, embeddingsBlob, sourceAppColumn)
             .filter(embeddingsBlob != nil)
+
+        if let sourceApp = sourceApp {
+            dbQuery = dbQuery.filter(sourceAppColumn == sourceApp)
+        }
+
         var scored: [(item: ClipItem, score: Float)] = []
         for row in try database.prepare(dbQuery) {
             guard let embBlob = row[embeddingsBlob] else { continue }
