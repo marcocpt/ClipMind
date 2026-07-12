@@ -1,4 +1,4 @@
-> 最后更新：2026-07-12 | 版本：v1.0（基于设计规范 v1.3）
+> 最后更新：2026-07-12 | 版本：v1.1（基于设计规范 v1.3，新增 CI 持续集成配置）
 
 # ClipMind 初赛 MVP 实施计划
 
@@ -205,8 +205,38 @@ fi
 | XCTest | 单元测试 + 性能测试 |
 | XCUITest | UI 自动化测试 |
 | SwiftLint | 代码风格检查（`--strict`） |
+| GitHub Actions | CI 持续集成（自动构建 + 测试 + Lint） |
+| XcodeGen | 从 `project.yml` 生成 Xcode 项目（CI 上自动生成） |
+| xcbeautify | Xcode 构建日志美化（CI 输出可读性） |
 | GitHub Pages | Web 交互预览页部署 |
 | curl | Web 页面可访问性验证 |
+
+### 3.6 CI 持续集成配置
+
+**配置文件**（`.github/workflows/ci.yml`，项目根目录）：
+
+CI 工作流在以下场景自动触发：
+- `push` 到 `main` 或 `feature/**` 分支
+- 向 `main` 发起 `pull_request`
+
+**CI 执行流程**：
+1. Checkout 代码
+2. 安装工具（SwiftLint、XcodeGen、xcbeautify）
+3. 使用 XcodeGen 从 `project.yml` 生成 Xcode 项目
+4. 运行 SwiftLint（`--strict`，使用 github-actions-logging 报告器）
+5. 编译项目（`xcodebuild build`，Debug 配置，禁用代码签名）
+6. 运行测试（`xcodebuild test`，包含 ClipMindTests + ClipMindUITests）
+7. 测试失败时上传 `.xcresult` 测试结果作为 artifact
+
+**CI 运行环境**：
+- Runner：`macos-15`（macOS 15 Sequoia）
+- 超时：30 分钟
+- 并发控制：同一分支的后续推送会取消正在运行的旧 CI
+
+**CI 通过要求**：
+- 所有后续任务（T2.1 起）的测试必须在 CI 上通过后才算完成
+- 提交代码后必须等待 CI 运行完成，CI 通过后方可继续下一个任务
+- CI 失败时需修复问题并重新提交，直至 CI 通过
 
 ---
 
@@ -1346,6 +1376,7 @@ flowchart TD
 - [ ] SwiftLint 检查通过（`swiftlint lint --strict` 无错误）
 - [ ] AC 映射的验收标准已验证（自动化测试通过或手动验证记录）
 - [ ] 代码已提交（`git commit` 触发 pre-commit hook 通过）
+- [ ] **CI 持续集成通过**（GitHub Actions CI 在远程仓库运行通过，推送后等待 CI 完成并确认绿色）
 - [ ] 任务状态更新为 ✅ DONE（在本实施计划文档中标注）
 
 每个 Phase 完成前额外满足：
@@ -1375,7 +1406,7 @@ flowchart TD
 |------|------|------|---------|
 | TODO | 未开始 | ⏸️ | 任务已定义，尚未启动 |
 | DOING | 进行中 | 🔄 | 已在 TRAE Session 中开始执行 |
-| DONE | 已完成 | ✅ | 测试通过 + 编译通过 + SwiftLint 通过 + 已提交 |
+| DONE | 已完成 | ✅ | 测试通过 + 编译通过 + SwiftLint 通过 + 已提交 + CI 通过 |
 | BLOCKED | 阻塞 | ⛔ | 遇到阻塞问题，需要外部输入或决策 |
 
 ### 9.2 状态变更流程
@@ -1393,12 +1424,17 @@ flowchart LR
     F -- 是 --> H{git commit 通过?}
     F -- 否 --> I[修复 Lint]
     I --> B
-    H -- 是 --> J[✅ DONE]
+    H -- 是 --> M{CI 通过?}
     H -- 否 --> K[修复 Hook]
     K --> B
+    M -- 是 --> J[✅ DONE]
+    M -- 否 --> N[修复 CI 失败]
+    N --> B
     B --> L[⛔ BLOCKED]
     L --> B
 ```
+
+**CI 等待规则**：代码推送到远程仓库后，必须等待 GitHub Actions CI 运行完成。仅当 CI 全部步骤（SwiftLint + Build + Test）通过后，任务才能标记为 ✅ DONE。CI 运行期间可准备下一任务的设计，但不能开始下一任务的代码实现。
 
 ### 9.3 文档更新规则
 
@@ -1455,3 +1491,4 @@ flowchart LR
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
 | v1.0 | 2026-07-12 | 初始版本，基于设计规范 v1.3 和测试用例表 v1.1，覆盖 25 条 AC 和 69 个测试用例，拆分 35 个任务（Phase 0: 8 + Phase 1: 9 + Phase 2: 6 + Phase 3: 7 + Phase 4: 5），总工时 105.5h，MVP 兜底路径 92h |
+| v1.1 | 2026-07-12 | 新增 3.6 节 CI 持续集成配置；更新 3.5 节测试工具表加入 GitHub Actions/XcodeGen/xcbeautify；DoD 检查表新增 CI 通过要求；状态变更流程新增 CI 检查节点 |
