@@ -135,8 +135,9 @@ final class APIKeyManager {
             LogCategory.llm.warning("Keychain 数据格式异常 provider=\(provider.rawValue)")
             return nil
         }
-        // 数据由本类的 saveKey 写入（Data(key.utf8)），UTF-8 编码可保证，使用非可选转换
-        return String(decoding: data, as: UTF8.self)
+        // 数据由本类的 saveKey 写入（Data(key.utf8)），UTF-8 编码可保证；
+        // 使用可失败初始化器以满足 SwiftLint optional_data_string_conversion 规则
+        return String(data: data, encoding: .utf8)
     }
 
     /// 删除 API Key（从 Keychain）。
