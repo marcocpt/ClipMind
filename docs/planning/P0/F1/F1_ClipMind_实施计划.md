@@ -322,7 +322,7 @@ fi
 | 输入 | 设计规范 3.9 节交互入口、10.3 节 UI 设计风格 |
 | 输出 | `ClipMind/UI/MenuBar/StatusItemController.swift`、`ClipMind/UI/MenuBar/PopoverView.swift`、`ClipMind/UI/MenuBar/ClipRowView.swift`、`ClipMindUITests/PopoverUITests.swift` |
 | AC 映射 | AC-23（菜单栏图标常驻，点击弹出 popover） |
-| 测试用例映射 | TC-23-01（菜单栏图标常驻）、TC-23-02（点击菜单栏图标弹出 popover）、TC-23-03（popover 手动验证） |
+| 测试用例映射 | TC-01-01（复制文本后 3 秒内出现在 popover）、TC-01-02（复制文本后主窗口历史同步出现）、TC-23-01（菜单栏图标常驻）、TC-23-02（点击菜单栏图标弹出 popover）、TC-23-03（popover 手动验证） |
 | 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindUITests/PopoverUITests` |
 | 工时估算 | 4h |
 | Session | Session-07 |
@@ -398,7 +398,7 @@ fi
 | Session | Session-11 |
 | MVP | ✅ 必做 |
 
-#### T1.4 SearchService.swift
+**TypeEmbeddings.swift 实现说明**：该文件包含 11 种入库类型的预计算嵌入向量常量。实现方式：使用 T1.1 转换后的 CoreML 模型，对每种 ContentType 的代表性文本（如 code 类型用 "func viewDidLoad() { super.viewDidLoad() }"，error 类型用 "Thread 1: Fatal error: Unexpectedly found nil"）生成嵌入向量，将结果硬编码为 Swift 静态常量数组 `[ContentType: [Float]]`。分类时计算输入向量与 11 个类型向量的余弦相似度，取最高分（低于阈值返回 .other）。
 
 | 字段 | 内容 |
 |------|------|
@@ -726,7 +726,7 @@ fi
 |------|------|
 | 任务编号 | T4.1 |
 | 任务名称 | Web 交互预览页（基于 docs/ClipMind.html 增强，4 个交互流程可点击） |
-| 依赖 | T2.5, T3.7 |
+| 依赖 | T2.5, T3.7（可选，MVP 跳过时自动解除） |
 | 输入 | 设计规范 10.3 节 UI 设计风格、3.3~3.6 节用户流程、`docs/ClipMind.html` 视觉原型 |
 | 输出 | `docs/web/index.html`、`docs/web/styles.css`、`docs/web/script.js` |
 | AC 映射 | AC-25（Web 交互预览页可访问且模拟核心流程） |
@@ -774,7 +774,7 @@ fi
 |------|------|
 | 任务编号 | T4.4 |
 | 任务名称 | 截图 + Session ID 收集（≥ 3 张截图 + ≥ 3 个 Session ID） |
-| 依赖 | T2.5, T3.7 |
+| 依赖 | T2.5, T3.7（可选，MVP 跳过时自动解除） |
 | 输入 | 开发过程 TRAE Session 记录、各 Phase 完成状态 |
 | 输出 | `docs/planning/P0/F1/screenshots/` 目录（≥ 3 张截图）、`docs/planning/P0/F1/session-ids.md`（≥ 3 个 Session ID 清单） |
 | AC 映射 | AC-25（间接，截图和 Session ID 是初赛硬性要求） |
@@ -790,7 +790,7 @@ fi
 |------|------|
 | 任务编号 | T4.5 |
 | 任务名称 | 最终 .app 构建（Universal Binary + ad-hoc 签名） |
-| 依赖 | T3.7, T4.1 |
+| 依赖 | T3.7（可选，MVP 跳过时自动解除）, T4.1 |
 | 输入 | 完整 ClipMind 项目代码、设计规范 6.1.2 节架构支持（Universal Binary） |
 | 输出 | `build/ClipMind.app`（Universal Binary，ad-hoc 签名） |
 | AC 映射 | AC-25（间接，.app 是初赛交付物）、AC-19（间接，最终构建验证数据不出本机） |
@@ -1032,6 +1032,20 @@ flowchart TD
 | Phase 4 | 12h | 12h | 0h |
 | **合计** | **105.5h** | **92h** | **13.5h** |
 
+### 6.6 MVP 依赖解除规则
+
+当 MVP 路径跳过 T3.7（首次启动引导）时，原本依赖 T3.7 的下游任务需按以下规则自动解除依赖，无需人工干预：
+
+| 下游任务 | 原依赖 | MVP 解除后依赖 | 解除说明 |
+|---------|--------|--------------|---------|
+| T4.1 Web 交互预览页 | T2.5, T3.7 | T2.5 | Web 预览页内容不依赖首启引导，可直接基于 T2.5 详情面板 UI 实现 |
+| T4.4 截图 + Session ID 收集 | T2.5, T3.7 | T2.5 | 截图主要展示核心功能（复制/分类/搜索/处理），无需首启引导截图 |
+| T4.5 最终 .app 构建 | T3.7, T4.1 | T4.1 | .app 构建仅需完整代码（T4.1 验证 Web 预览页完成），首启引导代码缺失不影响构建 |
+
+**判定逻辑**：若 T3.7 任务状态为 ⏸️ TODO 且当前执行 MVP 路径，则 T4.1/T4.4/T4.5 自动按上表解除对 T3.7 的依赖；若 T3.7 已完成或非 MVP 路径，则保留原依赖关系。
+
+**验证要求**：MVP 路径下执行 T4.1/T4.4/T4.5 前，需确认 T3.7 任务状态为 ⏸️ TODO（MVP 跳过），并在任务执行记录中标注"依赖解除：T3.7（MVP 跳过）"。
+
 ---
 
 ## 7. 风险与应对
@@ -1089,7 +1103,7 @@ flowchart TD
 
 | AC 编号 | AC 描述 | 覆盖任务 | 测试用例 | 验证框架 |
 |---------|---------|---------|---------|---------|
-| AC-01 | 复制文本后 3 秒内出现在 popover 与主窗口历史 | T0.2, T0.4, T0.6, T0.8 | TC-01-01, TC-01-02, TC-01-03 | XCUITest + 手动 |
+| AC-01 | 复制文本后 3 秒内出现在 popover 与主窗口历史 | T0.2, T0.4, T0.6, T0.7, T0.8 | TC-01-01, TC-01-02, TC-01-03 | XCUITest + 手动 |
 | AC-02 | 复制图片被捕获为缩略图 | T0.4, T0.8 | TC-02-01, TC-02-02 | XCTest + 手动 |
 | AC-03 | 复制文件路径被捕获 | T0.4, T0.8 | TC-03-01, TC-03-02 | XCTest + 手动 |
 | AC-04 | 连续复制相同内容不重复入库 | T0.4 | TC-04-01 | XCTest |
@@ -1119,8 +1133,8 @@ flowchart TD
 
 | TC 编号 | TC 名称 | 覆盖任务 |
 |---------|---------|---------|
-| TC-01-01 | 复制文本后 3 秒内出现在 popover | T0.4, T0.6 |
-| TC-01-02 | 复制文本后主窗口历史同步出现 | T0.8 |
+| TC-01-01 | 复制文本后 3 秒内出现在 popover | T0.4, T0.6, T0.7 |
+| TC-01-02 | 复制文本后主窗口历史同步出现 | T0.7, T0.8 |
 | TC-01-03 | 文本捕获手动验证 | T0.4 |
 | TC-02-01 | 复制图片被捕获为缩略图（单元） | T0.4 |
 | TC-02-02 | 复制图片被捕获为缩略图（UI） | T0.8 |
