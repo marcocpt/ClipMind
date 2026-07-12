@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipMind — AI 剪贴板知识管家</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #0a0a0f;
+    --bg-1: #0f0f17;
+    --bg-2: #14141f;
+    --bg-3: #1a1a28;
+    --surface: rgba(255, 255, 255, 0.03);
+    --surface-hover: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.14);
+    --text-0: #f5f5f7;
+    --text-1: #c7c7d1;
+    --text-2: #8a8a99;
+    --text-3: #5a5a6e;
+    --accent-violet: #8b5cf6;
+    --accent-cyan: #22d3ee;
+    --accent-amber: #fbbf24;
+    --accent-rose: #fb7185;
+    --accent-emerald: #34d399;
+    --grad-primary: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
+    --grad-warm: linear-gradient(135deg, #fb7185 0%, #fbbf24 100%);
+    --grad-cool: linear-gradient(135deg, #34d399 0%, #22d3ee 100%);
+    --shadow-glow: 0 0 80px rgba(139, 92, 246, 0.25);
+    --shadow-card: 0 20px 60px rgba(0, 0, 0, 0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-0);
+    color: var(--text-0);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 背景氛围层 */
+  .ambient-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .ambient-bg::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    left: -10%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 60%);
+    filter: blur(80px);
+    animation: float1 20s ease-in-out infinite;
+  }
+  .ambient-bg::after {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    right: -10%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.12) 0%, transparent 60%);
+    filter: blur(80px);
+    animation: float2 25s ease-in-out infinite;
+  }
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(10%, 10%) scale(1.1); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-10%, -10%) scale(1.1); }
+  }
+
+  /* 噪点纹理 */
+  .noise {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.025;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* 导航栏 */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 18px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(10, 10, 15, 0.6);
+    border-bottom: 1px solid var(--border);
+    transition: all 0.3s ease;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+  }
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--grad-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .logo-mark::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%);
+    animation: shimmer 3s infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .logo-mark svg { width: 18px; height: 18px; position: relative; z-index: 1; }
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--text-1);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+    position: relative;
+  }
+  .nav-links a:hover { color: var(--text-0); }
+  .nav-cta {
+    padding: 9px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 100px;
+    color: var(--text-0);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-cta:hover {
+    background: var(--surface-hover);
+    border-color: var(--accent-violet);
+  }
+
+  /* 通用容器 */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+
+  /* Hero 区域 */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-content {
+    max-width: 1200px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .hero-text { position: relative; }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 100px;
+    font-size: 12px;
+    color: var(--text-1);
+    margin-bottom: 32px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .hero-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-emerald);
+    box-shadow: 0 0 10px var(--accent-emerald);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(48px, 6vw, 84px);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    margin-bottom: 28px;
+  }
+  .hero h1 .accent {
+    font-style: italic;
+    font-weight: 300;
+    background: var(--grad-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero h1 .strike {
+    position: relative;
+    display: inline-block;
+  }
+  .hero h1 .strike::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 55%;
+    height: 4px;
+    background: var(--accent-rose);
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: strikeIn 1.2s 0.8s forwards;
+  }
+  @keyframes strikeIn {
+    to { transform: scaleX(1); }
+  }
+  .hero p.lead {
+    font-size: 18px;
+    color: var(--text-1);
+    line-height: 1.7;
+    margin-bottom: 40px;
+    max-width: 540px;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .btn-primary {
+    padding: 14px 28px;
+    background: var(--grad-primary);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(139, 92, 246, 0.5);
+  }
+  .btn-ghost {
+    padding: 14px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    color: var(--text-0);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-ghost:hover {
+    background: var(--surface-hover);
+    border-color: var(--text-3);
+  }
+  .hero-stats {
+    display: flex;
+    gap: 40px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .stat .num {
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    font-weight: 500;
+    background: var(--grad-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat .label {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-top: 4px;
+  }
+
+  /* Hero 可视化 - 模拟剪贴板界面 */
+  .hero-visual {
+    position: relative;
+    perspective: 1500px;
+  }
+  .clipboard-mock {
+    background: linear-gradient(145deg, rgba(30, 30, 45, 0.9), rgba(20, 20, 30, 0.9));
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow-card), var(--shadow-glow);
+    backdrop-filter: blur(20px);
+    transform: rotateY(-8deg) rotateX(4deg);
+    transition: transform 0.4s ease;
+    position: relative;
+  }
+  .clipboard-mock:hover {
+    transform: rotateY(-4deg) rotateX(2deg);
+  }
+  .clipboard-mock::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), transparent 40%, transparent 60%, rgba(34, 211, 238, 0.4));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  .mock-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mock-title {
+    font-size: 13px;
+    color: var(--text-1);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mock-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .mock-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .mock-search {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .mock-search .cursor {
+    width: 1px;
+    height: 14px;
+    background: var(--accent-cyan);
+    animation: blink 1s infinite;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+  .clip-item {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .clip-item:hover {
+    border-color: var(--border-strong);
+    transform: translateX(4px);
+  }
+  .clip-item .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .tag-code { background: rgba(139, 92, 246, 0.15); color: var(--accent-violet); }
+  .tag-link { background: rgba(34, 211, 238, 0.15); color: var(--accent-cyan); }
+  .tag-error { background: rgba(251, 113, 133, 0.15); color: var(--accent-rose); }
+  .tag-todo { background: rgba(251, 191, 36, 0.15); color: var(--accent-amber); }
+  .tag-meeting { background: rgba(52, 211, 153, 0.15); color: var(--accent-emerald); }
+  .clip-item .content {
+    font-size: 12px;
+    color: var(--text-1);
+    line-height: 1.5;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .clip-item .meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 10px;
+    color: var(--text-3);
+  }
+
+  /* 浮动 AI 标签 */
+  .floating-tag {
+    position: absolute;
+    background: var(--bg-3);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 11px;
+    color: var(--text-0);
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: floatTag 4s ease-in-out infinite;
+  }
+  .floating-tag.t1 {
+    top: -20px;
+    right: -30px;
+    animation-delay: 0s;
+  }
+  .floating-tag.t2 {
+    bottom: 40px;
+    left: -40px;
+    animation-delay: 1.5s;
+  }
+  .floating-tag.t3 {
+    bottom: -20px;
+    right: 20px;
+    animation-delay: 3s;
+  }
+  @keyframes floatTag {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .floating-tag .icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 章节通用样式 */
+  section {
+    padding: 120px 48px;
+    position: relative;
+  }
+  .section-header {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto 80px;
+  }
+  .section-label {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-violet);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding: 6px 14px;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 100px;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(36px, 4.5vw, 56px);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+  }
+  .section-title .italic {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent-violet);
+  }
+  .section-subtitle {
+    font-size: 17px;
+    color: var(--text-1);
+    line-height: 1.7;
+  }
+
+  /* 痛点区域 */
+  .pain-points {
+    background: linear-gradient(180deg, transparent, rgba(139, 92, 246, 0.03), transparent);
+  }
+  .pain-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .pain-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 24px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .pain-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--grad-warm);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s;
+  }
+  .pain-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-4px);
+  }
+  .pain-card:hover::before { transform: scaleX(1); }
+  .pain-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(251, 113, 133, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: var(--accent-rose);
+  }
+  .pain-card h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text-0);
+  }
+  .pain-card p {
+    font-size: 14px;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  /* 核心功能 - 自动分类 */
+  .feature-showcase {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto 120px;
+  }
+  .feature-showcase.reverse {
+    direction: rtl;
+  }
+  .feature-showcase.reverse > * { direction: ltr; }
+  .feature-text .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-cyan);
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+  .feature-text h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 42px;
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+  .feature-text h2 .italic {
+    font-style: italic;
+    color: var(--accent-cyan);
+  }
+  .feature-text p {
+    font-size: 16px;
+    color: var(--text-1);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .feature-list {
+    list-style: none;
+    margin-top: 24px;
+  }
+  .feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    font-size: 14px;
+    color: var(--text-1);
+  }
+  .feature-list .check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--accent-emerald);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* 分类可视化 */
+  .classify-visual {
+    background: linear-gradient(145deg, rgba(30, 30, 45, 0.6), rgba(20, 20, 30, 0.6));
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(20px);
+  }
+  .classify-input {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-1);
+    line-height: 1.6;
+    position: relative;
+  }
+  .classify-input .label-top {
+    font-size: 10px;
+    color: var(--text-3);
+    margin-bottom: 8px;
+    font-family: 'Noto Sans SC', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .classify-arrow {
+    text-align: center;
+    color: var(--accent-violet);
+    margin: 12px 0;
+    font-size: 20px;
+  }
+  .classify-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .classify-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    transition: all 0.3s;
+  }
+  .classify-card.active {
+    border-color: var(--accent-violet);
+    background: rgba(139, 92, 246, 0.08);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  }
+  .classify-card .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .classify-card .preview {
+    font-size: 11px;
+    color: var(--text-2);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 搜索可视化 */
+  .search-visual {
+    background: linear-gradient(145deg, rgba(30, 30, 45, 0.6), rgba(20, 20, 30, 0.6));
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(20px);
+  }
+  .search-bar {
+    background: var(--bg-2);
+    border: 1px solid var(--accent-violet);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+  }
+  .search-bar .query {
+    font-size: 14px;
+    color: var(--text-0);
+    flex: 1;
+  }
+  .search-bar .query .highlight {
+    background: rgba(139, 92, 246, 0.25);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent-violet);
+  }
+  .search-result {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .search-result .relevance {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--accent-violet);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+  }
+  .search-result .info { flex: 1; }
+  .search-result .title {
+    font-size: 13px;
+    color: var(--text-0);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .search-result .snippet {
+    font-size: 11px;
+    color: var(--text-2);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.5;
+  }
+  .search-result .snippet em {
+    color: var(--accent-amber);
+    font-style: normal;
+  }
+
+  /* 一键处理 */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    max-width: 1200px;
+    margin: 60px auto 0;
+  }
+  .action-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    transition: all 0.3s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .action-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: var(--grad-primary);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+  }
+  .action-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-card);
+  }
+  .action-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .action-icon.v { background: rgba(139, 92, 246, 0.15); color: var(--accent-violet); }
+  .action-icon.c { background: rgba(34, 211, 238, 0.15); color: var(--accent-cyan); }
+  .action-icon.a { background: rgba(251, 191, 36, 0.15); color: var(--accent-amber); }
+  .action-icon.e { background: rgba(52, 211, 153, 0.15); color: var(--accent-emerald); }
+  .action-card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .action-card p {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  /* 场景展示 */
+  .scenarios {
+    background: linear-gradient(180deg, transparent, rgba(34, 211, 238, 0.02), transparent);
+  }
+  .scenario-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 60px;
+    flex-wrap: wrap;
+  }
+  .scenario-tab {
+    padding: 12px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--text-1);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .scenario-tab.active {
+    background: var(--grad-primary);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35);
+  }
+  .scenario-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+  .scenario-content.active { display: grid; }
+  .scenario-info .tag-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-cyan);
+    margin-bottom: 16px;
+    letter-spacing: 0.1em;
+  }
+  .scenario-info h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 38px;
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+  .scenario-info p {
+    font-size: 16px;
+    color: var(--text-1);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .scenario-steps {
+    list-style: none;
+  }
+  .scenario-steps li {
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .scenario-steps li:last-child { border-bottom: none; }
+  .scenario-steps .num {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--accent-violet);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 32px;
+  }
+  .scenario-steps .text {
+    font-size: 14px;
+    color: var(--text-1);
+    line-height: 1.5;
+  }
+  .scenario-steps .text strong {
+    color: var(--text-0);
+    font-weight: 600;
+  }
+
+  /* 场景可视化 */
+  .scenario-visual {
+    background: linear-gradient(145deg, rgba(30, 30, 45, 0.6), rgba(20, 20, 30, 0.6));
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(20px);
+  }
+  .scenario-window {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .scenario-window .win-bar {
+    background: var(--bg-3);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-2);
+  }
+  .scenario-window .win-bar .dots {
+    display: flex;
+    gap: 5px;
+    margin-right: 8px;
+  }
+  .scenario-window .win-bar .dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .scenario-window .win-body {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-1);
+    line-height: 1.7;
+  }
+  .code-line { display: block; }
+  .code-comment { color: var(--text-3); }
+  .code-keyword { color: var(--accent-violet); }
+  .code-string { color: var(--accent-amber); }
+  .code-error { color: var(--accent-rose); }
+  .code-success { color: var(--accent-emerald); }
+
+  /* 隐私保护 */
+  .privacy-section {
+    background: linear-gradient(180deg, transparent, rgba(52, 211, 153, 0.03), transparent);
+  }
+  .privacy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .privacy-visual {
+    position: relative;
+  }
+  .shield-core {
+    width: 280px;
+    height: 280px;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .shield-ring {
+    position: absolute;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    animation: rotate 20s linear infinite;
+  }
+  .shield-ring.r1 { width: 100%; height: 100%; }
+  .shield-ring.r2 { width: 75%; height: 75%; animation-direction: reverse; animation-duration: 15s; }
+  .shield-ring.r3 { width: 50%; height: 50%; animation-duration: 10s; }
+  @keyframes rotate {
+    to { transform: rotate(360deg); }
+  }
+  .shield-ring .dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .shield-center {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(34, 211, 238, 0.2));
+    border: 1px solid var(--accent-emerald);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 60px rgba(52, 211, 153, 0.3);
+    position: relative;
+    z-index: 2;
+  }
+  .privacy-features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+  }
+  .privacy-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .privacy-item .icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--accent-emerald);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .privacy-item .text h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .privacy-item .text p {
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+
+  /* 路线图 */
+  .roadmap {
+    background: linear-gradient(180deg, transparent, rgba(139, 92, 246, 0.03));
+  }
+  .timeline {
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--accent-violet), var(--accent-cyan), transparent);
+    transform: translateX(-50%);
+  }
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    gap: 0;
+    margin-bottom: 60px;
+    align-items: center;
+  }
+  .timeline-item:nth-child(even) .timeline-content {
+    grid-column: 3;
+    text-align: left;
+  }
+  .timeline-item:nth-child(odd) .timeline-content {
+    grid-column: 1;
+    text-align: right;
+  }
+  .timeline-dot {
+    grid-column: 2;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--bg-0);
+    border: 2px solid var(--accent-violet);
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  }
+  .timeline-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s;
+  }
+  .timeline-content:hover {
+    border-color: var(--border-strong);
+    transform: scale(1.02);
+  }
+  .timeline-phase {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-violet);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .timeline-content h4 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  .timeline-content p {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  /* CTA 区域 */
+  .cta-section {
+    text-align: center;
+    padding: 140px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 60%);
+    transform: translate(-50%, -50%);
+    filter: blur(60px);
+    z-index: -1;
+  }
+  .cta-content {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .cta-content h2 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(40px, 5vw, 64px);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+  .cta-content h2 .italic {
+    font-style: italic;
+    background: var(--grad-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .cta-content p {
+    font-size: 18px;
+    color: var(--text-1);
+    margin-bottom: 40px;
+    line-height: 1.7;
+  }
+
+  /* Footer */
+  footer {
+    padding: 60px 48px 40px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-1);
+  }
+  .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .footer-brand .logo {
+    font-size: 18px;
+  }
+  .footer-meta {
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .footer-meta .sep {
+    margin: 0 12px;
+    color: var(--text-3);
+  }
+
+  /* 滚动动画 */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* 响应式 */
+  @media (max-width: 968px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .container { padding: 0 24px; }
+    .hero { padding: 100px 24px 60px; }
+    .hero-content { grid-template-columns: 1fr; gap: 60px; }
+    section { padding: 80px 24px; }
+    .pain-grid { grid-template-columns: repeat(2, 1fr); }
+    .feature-showcase { grid-template-columns: 1fr; gap: 48px; }
+    .feature-showcase.reverse { direction: ltr; }
+    .actions-grid { grid-template-columns: repeat(2, 1fr); }
+    .scenario-content { grid-template-columns: 1fr; gap: 40px; }
+    .privacy-grid { grid-template-columns: 1fr; gap: 48px; }
+    .timeline::before { left: 20px; }
+    .timeline-item { grid-template-columns: 40px 1fr; }
+    .timeline-item:nth-child(even) .timeline-content,
+    .timeline-item:nth-child(odd) .timeline-content {
+      grid-column: 2;
+      text-align: left;
+    }
+    .timeline-dot { grid-column: 1; }
+    .hero-stats { flex-wrap: wrap; gap: 24px; }
+  }
+  @media (max-width: 600px) {
+    .pain-grid { grid-template-columns: 1fr; }
+    .actions-grid { grid-template-columns: 1fr; }
+    .privacy-features { grid-template-columns: 1fr; }
+    .classify-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="ambient-bg"></div>
+<div class="noise"></div>
+
+<!-- 导航栏 -->
+<nav>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/>
+        <path d="M9 12h6M9 16h4"/>
+      </svg>
+    </div>
+    ClipMind
+  </div>
+  <ul class="nav-links">
+    <li><a href="#problem">痛点</a></li>
+    <li><a href="#features">功能</a></li>
+    <li><a href="#scenarios">场景</a></li>
+    <li><a href="#privacy">隐私</a></li>
+    <li><a href="#roadmap">路线</a></li>
+  </ul>
+  <a href="#cta" class="nav-cta">
+    立即体验
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </a>
+</nav>
+
+<!-- Hero 区域 -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        macOS · AI Clipboard · v1.0
+      </div>
+      <h1>
+        让剪贴板<br>
+        <span class="strike">用完就丢</span><br>
+        变成你的 <span class="accent">第二大脑</span>
+      </h1>
+      <p class="lead">
+        ClipMind 把 macOS 系统剪贴板升级为会自动分类、总结、搜索和复用的 AI 信息库。你复制过的代码、链接、报错、文案、会议内容，都能被理解、被找回、被再次使用。
+      </p>
+      <div class="hero-actions">
+        <a href="#features" class="btn-primary">
+          探索功能
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#scenarios" class="btn-ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+          观看演示
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="num">12+</div>
+          <div class="label">内容类型识别</div>
+        </div>
+        <div class="stat">
+          <div class="num">0.3s</div>
+          <div class="label">平均分类耗时</div>
+        </div>
+        <div class="stat">
+          <div class="num">100%</div>
+          <div class="label">本地优先存储</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="clipboard-mock">
+        <div class="mock-header">
+          <div class="mock-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            ClipMind 历史
+          </div>
+          <div class="mock-dots">
+            <span style="background:#fb7185"></span>
+            <span style="background:#fbbf24"></span>
+            <span style="background:#34d399"></span>
+          </div>
+        </div>
+        <div class="mock-search">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          搜索剪贴历史...
+          <span class="cursor"></span>
+        </div>
+
+        <div class="clip-item">
+          <span class="tag tag-code">CODE</span>
+          <div class="content">func application(_ application: UIApplication, didFinishLaunchingWithOptions...</div>
+          <div class="meta">
+            <span>Xcode · AppDelegate.swift</span>
+            <span>2 分钟前</span>
+          </div>
+        </div>
+
+        <div class="clip-item">
+          <span class="tag tag-error">ERROR</span>
+          <div class="content">Thread 1: Fatal error: Unexpectedly found nil while unwrapping...</div>
+          <div class="meta">
+            <span>已自动总结 · 含解决方案</span>
+            <span>12 分钟前</span>
+          </div>
+        </div>
+
+        <div class="clip-item">
+          <span class="tag tag-link">LINK</span>
+          <div class="content">developer.apple.com/documentation/swiftui/navigationstack</div>
+          <div class="meta">
+            <span>已提取标题与摘要</span>
+            <span>1 小时前</span>
+          </div>
+        </div>
+
+        <div class="clip-item">
+          <span class="tag tag-meeting">MEETING</span>
+          <div class="content">产品周会 06.18 - 下周需交付登录模块、支付联调...</div>
+          <div class="meta">
+            <span>已提取 5 项待办</span>
+            <span>3 小时前</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="floating-tag t1">
+        <div class="icon" style="background:rgba(139,92,246,0.2);color:var(--accent-violet)">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        自动分类完成
+      </div>
+      <div class="floating-tag t2">
+        <div class="icon" style="background:rgba(34,211,238,0.2);color:var(--accent-cyan)">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+        </div>
+        AI 总结中
+      </div>
+      <div class="floating-tag t3">
+        <div class="icon" style="background:rgba(52,211,153,0.2);color:var(--accent-emerald)">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        本地加密
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 痛点区域 -->
+<section id="problem" class="pain-points">
+  <div class="section-header reveal">
+    <div class="section-label">THE PROBLEM</div>
+    <h2 class="section-title">复制了，<span class="italic">却找不回</span></h2>
+    <p class="section-subtitle">
+      普通剪贴板只是临时容器。每天复制的大量信息，真正需要时却早已被覆盖、被遗忘，只能重新搜索、重新整理。
+    </p>
+  </div>
+
+  <div class="pain-grid">
+    <div class="pain-card reveal">
+      <div class="pain-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </div>
+      <h3>信息被覆盖</h3>
+      <p>剪贴板只能保存最近一条，重要的报错、链接、文案瞬间被新内容冲掉，再也找不回来。</p>
+    </div>
+
+    <div class="pain-card reveal">
+      <div class="pain-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></svg>
+      </div>
+      <h3>无法被理解</h3>
+      <p>传统历史只按时间排列，不能识别内容是代码、报错还是会议纪要，更不能按含义搜索。</p>
+    </div>
+
+    <div class="pain-card reveal">
+      <div class="pain-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+      </div>
+      <h3>需手动整理</h3>
+      <p>复制长文本后还要自己总结、翻译、改写、提取要点，重复劳动消耗大量专注时间。</p>
+    </div>
+
+    <div class="pain-card reveal">
+      <div class="pain-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h3>隐私无保护</h3>
+      <p>密码、Token、验证码常被临时复制，普通工具全部记录在案，存在敏感信息泄露风险。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 核心功能 - 自动分类 -->
+<section id="features">
+  <div class="section-header reveal">
+    <div class="section-label">CORE FEATURE 01</div>
+    <h2 class="section-title">复制即<span class="italic">理解</span></h2>
+    <p class="section-subtitle">
+      ClipMind 在你复制的瞬间，自动识别内容类型并打上标签。代码、链接、报错、文章、待办、会议纪要，各归其位。
+    </p>
+  </div>
+
+  <div class="feature-showcase reveal">
+    <div class="feature-text">
+      <div class="label">AUTO CLASSIFICATION</div>
+      <h2>12+ 类型<br>自动<span class="italic">智能识别</span></h2>
+      <p>
+        基于本地 AI 模型与规则引擎，ClipMind 能在 0.3 秒内判断剪贴内容的类型，并自动打上语义标签。无需手动整理，复制即可被结构化。
+      </p>
+      <ul class="feature-list">
+        <li>
+          <span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+          代码片段：自动识别语言（Swift / Python / JS / Shell 等）
+        </li>
+        <li>
+          <span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+          链接：提取标题、摘要、Favicon
+        </li>
+        <li>
+          <span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+          报错日志：定位关键错误行与堆栈
+        </li>
+        <li>
+          <span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+          会议纪要：自动提取待办与负责人
+        </li>
+        <li>
+          <span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+          密码 / Token：识别后自动忽略并提醒
+        </li>
+      </ul>
+    </div>
+
+    <div class="classify-visual">
+      <div class="classify-input">
+        <div class="label-top">刚复制的内容</div>
+        Thread 1: Fatal error: Unexpectedly found nil while unwrapping an Optional value<br>
+        &nbsp; at MyApp.ViewController.viewDidLoad() (ViewController.swift:42)
+      </div>
+      <div class="classify-arrow">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+      </div>
+      <div class="classify-grid">
+        <div class="classify-card">
+          <span class="tag tag-code" style="background:rgba(139,92,246,0.15);color:var(--accent-violet)">CODE</span>
+          <div class="preview">func viewDidLoad()</div>
+        </div>
+        <div class="classify-card">
+          <span class="tag tag-link" style="background:rgba(34,211,238,0.15);color:var(--accent-cyan)">LINK</span>
+          <div class="preview">apple.com/swiftui</div>
+        </div>
+        <div class="classify-card active">
+          <span class="tag tag-error" style="background:rgba(251,113,133,0.15);color:var(--accent-rose)">ERROR</span>
+          <div class="preview">Fatal error: nil...</div>
+        </div>
+        <div class="classify-card">
+          <span class="tag tag-todo" style="background:rgba(251,191,36,0.15);color:var(--accent-amber)">TODO</span>
+          <div class="preview">下周交付登录模块</div>
+        </div>
+        <div class="classify-card">
+          <span class="tag tag-meeting" style="background:rgba(52,211,153,0.15);color:var(--accent-emerald)">MEETING</span>
+          <div class="preview">产品周会 06.18</div>
+        </div>
+        <div class="classify-card">
+          <span class="tag" style="background:rgba(251,113,133,0.15);color:var(--accent-rose)">SECRET</span>
+          <div class="preview">••••••••（已忽略）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自然语言搜索 -->
+  <div class="feature-showcase reverse reveal">
+    <div class="feature-text">
+      <div class="label">NATURAL LANGUAGE SEARCH</div>
+      <h2>说人话，<br>就能<span class="italic">找到</span></h2>
+      <p>
+        不再记关键词、不再翻时间轴。用自然语言描述你记得的片段，ClipMind 用语义搜索从历史中精准召回，并按相关度排序。
+      </p>
+      <ul class="feature-list">
+        <li>
+          <span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+          支持模糊描述："上次那个窗口管理的报错"
+        </li>
+        <li>
+          <span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+          跨语言搜索：中文查询匹配英文内容
+        </li>
+        <li>
+          <span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+          时间维度："上周复制的那段接口文档"
+        </li>
+        <li>
+          <span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+          来源过滤：仅在某 App 内复制的内容
+        </li>
+      </ul>
+    </div>
+
+    <div class="search-visual">
+      <div class="search-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-violet)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <div class="query">"<span class="highlight">上次那个窗口管理</span>的报错"</div>
+      </div>
+
+      <div class="search-result">
+        <div class="relevance">98%</div>
+        <div class="info">
+          <div class="title">NSWindowController 崩溃日志</div>
+          <div class="snippet">Thread 1: Fatal error: <em>NSWindowController</em> not initialized... at <em>WindowManager</em>.swift:87</div>
+        </div>
+      </div>
+
+      <div class="search-result">
+        <div class="relevance">84%</div>
+        <div class="info">
+          <div class="title">SwiftUI 窗口生命周期问题</div>
+          <div class="snippet">...<em>window</em> management in SwiftUI requires NSWindowController... <em>error</em>: invalid state</div>
+        </div>
+      </div>
+
+      <div class="search-result">
+        <div class="relevance">71%</div>
+        <div class="info">
+          <div class="title">StackOverflow 答案片段</div>
+          <div class="snippet">How to fix <em>window</em> controller <em>error</em> on macOS 14... use NSWindowController</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 一键处理 -->
+  <div class="section-header reveal" style="margin-top:120px">
+    <div class="section-label">CORE FEATURE 03</div>
+    <h2 class="section-title">一键<span class="italic">处理</span></h2>
+    <p class="section-subtitle">
+      复制之后，不必再开第二个工具。总结、翻译、改写、提取待办，全部在 ClipMind 内一键完成。
+    </p>
+  </div>
+
+  <div class="actions-grid">
+    <div class="action-card reveal">
+      <div class="action-icon v">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13l2 2 4-4"/></svg>
+      </div>
+      <h3>智能总结</h3>
+      <p>长文章、长报错、长会议，一键提炼核心要点，节省 80% 阅读时间。</p>
+    </div>
+
+    <div class="action-card reveal">
+      <div class="action-icon c">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg>
+      </div>
+      <h3>即时翻译</h3>
+      <p>中英日韩多语言互译，技术术语保留原文，阅读外文资料不再卡壳。</p>
+    </div>
+
+    <div class="action-card reveal">
+      <div class="action-icon a">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </div>
+      <h3>智能改写</h3>
+      <p>调整语气、优化表达、压缩字数，让文案、邮件、文档瞬间更专业。</p>
+    </div>
+
+    <div class="action-card reveal">
+      <div class="action-icon e">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <h3>提取待办</h3>
+      <p>从会议纪要、聊天记录、需求文档中自动抽取任务项与负责人。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 场景展示 -->
+<section id="scenarios" class="scenarios">
+  <div class="section-header reveal">
+    <div class="section-label">USE CASES</div>
+    <h2 class="section-title">三类场景，<span class="italic">一种解法</span></h2>
+    <p class="section-subtitle">
+      无论是写代码、做办公还是搞学习，ClipMind 都能让复制过的信息真正为你所用。
+    </p>
+  </div>
+
+  <div class="scenario-tabs reveal">
+    <div class="scenario-tab active" data-tab="dev">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      开发者
+    </div>
+    <div class="scenario-tab" data-tab="office">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      办公人士
+    </div>
+    <div class="scenario-tab" data-tab="study">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      学生学者
+    </div>
+  </div>
+
+  <!-- 开发者场景 -->
+  <div class="scenario-content active" data-content="dev">
+    <div class="scenario-info">
+      <div class="tag-line">FOR DEVELOPERS</div>
+      <h3>报错不再<br>反复搜索</h3>
+      <p>
+        复制 Xcode 报错、StackOverflow 答案、接口文档，ClipMind 自动归类并关联。下次遇到类似问题，一句话就能找回上次的解决方案。
+      </p>
+      <ol class="scenario-steps">
+        <li>
+          <span class="num">01</span>
+          <span class="text"><strong>复制报错</strong>：从 Xcode 复制一段崩溃日志，自动识别为 ERROR 类型</span>
+        </li>
+        <li>
+          <span class="num">02</span>
+          <span class="text"><strong>AI 分析</strong>：自动定位关键错误行，给出可能原因与修复建议</span>
+        </li>
+        <li>
+          <span class="num">03</span>
+          <span class="text"><strong>关联方案</strong>：复制 StackOverflow 答案时，自动与之前的报错关联</span>
+        </li>
+        <li>
+          <span class="num">04</span>
+          <span class="text"><strong>语义召回</strong>：下次搜索"上次那个窗口管理报错"，秒级找回</span>
+        </li>
+      </ol>
+    </div>
+
+    <div class="scenario-visual">
+      <div class="scenario-window">
+        <div class="win-bar">
+          <div class="dots">
+            <span style="background:#fb7185"></span>
+            <span style="background:#fbbf24"></span>
+            <span style="background:#34d399"></span>
+          </div>
+          AppDelegate.swift — Xcode
+        </div>
+        <div class="win-body">
+          <span class="code-line"><span class="code-comment">// 应用启动入口</span></span>
+          <span class="code-line"><span class="code-keyword">func</span> application(_ app: UIApplication,</span>
+          <span class="code-line">  didFinishLaunchingWithOptions opts: ...) {</span>
+          <span class="code-line">  <span class="code-keyword">let</span> window = UIWindow(frame: screen.bounds)</span>
+          <span class="code-line">  window.rootViewController = NavController()</span>
+          <span class="code-line">  window.makeKeyAndVisible()</span>
+          <span class="code-line">  <span class="code-error">⚠ Thread 1: Fatal error:</span></span>
+          <span class="code-line">  <span class="code-error">  Unexpectedly found nil while</span></span>
+          <span class="code-line">  <span class="code-error">  unwrapping Optional value</span></span>
+          <span class="code-line">  <span class="code-comment">// → ClipMind 已自动捕获</span></span>
+          <span class="code-line">  <span class="code-success">// → 已生成修复建议</span></span>
+          <span class="code-line">}</span>
+        </div>
+      </div>
+      <div class="scenario-window">
+        <div class="win-bar">
+          <div class="dots">
+            <span style="background:#fb7185"></span>
+            <span style="background:#fbbf24"></span>
+            <span style="background:#34d399"></span>
+          </div>
+          ClipMind · 自动分析
+        </div>
+        <div class="win-body" style="font-family:'Noto Sans SC',sans-serif;font-size:13px">
+          <div style="color:var(--accent-rose);margin-bottom:8px">▸ 错误类型：Optional 强制解包为 nil</div>
+          <div style="color:var(--text-1);margin-bottom:8px">▸ 位置：ViewController.swift:42</div>
+          <div style="color:var(--accent-emerald);margin-bottom:8px">▸ 建议：使用 if let / guard let 安全解包</div>
+          <div style="color:var(--text-2);font-size:11px">▸ 已关联 3 条相似历史记录</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 办公场景 -->
+  <div class="scenario-content" data-content="office">
+    <div class="scenario-info">
+      <div class="tag-line">FOR OFFICE WORKERS</div>
+      <h3>会议结束<br>待办已就绪</h3>
+      <p>
+        复制会议纪要、需求文档、邮件内容，ClipMind 自动提取待办事项、关键决策和负责人，让跟进不再遗漏。
+      </p>
+      <ol class="scenario-steps">
+        <li>
+          <span class="num">01</span>
+          <span class="text"><strong>复制纪要</strong>：从飞书 / 钉钉复制会议记录，自动识别为 MEETING</span>
+        </li>
+        <li>
+          <span class="num">02</span>
+          <span class="text"><strong>提取待办</strong>：AI 自动抽取任务项、负责人、截止时间</span>
+        </li>
+        <li>
+          <span class="num">03</span>
+          <span class="text"><strong>生成摘要</strong>：长会议一键压缩为 3 句话核心结论</span>
+        </li>
+        <li>
+          <span class="num">04</span>
+          <span class="text"><strong>一键复用</strong>：待办直接粘贴到 Notion / Things / 提醒事项</span>
+        </li>
+      </ol>
+    </div>
+
+    <div class="scenario-visual">
+      <div class="scenario-window">
+        <div class="win-bar">
+          <div class="dots">
+            <span style="background:#fb7185"></span>
+            <span style="background:#fbbf24"></span>
+            <span style="background:#34d399"></span>
+          </div>
+          产品周会 06.18 — 飞书文档
+        </div>
+        <div class="win-body" style="font-family:'Noto Sans SC',sans-serif;font-size:12px;color:var(--text-1);line-height:1.7">
+          <div style="margin-bottom:6px">会议时间：2026.06.18 14:00-15:30</div>
+          <div style="margin-bottom:6px">参会人：张三、李四、王五、赵六</div>
+          <div style="margin-bottom:6px;color:var(--text-2">议题：Q2 产品迭代评审</div>
+          <div style="margin-bottom:6px">1. 登录模块需在 06.25 前完成，负责人张三</div>
+          <div style="margin-bottom:6px">2. 支付联调推迟到 06.28，李四跟进</div>
+          <div style="margin-bottom:6px">3. 王五负责下周用户调研问卷设计</div>
+          <div style="color:var(--text-3);font-size:11px">...（共 248 字）</div>
+        </div>
+      </div>
+      <div class="scenario-window">
+        <div class="win-bar">
+          <div class="dots">
+            <span style="background:#fb7185"></span>
+            <span style="background:#fbbf24"></span>
+            <span style="background:#34d399"></span>
+          </div>
+          ClipMind · 待办提取
+        </div>
+        <div class="win-body" style="font-family:'Noto Sans SC',sans-serif;font-size:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="color:var(--accent-emerald)">☐</span>
+            <span>登录模块完成 · <span style="color:var(--accent-amber)">张三</span> · 06.25</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="color:var(--accent-emerald)">☐</span>
+            <span>支付联调跟进 · <span style="color:var(--accent-amber)">李四</span> · 06.28</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="color:var(--accent-emerald)">☐</span>
+            <span>用户调研问卷 · <span style="color:var(--accent-amber)">王五</span> · 下周</span>
+          </div>
+          <div style="color:var(--text-2);font-size:11px;margin-top:12px;padding-top:8px;border-top:1px solid var(--border)">▸ 摘要：评审 Q2 进度，确认登录、支付、调研三项关键任务。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 学习场景 -->
+  <div class="scenario-content" data-content="study">
+    <div class="scenario-info">
+      <div class="tag-line">FOR STUDENTS & RESEARCHERS</div>
+      <h3>资料整理<br>自动沉淀</h3>
+      <p>
+        复制论文段落、英文资料、网页摘录，ClipMind 自动翻译、总结、归类，让学习笔记真正沉淀为个人知识库。
+      </p>
+      <ol class="scenario-steps">
+        <li>
+          <span class="num">01</span>
+          <span class="text"><strong>复制资料</strong>：从 PDF / 网页复制英文段落，自动识别为 ARTICLE</span>
+        </li>
+        <li>
+          <span class="num">02</span>
+          <span class="text"><strong>即时翻译</strong>：一键中英对照，技术术语保留原文</span>
+        </li>
+        <li>
+          <span class="num">03</span>
+          <span class="text"><strong>要点提炼</strong>：长论文一键生成 3-5 句核心摘要</span>
+        </li>
+        <li>
+          <span class="num">04</span>
+          <span class="text"><strong>主题归档</strong>：按学科 / 项目自动归类，写作时一键引用</span>
+        </li>
+      </ol>
+    </div>
+
+    <div class="scenario-visual">
+      <div class="scenario-window">
+        <div class="win-bar">
+          <div class="dots">
+            <span style="background:#fb7185"></span>
+            <span style="background:#fbbf24"></span>
+            <span style="background:#34d399"></span>
+          </div>
+          attention-is-all-you-need.pdf
+        </div>
+        <div class="win-body" style="font-size:11px;line-height:1.7">
+          <span class="code-line"><span class="code-comment">// 已复制段落</span></span>
+          <span class="line">The Transformer follows this overall architecture</span>
+          <span class="line">using stacked self-attention and point-wise, fully</span>
+          <span class="line">connected layers for both the encoder and decoder,</span>
+          <span class="line">shown in the left and right halves of Figure 1,</span>
+          <span class="line">respectively.</span>
+        </div>
+      </div>
+      <div class="scenario-window">
+        <div class="win-bar">
+          <div class="dots">
+            <span style="background:#fb7185"></span>
+            <span style="background:#fbbf24"></span>
+            <span style="background:#34d399"></span>
+          </div>
+          ClipMind · 翻译 + 摘要
+        </div>
+        <div class="win-body" style="font-family:'Noto Sans SC',sans-serif;font-size:12px;line-height:1.7">
+          <div style="color:var(--accent-cyan);margin-bottom:8px">▸ 中文翻译</div>
+          <div style="color:var(--text-1);margin-bottom:12px">Transformer 采用整体架构，编码器与解码器均使用堆叠的自注意力层与全连接层。</div>
+          <div style="color:var(--accent-violet);margin-bottom:8px">▸ 核心摘要</div>
+          <div style="color:var(--text-1);font-size:11px">本文提出 Transformer，摒弃循环与卷积，仅依赖注意力机制，在翻译任务上达到 SOTA。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 隐私保护 -->
+<section id="privacy" class="privacy-section">
+  <div class="section-header reveal">
+    <div class="section-label">PRIVACY FIRST</div>
+    <h2 class="section-title">效率之上，<span class="italic">安心为本</span></h2>
+    <p class="section-subtitle">
+      剪贴板里藏着太多秘密。ClipMind 用本地优先架构与多层识别机制，让你的效率提升不以隐私为代价。
+    </p>
+  </div>
+
+  <div class="privacy-grid">
+    <div class="privacy-visual reveal">
+      <div class="shield-core">
+        <div class="shield-ring r1">
+          <div class="dot" style="background:var(--accent-violet);box-shadow:0 0 10px var(--accent-violet)"></div>
+        </div>
+        <div class="shield-ring r2">
+          <div class="dot" style="background:var(--accent-cyan);box-shadow:0 0 10px var(--accent-cyan)"></div>
+        </div>
+        <div class="shield-ring r3">
+          <div class="dot" style="background:var(--accent-emerald);box-shadow:0 0 10px var(--accent-emerald)"></div>
+        </div>
+        <div class="shield-center">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-emerald)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="privacy-info reveal">
+      <h2 style="font-family:'Fraunces',serif;font-size:38px;font-weight:400;line-height:1.15;margin-bottom:20px;letter-spacing:-0.02em">
+        本地优先<br>
+        <span style="font-style:italic;color:var(--accent-emerald)">端到端可控</span>
+      </h2>
+      <p style="font-size:16px;color:var(--text-1);line-height:1.7;margin-bottom:12px">
+        所有剪贴内容默认存储在本机加密数据库，AI 处理优先使用本地模型。云端能力可选开启，且仅在你明确授权时调用。
+      </p>
+
+      <div class="privacy-features">
+        <div class="privacy-item">
+          <div class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="text">
+            <h4>本地加密存储</h4>
+            <p>AES-256 加密，数据不出本机</p>
+          </div>
+        </div>
+        <div class="privacy-item">
+          <div class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div class="text">
+            <h4>敏感内容识别</h4>
+            <p>密码 / Token / 验证码自动忽略</p>
+          </div>
+        </div>
+        <div class="privacy-item">
+          <div class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+          </div>
+          <div class="text">
+            <h4>应用黑名单</h4>
+            <p>1Password / 银行 App 自动忽略</p>
+          </div>
+        </div>
+        <div class="privacy-item">
+          <div class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </div>
+          <div class="text">
+            <h4>自动清理策略</h4>
+            <p>可设过期时间，定期销毁</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 路线图 -->
+<section id="roadmap" class="roadmap">
+  <div class="section-header reveal">
+    <div class="section-label">ROADMAP</div>
+    <h2 class="section-title">从剪贴板，<span class="italic">到工作流</span></h2>
+    <p class="section-subtitle">
+      ClipMind 不止于剪贴板管理。我们将逐步构建面向专业场景的 AI 工作流工具。
+    </p>
+  </div>
+
+  <div class="timeline">
+    <div class="timeline-item reveal">
+      <div class="timeline-content">
+        <div class="timeline-phase">PHASE 01 · 2026 Q3</div>
+        <h4>ClipMind 1.0</h4>
+        <p>核心剪贴板管理、自动分类、自然语言搜索、一键处理、本地优先存储。面向 macOS 的完整 MVP。</p>
+      </div>
+      <div class="timeline-dot"></div>
+    </div>
+
+    <div class="timeline-item reveal">
+      <div class="timeline-content">
+        <div class="timeline-phase">PHASE 02 · 2026 Q4</div>
+        <h4>场景模板</h4>
+        <p>推出"开发者报错分析""会议纪要""论文阅读""写作素材"等专业模板，一键切换工作流。</p>
+      </div>
+      <div class="timeline-dot"></div>
+    </div>
+
+    <div class="timeline-item reveal">
+      <div class="timeline-content">
+        <div class="timeline-phase">PHASE 03 · 2027 Q1</div>
+        <h4>跨设备同步</h4>
+        <p>端到端加密的 iCloud 同步，让 Mac、iPad、iPhone 上的剪贴板知识库保持一致。</p>
+      </div>
+      <div class="timeline-dot"></div>
+    </div>
+
+    <div class="timeline-item reveal">
+      <div class="timeline-content">
+        <div class="timeline-phase">PHASE 04 · 2027 Q2</div>
+        <h4>AI 工作流引擎</h4>
+        <p>可视化工作流编排，将剪贴内容与外部工具（Notion、Things、GitHub）自动联动，形成个人 AI 助理。</p>
+      </div>
+      <div class="timeline-dot"></div>
+    </div>
+
+    <div class="timeline-item reveal">
+      <div class="timeline-content">
+        <div class="timeline-phase">PHASE 05 · 2027 Q3</div>
+        <h4>订阅制与生态</h4>
+        <p>推出 Pro 订阅，开放模板市场与插件生态，让 ClipMind 成为 macOS 效率工具的核心枢纽。</p>
+      </div>
+      <div class="timeline-dot"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="cta-section">
+  <div class="cta-content reveal">
+    <h2>让每一次复制，<br>都<span class="italic">不再浪费</span></h2>
+    <p>ClipMind 把 macOS 剪贴板从"临时复制工具"升级为"AI 个人知识管家"。<br>复制过的信息，真正变得可找回、可理解、可复用。</p>
+    <div class="hero-actions" style="justify-content:center">
+      <a href="#" class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        下载 ClipMind
+      </a>
+      <a href="#features" class="btn-ghost">
+        查看完整功能
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-content">
+    <div class="footer-brand">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/>
+            <path d="M9 12h6M9 16h4"/>
+          </svg>
+        </div>
+        ClipMind
+      </div>
+    </div>
+    <div class="footer-meta">
+      AI 剪贴板知识管家
+      <span class="sep">·</span>
+      macOS Native
+      <span class="sep">·</span>
+      © 2026 ClipMind
+    </div>
+  </div>
+</footer>
+
+<script>
+  // 滚动揭示动画
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // 场景切换
+  const tabs = document.querySelectorAll('.scenario-tab');
+  const contents = document.querySelectorAll('.scenario-content');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelector(`[data-content="${target}"]`).classList.add('active');
+    });
+  });
+
+  // 分类卡片轮播高亮
+  const classifyCards = document.querySelectorAll('.classify-card');
+  let classifyIndex = 2;
+  setInterval(() => {
+    classifyCards.forEach(c => c.classList.remove('active'));
+    classifyCards[classifyIndex].classList.add('active');
+    classifyIndex = (classifyIndex + 1) % classifyCards.length;
+  }, 2500);
+
+  // 导航栏滚动效果
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      nav.style.padding = '12px 48px';
+      nav.style.background = 'rgba(10, 10, 15, 0.85)';
+    } else {
+      nav.style.padding = '18px 48px';
+      nav.style.background = 'rgba(10, 10, 15, 0.6)';
+    }
+  });
+
+  // 平滑滚动
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href === '#') return;
+      e.preventDefault();
+      const target = document.querySelector(href);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+</body>
+</html>
