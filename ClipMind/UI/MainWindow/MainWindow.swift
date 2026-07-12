@@ -15,7 +15,9 @@ struct MainWindow: View {
                 Divider()
                 contentArea
             }
-            DetailPanel(clip: selectedClip)
+            DetailPanel(clip: selectedClip) { updated in
+                selectedClip = updated
+            }
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -26,6 +28,11 @@ struct MainWindow: View {
             }
         }
         .frame(minWidth: 800, minHeight: 500)
+        .onAppear {
+            if CommandLine.arguments.contains("--UITEST_AUTO_SELECT_FIRST") {
+                selectedClip = allClips.first
+            }
+        }
     }
 
     private var searchPanel: some View {
