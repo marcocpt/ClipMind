@@ -1,4 +1,4 @@
-> 最后更新：2026-07-14 | 版本：v1.6
+> 最后更新：2026-07-14 | 版本：v1.7
 
 # ClipMind 初赛 MVP 设计规范
 
@@ -890,7 +890,7 @@ CREATE TABLE blacklist (
 
 | 权限 | 用途 | 必需性 | Info.plist 键 |
 |------|------|--------|---------------|
-| 辅助功能（Accessibility） | 获取前台 App bundleId | 必需 | 无需 Info.plist 键，通过 TCC 授权（`AXIsProcessTrusted()`） |
+| 辅助功能（Accessibility） | 获取前台 App bundleId | 必需 | 无需 Info.plist 键，通过 TCC 授权（`AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt: true])`，首次启动时弹出系统 TCC 提示并自动加入权限列表） |
 | 通知（Notifications） | 敏感内容忽略提示 | 可选 | 无需 Info.plist 键，通过 `UNUserNotificationCenter` 请求（macOS 10.14+） |
 
 ### 6.2 迁移策略
@@ -1910,3 +1910,4 @@ flowchart LR
 | v1.4 | 2026-07-13 | 第 10 节 UI 可观测性矩阵新增"手动验收证据延后说明"：标注截图/录屏手动验收证据延后至 Phase 4 T4.4 Demo 帖准备时统一补充，Phase 2 期间通过 XCUITest 自动化证据覆盖 UI AC（Layer 1-2 证据层级） |
 | v1.5 | 2026-07-13 | 同步剪贴板捕获管线接线修复：5.2.1 节代码示例更新为实际实现；3.3 节补充实现说明（通知机制 + ClipStore 刷新链路） |
 | v1.6 | 2026-07-14 | 同步快捷键唤醒修复（新增 GlobalHotkeyService + CarbonHotkeyRegistrar + HotkeyFormatter.parse(stored:)）；新增 AC-26 全局快捷键唤醒主窗口；5.2 节新增 5.2.5 全局快捷键服务接口描述；3.9 节对齐描述为"唤起主窗口"（移除"聚焦搜索框"）；12.4 节快捷键默认值标记为已决策 |
+| v1.7 | 2026-07-14 | 同步权限图标/TCC/AppIcon 修复：6.1.3 节辅助功能权限描述从 `AXIsProcessTrusted()` 更新为 `AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt: true])`，标注首次启动时弹出系统 TCC 提示并自动把 ClipMind 加入权限列表 |
