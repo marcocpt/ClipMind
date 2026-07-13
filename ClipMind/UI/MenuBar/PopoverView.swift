@@ -1,8 +1,16 @@
 import SwiftUI
 
 struct PopoverView: View {
+    @ObservedObject private var captureService: CaptureService
     @State private var searchText = ""
-    @State private var clips: [ClipItem] = ClipTestData.isUITesting ? ClipTestData.previewClips : []
+
+    init(captureService: CaptureService? = nil) {
+        // swiftlint:disable:next force_try
+        let fallback = try! CaptureService(store: EncryptedStore())
+        self._captureService = ObservedObject(
+            wrappedValue: captureService ?? AppDelegate.shared.captureService ?? fallback
+        )
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,6 +35,7 @@ struct PopoverView: View {
     }
 
     private var filteredClips: [ClipItem] {
+        let clips = ClipTestData.isUITesting ? ClipTestData.previewClips : captureService.clips
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return clips }
         return clips.filter { clip in

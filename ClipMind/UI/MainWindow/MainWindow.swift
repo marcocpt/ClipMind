@@ -1,12 +1,24 @@
 import SwiftUI
 
 struct MainWindow: View {
+    @ObservedObject private var captureService: CaptureService
     @State private var selectedClip: ClipItem?
     @State private var searchText = ""
     @State private var searchResults: [ClipItem] = []
     @State private var isSearching = false
     @State private var selectedSourceApp: String?
-    @State private var allClips: [ClipItem] = ClipTestData.isUITesting ? ClipTestData.previewClips : []
+
+    init(captureService: CaptureService? = nil) {
+        // swiftlint:disable:next force_try
+        let fallback = try! CaptureService(store: EncryptedStore())
+        self._captureService = ObservedObject(
+            wrappedValue: captureService ?? AppDelegate.shared.captureService ?? fallback
+        )
+    }
+
+    private var allClips: [ClipItem] {
+        ClipTestData.isUITesting ? ClipTestData.previewClips : captureService.clips
+    }
 
     var body: some View {
         NavigationView {
@@ -53,7 +65,7 @@ struct MainWindow: View {
                 selectedClip = clip
             }
         } else {
-            HistoryListView(selectedClip: $selectedClip)
+            HistoryListView(selectedClip: $selectedClip, clips: allClips)
         }
     }
 

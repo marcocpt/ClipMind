@@ -8,8 +8,10 @@ extension Notification.Name {
 final class StatusItemController: NSObject {
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
+    private var captureService: CaptureService?
 
-    func setup() {
+    func setup(captureService: CaptureService? = AppDelegate.shared.captureService) {
+        self.captureService = captureService
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem?.button {
             button.image = NSImage(
@@ -21,7 +23,8 @@ final class StatusItemController: NSObject {
             button.action = #selector(togglePopover)
         }
         popover = NSPopover()
-        popover?.contentViewController = NSHostingController(rootView: PopoverView())
+        let popoverView = PopoverView(captureService: captureService)
+        popover?.contentViewController = NSHostingController(rootView: popoverView)
         popover?.behavior = .transient
     }
 

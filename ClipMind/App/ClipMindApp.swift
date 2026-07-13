@@ -27,8 +27,11 @@ struct ClipMindApp: App {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    static let shared = AppDelegate()
+
     private var statusItemController: StatusItemController?
     private var cleanupService: CleanupService?
+    private(set) var captureService: CaptureService?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         applyUITestOverrides()
@@ -87,23 +90,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             statusItemController = StatusItemController()
             statusItemController?.setup()
-            setupCleanupService()
+            setupServices()
         } else {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
         }
     }
 
-    /// 初始化清理服务并启动
-    private func setupCleanupService() {
+    /// 初始化共享存储、清理服务和捕获服务
+    private func setupServices() {
         do {
             let store = try EncryptedStore()
             let settings = AppSettings()
+
             cleanupService = CleanupService(store: store, settings: settings)
             cleanupService?.cleanupOnLaunch()
             cleanupService?.startPeriodicCleanup()
+
+            let captureService = CaptureService(store: store)
+            captureService.start()
+            self.captureService = captureService
+            LogCategory.capture.info("捕获服务已启动")
         } catch {
-            LogCategory.storage.error("清理服务初始化失败: \(error.localizedDescription)")
+            LogCategory.storage.error("服务初始化失败: \(error.localizedDescription)")
         }
     }
 
