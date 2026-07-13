@@ -86,12 +86,27 @@ final class FirstLaunchUITests: XCTestCase {
 
     // MARK: - 辅助方法
 
-    /// 查找按钮元素，使用 descendants 在整个可访问性树中搜索
+    /// 查找按钮元素
     ///
-    /// macOS SwiftUI 中，按钮可能嵌套在 group 内，
-    /// app.buttons[identifier] 仅搜索顶层按钮，可能找不到。
+    /// macOS SwiftUI 中按钮的 accessibilityIdentifier 可能不被 XCUItest 正确暴露，
+    /// 优先按 label 查找（更可靠），回退按 identifier 查找。
     private func findButton(_ app: XCUIApplication, identifier: String) -> XCUIElement {
-        app.descendants(matching: .button)[identifier]
+        let labelMap: [String: String] = [
+            "startButton": "开始使用",
+            "nextButton": "下一步",
+            "skipButton": "跳过",
+            "finishButton": "开始使用 ClipMind",
+            "backButton": "上一步"
+        ]
+        // 优先按 label 文本查找（macOS XCUItest 更可靠）
+        if let label = labelMap[identifier] {
+            let byLabel = app.buttons[label]
+            if byLabel.waitForExistence(timeout: 1) { return byLabel }
+            let byLabelDesc = app.descendants(matching: .button)[label]
+            if byLabelDesc.waitForExistence(timeout: 1) { return byLabelDesc }
+        }
+        // 回退按 identifier 查找
+        return app.descendants(matching: .button)[identifier]
     }
 
     /// 启动带引导重置参数的 App
