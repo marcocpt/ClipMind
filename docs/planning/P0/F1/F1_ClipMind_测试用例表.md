@@ -181,9 +181,10 @@ ClipMindUITests/
 | TC-23-01 | AC-23 | 菜单栏图标常驻 | App 已启动 | 1. 启动 App<br>2. 观察系统菜单栏 | 菜单栏出现 ClipMind 图标 | XCUITest | ✅ COVERED | PopoverUITests.testStatusBarItemExists 覆盖 |
 | TC-23-02 | AC-23 | 点击菜单栏图标弹出 popover | App 已启动，菜单栏图标可见 | 1. 点击菜单栏 ClipMind 图标<br>2. 观察 popover | popover 弹出<br>显示最近 5-10 条剪贴内容 + 搜索框 + "查看全部"按钮 | XCUITest | ✅ COVERED | PopoverUITests.testPopoverAppearsOnIconClick + testPopoverContainsSearchField + testPopoverContainsViewAllButton |
 | TC-23-03 | AC-23 | popover 手动验证 | App 已启动，已有复制内容 | 1. 点击菜单栏图标<br>2. 观察 popover 内容 | popover 显示最近条目<br>含类型标签 + 内容预览 + 来源 + 时间 | 手动 | ⏸️ DEFERRED | UX 验证，延后至 Phase 4 T4.4 |
-| TC-24-01 | AC-24 | 首次启动引导流程完整（UI 自动化） | UserDefaults 已清空 | 1. 清空 UserDefaults<br>2. 启动 App<br>3. 遍历引导流程<br>4. 断言每个步骤页面出现 | 依次显示：欢迎页 → 权限请求 → API Key 配置引导（可跳过）→ 隐私默认值提示 → 进入主界面 | XCUITest | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
-| TC-24-02 | AC-24 | API Key 配置引导可跳过 | UserDefaults 已清空 | 1. 启动 App 进入引导<br>2. 到达 API Key 配置步骤<br>3. 点击"跳过"<br>4. 观察提示 | 提示"分类/搜索本地可用，处理需配置"<br>进入隐私默认值提示步骤 | XCUITest | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
+| TC-24-01 | AC-24 | 首次启动引导流程完整（UI 自动化） | UserDefaults 已清空 | 1. 清空 UserDefaults<br>2. 启动 App<br>3. 遍历引导流程<br>4. 断言每个步骤页面出现 | 依次显示：欢迎页 → 权限请求 → API Key 配置引导（可跳过）→ 隐私默认值提示 → 进入主界面 | XCUITest | ✅ COVERED | FirstLaunchUITests.testFirstLaunchOnboardingFlow |
+| TC-24-02 | AC-24 | API Key 配置引导可跳过 | UserDefaults 已清空 | 1. 启动 App 进入引导<br>2. 到达 API Key 配置步骤<br>3. 点击"跳过"<br>4. 观察提示 | 提示"分类/搜索本地可用，处理需配置"<br>进入隐私默认值提示步骤 | XCUITest | ✅ COVERED | FirstLaunchUITests.testAPIKeyGuideCanBeSkipped |
 | TC-24-03 | AC-24 | 首次启动引导手动验证 | App 偏好已删除 | 1. 删除 App 偏好<br>2. 启动 App<br>3. 观察引导流程 | 5 个步骤依次出现<br>权限请求正确展示 | 手动 | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
+| TC-24-04 | AC-24 | 重置标志位后首启引导应显示 | hasCompletedOnboarding=true | 1. 设置 hasCompletedOnboarding=true<br>2. 使用 --reset-onboarding 启动<br>3. 验证 OnboardingView 出现 | 显示首启引导而非主窗口 | XCUITest | ✅ COVERED | FirstLaunchUITests.testOnboardingShowsAfterResetFromCompletedState |
 | TC-25-01 | AC-25 | Web 预览页可访问（curl） | Web 页已部署到 GitHub Pages | 1. 执行 `curl -I https://marcocpt.github.io/ClipMind/`<br>2. 检查 HTTP 状态码 | 返回 HTTP 200 | curl | ⏸️ DEFERRED | 延后至 Phase 4 T4.2 GitHub Pages 部署 |
 | TC-25-02 | AC-25 | Web 预览页 4 个交互流程可点击 | 浏览器已打开 Web 预览页 URL | 1. 浏览器打开 Web URL<br>2. 点击"复制演示内容"按钮<br>3. 点击"自动分类"按钮<br>4. 点击"搜索"按钮<br>5. 点击"一键处理"按钮<br>6. 观察响应 | 4 个核心流程按钮均可点击<br>每个按钮有交互响应 | 手动 | ✅ COVERED | Phase 4 已完成，browser_use 子代理验证 4 个交互流程 PASS，截图存于 docs/planning/P0/F1/screenshots/ |
 | TC-25-03 | AC-25 | Web 预览页内容完整 | 浏览器已打开 Web URL | 1. 浏览器打开 Web URL<br>2. 检查页面内容 | 包含产品介绍 + 交互式模拟<br>4 个核心流程可体验 | 手动 | ✅ COVERED | Phase 4 已完成，Web 页面包含产品介绍 + 4 个交互流程演示 |
@@ -1329,6 +1330,22 @@ ClipMindUITests/
 - **覆盖状态**：❌ MISSING
 - **备注**：真实场景验证
 
+**TC-24-04：重置标志位后首启引导应显示**
+
+- **前置条件**：
+  - `hasCompletedOnboarding=true`（模拟已完成引导）
+- **测试步骤**：
+  1. 使用 `--UITEST_SHOW_MAIN_WINDOW` 设置 `hasCompletedOnboarding=true`
+  2. 终止 App
+  3. 使用 `--reset-onboarding` 重新启动
+  4. 验证 OnboardingView 出现
+- **预期结果**：
+  - 显示首启引导而非主窗口
+  - `startButton` 可见
+- **测试框架**：XCUITest
+- **覆盖状态**：✅ COVERED
+- **备注**：验证 `applicationWillFinishLaunching` 中的通用重置机制
+
 ---
 
 #### AC-25：Web 交互预览页可访问且模拟核心流程
@@ -1654,7 +1671,7 @@ ClipMindUITests/
 | AC-21 | TC-21-01, TC-21-02, TC-21-03, TC-21-04 | XCTest | 30 天清理 + 边界（29/30/31 天）+ 启动触发 |
 | AC-22 | TC-22-01, TC-22-02, TC-22-03 | XCTest + XCUITest | 敏感识别开关 |
 | AC-23 | TC-23-03 | 手动 | popover 完整内容 |
-| AC-24 | TC-24-01, TC-24-02, TC-24-03 | XCUITest + 手动 | 首启引导完整流程 |
+| AC-24 | TC-24-01, TC-24-02, TC-24-03, TC-24-04 | XCUITest + 手动 | 首启引导完整流程 |
 
 **完成标志**：
 - 敏感内容自动识别并忽略（6 种模式）

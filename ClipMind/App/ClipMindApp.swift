@@ -31,6 +31,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var cleanupService: CleanupService?
     private var captureService: ClipCaptureService?
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // 在 SwiftUI 读取 @AppStorage 之前执行通用重置，避免先渲染错误视图再切换
+        applyOnboardingResetIfNeeded()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         applyUITestOverrides()
         configureActivationPolicy()
@@ -43,6 +48,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .openMainWindow,
             object: nil
         )
+    }
+
+    /// 应用通用启动参数重置（非 UITEST 专用）
+    ///
+    /// 在 `applicationWillFinishLaunching` 中调用，早于 SwiftUI 读取 `@AppStorage`，
+    /// 确保重置后 SwiftUI 直接渲染正确视图，避免先渲染 MainWindow 再切换的时序问题。
+    private func applyOnboardingResetIfNeeded() {
+        guard CommandLine.arguments.contains("--reset-onboarding") else { return }
+        UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.synchronize()
+        LogCategory.app.info("已通过 --reset-onboarding 重置首启引导标志位")
     }
 
     /// 应用 UI 测试启动参数覆盖
