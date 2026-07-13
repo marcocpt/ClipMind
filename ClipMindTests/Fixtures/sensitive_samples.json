@@ -1,0 +1,24 @@
+{
+  "samples": [
+    {"text": "password=abc123", "type": "password", "isSensitive": true},
+    {"text": "password: mypass123", "type": "password", "isSensitive": true},
+    {"text": "password = secret123", "type": "password", "isSensitive": true},
+    {"text": "passion for coding and design", "type": null, "isSensitive": false},
+    {"text": "sk-proj-abcdefghijklmnopqrstuvwxyz0123456789", "type": "token", "isSensitive": true},
+    {"text": "ghp_abcdefghijklmnopqrstuvwxyz0123456789", "type": "token", "isSensitive": true},
+    {"text": "Bearer abcdefghijklmnopqrstuvwxyz0123456789", "type": "token", "isSensitive": true},
+    {"text": "sk-short", "type": null, "isSensitive": false},
+    {"text": "123456", "type": "verificationCode", "isSensitive": true},
+    {"text": "12345678", "type": "verificationCode", "isSensitive": true},
+    {"text": "123", "type": null, "isSensitive": false},
+    {"text": "4111111111111111", "type": "bankCard", "isSensitive": true},
+    {"text": "4111111111111112", "type": null, "isSensitive": false},
+    {"text": "110101199001011237", "type": "idCard", "isSensitive": true},
+    {"text": "110101199001011234", "type": null, "isSensitive": false},
+    {"text": "api_key=xxx", "type": "sensitiveKeyword", "isSensitive": true},
+    {"text": "the secret value is hidden here", "type": "sensitiveKeyword", "isSensitive": true},
+    {"text": "access_token=abc123", "type": "sensitiveKeyword", "isSensitive": true},
+    {"text": "private_key=-----BEGIN", "type": "sensitiveKeyword", "isSensitive": true},
+    {"text": "Hello, this is a normal text for testing.", "type": null, "isSensitive": false}
+  ]
+}
