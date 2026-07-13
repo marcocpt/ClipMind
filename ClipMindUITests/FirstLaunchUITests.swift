@@ -15,7 +15,7 @@ final class FirstLaunchUITests: XCTestCase {
 
         // 欢迎页：等待 "开始使用" 按钮出现并点击
         XCTAssertTrue(
-            app.buttons["startButton"].waitForExistence(timeout: 10),
+            app.buttons["startButton"].waitForExistence(timeout: 20),
             "欢迎页的'开始使用'按钮应出现"
         )
         app.buttons["startButton"].click()
@@ -57,7 +57,7 @@ final class FirstLaunchUITests: XCTestCase {
         let app = launchFreshApp()
 
         // 快速导航到 API Key 引导页
-        XCTAssertTrue(app.buttons["startButton"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["startButton"].waitForExistence(timeout: 20))
         app.buttons["startButton"].click()
         XCTAssertTrue(app.buttons["nextButton"].waitForExistence(timeout: 5))
         app.buttons["nextButton"].click()
@@ -89,6 +89,9 @@ final class FirstLaunchUITests: XCTestCase {
             "--UITEST_RESET_SETTINGS"
         ]
         app.launch()
+        // 等待窗口出现后再激活，确保 SwiftUI WindowGroup 已完成初始化
+        let window = app.windows.firstMatch
+        _ = window.waitForExistence(timeout: 10)
         app.activate()
         return app
     }

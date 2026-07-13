@@ -31,10 +31,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // UITEST_RESET_ONBOARDING: 重置引导状态，确保测试间状态隔离
         if CommandLine.arguments.contains("--UITEST_RESET_ONBOARDING") {
             UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+            UserDefaults.standard.synchronize()
         }
         // UITEST_SHOW_MAIN_WINDOW: 跳过引导直接显示主窗口
         if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW") {
             UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+            UserDefaults.standard.synchronize()
         }
         // UITEST_RESET_SETTINGS: 重置隐私相关 UserDefaults，确保测试间状态隔离
         if CommandLine.arguments.contains("--UITEST_RESET_SETTINGS") {
@@ -49,6 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             for key in keys {
                 UserDefaults.standard.removeObject(forKey: key)
             }
+            UserDefaults.standard.synchronize()
         }
 
         let hasCompletedOnboarding = UserDefaults.standard.bool(
@@ -69,6 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             // 未完成引导，显示常规窗口
             NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
         }
 
         if CommandLine.arguments.contains("--UITEST_POPOVER_WINDOW") {
