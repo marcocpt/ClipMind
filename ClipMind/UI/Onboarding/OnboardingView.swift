@@ -110,5 +110,18 @@ struct OnboardingView: View {
         hasCompletedOnboarding = true
         currentStep = .completed
         LogCategory.app.info("首次启动引导完成")
+
+        // 异步注入示例数据
+        // 使用 userInitiated 优先级（用户正在等待看到内容），不阻塞 UI 切换
+        // 注入总耗时 < 1s（13 条 × < 100ms/条）
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let store = try EncryptedStore()
+                let embeddingService = LocalEmbeddingService()
+                SampleDataSeeder.seedIfNeeded(store: store, embeddingService: embeddingService)
+            } catch {
+                LogCategory.app.error("示例数据注入初始化失败: \(error.localizedDescription)")
+            }
+        }
     }
 }
