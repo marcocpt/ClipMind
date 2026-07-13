@@ -125,7 +125,7 @@ final class FirstLaunchUITests: XCTestCase {
 
     /// 如有弹窗则关闭
     private func dismissAlertIfExists(in app: XCUIApplication) {
-        let confirm = app.descendants(matching: .button)["确定"]
+        let confirm = app.descendants(matching: .button)["确定"].firstMatch
         if confirm.waitForExistence(timeout: 2) { confirm.click() }
     }
 }
