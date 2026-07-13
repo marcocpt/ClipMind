@@ -1234,7 +1234,7 @@ struct DebugConfig {
 
 **AC-25：Web 交互预览页可访问且模拟核心流程**
 
-- **场景**：用户访问 GitHub Pages 部署的 Web 预览页（URL：`https://<github-username>.github.io/ClipMind/`，Phase 4 部署时确定实际用户名）
+- **场景**：用户访问 GitHub Pages 部署的 Web 预览页（URL：`https://marcocpt.github.io/ClipMind/`）
 - **预期**：页面可访问，包含产品介绍 + 交互式模拟（复制演示内容→自动分类→搜索→一键处理），4 个核心流程可点击体验
 - **验证方式**：
   - 手动验证（浏览器打开 URL，点击 4 个核心流程按钮，确认交互响应）

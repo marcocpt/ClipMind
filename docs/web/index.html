@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClipMind — AI 剪贴板知识管家 | 交互预览</title>
+  <meta name="description" content="ClipMind 把 macOS 系统剪贴板升级为会自动分类、总结、搜索和复用的 AI 信息库。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="ambient-bg" aria-hidden="true"></div>
+<div class="noise" aria-hidden="true"></div>
+
+<!-- 导航栏 -->
+<nav role="navigation" aria-label="主导航">
+  <a href="#hero" class="logo" aria-label="ClipMind 首页">
+    <div class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/>
+        <path d="M9 12h6M9 16h4"/>
+      </svg>
+    </div>
+    ClipMind
+  </a>
+  <ul class="nav-links">
+    <li><a href="#hero">首页</a></li>
+    <li><a href="#demo">交互演示</a></li>
+    <li><a href="#features">功能介绍</a></li>
+    <li><a href="#download">下载</a></li>
+  </ul>
+  <a href="https://github.com/marcocpt/ClipMind" class="nav-cta" target="_blank" rel="noopener" aria-label="GitHub 仓库">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.6.3 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.7-5.5 6 .4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>
+    GitHub
+  </a>
+</nav>
+
+<!-- Hero 区域 -->
+<header id="hero" class="hero">
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-badge">
+        <span class="dot" aria-hidden="true"></span>
+        最后更新：2026-07-13 | 版本：v1.0
+      </div>
+      <h1>
+        ClipMind<br>
+        <span class="accent">AI 剪贴板知识管家</span>
+      </h1>
+      <p class="lead">
+        把 macOS 系统剪贴板升级为会自动分类、总结、搜索和复用的 AI 信息库。
+        下方 4 个交互流程，让你亲身感受复制即理解、说人话就能找、一键即可处理的体验。
+      </p>
+      <div class="hero-actions">
+        <a href="#demo" class="btn-primary">
+          开始体验
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#download" class="btn-ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          下载 App
+        </a>
+      </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="clipboard-mock">
+        <div class="mock-header">
+          <div class="mock-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            ClipMind 历史
+          </div>
+          <div class="mock-dots">
+            <span style="background:#fb7185"></span>
+            <span style="background:#fbbf24"></span>
+            <span style="background:#34d399"></span>
+          </div>
+        </div>
+        <div class="mock-search">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          搜索剪贴历史...
+          <span class="cursor"></span>
+        </div>
+        <div class="clip-item">
+          <span class="tag tag-code">CODE</span>
+          <div class="content">func application(_ application: UIApplication, didFinish...</div>
+          <div class="meta"><span>Xcode · AppDelegate.swift</span><span>2 分钟前</span></div>
+        </div>
+        <div class="clip-item">
+          <span class="tag tag-error">ERROR</span>
+          <div class="content">Thread 1: Fatal error: Unexpectedly found nil...</div>
+          <div class="meta"><span>已自动总结 · 含解决方案</span><span>12 分钟前</span></div>
+        </div>
+        <div class="clip-item">
+          <span class="tag tag-link">LINK</span>
+          <div class="content">developer.apple.com/documentation/swiftui</div>
+          <div class="meta"><span>已提取标题与摘要</span><span>1 小时前</span></div>
+        </div>
+        <div class="clip-item">
+          <span class="tag tag-meeting">MEETING</span>
+          <div class="content">产品周会 06.18 - 下周需交付登录模块...</div>
+          <div class="meta"><span>已提取 5 项待办</span><span>3 小时前</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- 交互演示区域 -->
+<section id="demo" class="demo-section">
+  <div class="section-header reveal">
+    <div class="section-label">INTERACTIVE DEMO</div>
+    <h2 class="section-title">4 步体验 <span class="italic">核心流程</span></h2>
+    <p class="section-subtitle">
+      点击交互，亲身感受 ClipMind 的工作方式。从复制到分类、从搜索到处理，全部可操作。
+    </p>
+  </div>
+
+  <div class="demo-grid">
+    <!-- 流程 1：复制演示内容 -->
+    <article class="demo-card" id="card-copy" aria-labelledby="copy-title">
+      <div class="card-header">
+        <span class="card-number">01</span>
+        <div>
+          <h3 id="copy-title">复制演示内容</h3>
+          <p class="card-desc">点击下方内容卡片的"复制"按钮，模拟复制到剪贴板</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="example-list" id="example-list" role="list">
+          <!-- 示例内容由 JS 动态渲染 -->
+        </div>
+      </div>
+    </article>
+
+    <!-- 流程 2：自动分类 -->
+    <article class="demo-card" id="card-classify" aria-labelledby="classify-title">
+      <div class="card-header">
+        <span class="card-number">02</span>
+        <div>
+          <h3 id="classify-title">自动分类</h3>
+          <p class="card-desc">复制后自动识别类型并打上彩色标签</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="history-header">
+          <span class="history-title-text">剪贴板历史</span>
+          <span class="history-count" id="history-count">0 条</span>
+        </div>
+        <div class="history-list" id="history-list" role="list" aria-live="polite">
+          <div class="empty-state" id="empty-history">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            <p>暂无内容，请从左侧"复制演示内容"</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 流程 3：语义搜索 -->
+    <article class="demo-card" id="card-search" aria-labelledby="search-title">
+      <div class="card-header">
+        <span class="card-number">03</span>
+        <div>
+          <h3 id="search-title">语义搜索</h3>
+          <p class="card-desc">输入自然语言，从历史内容中智能查找</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="search-input" placeholder="试试输入：报错、代码、会议、链接..." aria-label="搜索输入框">
+          <button id="search-btn" class="btn-small" aria-label="执行搜索">搜索</button>
+        </div>
+        <div class="search-suggestions">
+          <span>快捷查询：</span>
+          <button class="suggestion-chip" data-query="上次那个报错">上次那个报错</button>
+          <button class="suggestion-chip" data-query="代码片段">代码片段</button>
+          <button class="suggestion-chip" data-query="会议纪要">会议纪要</button>
+        </div>
+        <div class="search-results" id="search-results" aria-live="polite">
+          <div class="empty-state">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <p>先复制一些内容，再输入关键词搜索</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 流程 4：一键处理 -->
+    <article class="demo-card" id="card-process" aria-labelledby="process-title">
+      <div class="card-header">
+        <span class="card-number">04</span>
+        <div>
+          <h3 id="process-title">一键处理</h3>
+          <p class="card-desc">选择历史内容，执行 AI 智能处理</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="process-selector">
+          <label for="process-select" class="selector-label">选择内容：</label>
+          <select id="process-select" aria-label="选择要处理的内容">
+            <option value="">— 请先复制一些内容 —</option>
+          </select>
+        </div>
+        <div class="process-buttons" role="group" aria-label="AI 处理操作">
+          <button class="process-btn" data-action="summarize" disabled>
+            <span class="btn-icon v" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13l2 2 4-4"/></svg>
+            </span>
+            智能总结
+          </button>
+          <button class="process-btn" data-action="translate" disabled>
+            <span class="btn-icon c" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg>
+            </span>
+            即时翻译
+          </button>
+          <button class="process-btn" data-action="rewrite" disabled>
+            <span class="btn-icon a" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </span>
+            智能改写
+          </button>
+          <button class="process-btn" data-action="extract" disabled>
+            <span class="btn-icon e" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </span>
+            提取待办
+          </button>
+        </div>
+        <div class="process-result" id="process-result" aria-live="polite">
+          <div class="empty-state">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <p>选择内容后点击上方按钮，查看 AI 处理结果</p>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- 功能介绍区域 -->
+<section id="features" class="features-section">
+  <div class="section-header reveal">
+    <div class="section-label">CORE FEATURES</div>
+    <h2 class="section-title">4 大核心 <span class="italic">能力</span></h2>
+    <p class="section-subtitle">
+      从复制到复用，ClipMind 用 AI 重新定义剪贴板的每一个环节。
+    </p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feature-icon v" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/><path d="M9 12h6M9 16h4"/></svg>
+      </div>
+      <h3>自动分类</h3>
+      <p>复制瞬间自动识别内容类型——代码、报错、链接、会议、待办，各归其位，无需手动整理。</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon c" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </div>
+      <h3>语义搜索</h3>
+      <p>不再记关键词。用自然语言描述你记得的片段，"上次那个报错"也能精准找回。</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon a" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <h3>一键处理</h3>
+      <p>总结、翻译、改写、提取待办，复制后不必再开第二个工具，全部在 ClipMind 内完成。</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon e" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <h3>隐私保护</h3>
+      <p>本地优先架构，AES-256 加密存储。密码、Token、验证码自动识别并忽略，数据不出本机。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 下载区域 -->
+<section id="download" class="download-section">
+  <div class="download-content reveal">
+    <div class="section-label">GET CLIPMIND</div>
+    <h2 class="section-title">让每一次复制，<br><span class="italic">不再浪费</span></h2>
+    <p class="section-subtitle">
+      ClipMind 把 macOS 剪贴板从"临时复制工具"升级为"AI 个人知识管家"。<br>
+      复制过的信息，真正变得可找回、可理解、可复用。
+    </p>
+    <div class="download-actions">
+      <a href="https://github.com/marcocpt/ClipMind/releases" class="btn-primary" target="_blank" rel="noopener" aria-label="下载 ClipMind App">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        下载 .app（macOS）
+      </a>
+      <a href="https://github.com/marcocpt/ClipMind" class="btn-ghost" target="_blank" rel="noopener" aria-label="GitHub 仓库">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.6.3 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.7-5.5 6 .4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>
+        查看源码
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-content">
+    <div class="footer-brand">
+      <div class="logo">
+        <div class="logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 2h6a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/>
+            <path d="M9 12h6M9 16h4"/>
+          </svg>
+        </div>
+        ClipMind
+      </div>
+    </div>
+    <div class="footer-meta">
+      AI 剪贴板知识管家
+      <span class="sep">·</span>
+      macOS Native
+      <span class="sep">·</span>
+      最后更新：2026-07-13 | 版本：v1.0
+      <span class="sep">·</span>
+      © 2026 ClipMind
+    </div>
+  </div>
+</footer>
+
+<!-- Toast 容器 -->
+<div class="toast-container" id="toast-container" role="alert" aria-live="assertive"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
