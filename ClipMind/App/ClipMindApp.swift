@@ -101,8 +101,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let store = try EncryptedStore()
             setupCaptureService(store: store)
             setupCleanupService(store: store)
+
+            // UI 测试预置数据（仅 --UITEST_PREPOPULATE_SAMPLE_AND_REAL 启动参数时执行）
+            if CommandLine.arguments.contains("--UITEST_PREPOPULATE_SAMPLE_AND_REAL") {
+                prepopulateTestData(store: store)
+            }
         } catch {
             LogCategory.storage.error("EncryptedStore 初始化失败: \(error.localizedDescription)")
+        }
+    }
+
+    /// UI 测试专用：预置 13 条示例 + 2 条真实数据到 EncryptedStore。
+    ///
+    /// 用于 UI-SD-02/03 测试场景：启动后直接显示主窗口（跳过引导），
+    /// 数据库已含示例 + 真实条目，便于验证清除示例后真实数据保留。
+    /// 生产环境不调用此方法。
+    private func prepopulateTestData(store: EncryptedStore) {
+        let embeddingService = LocalEmbeddingService()
+        SampleDataSeeder.seedIfNeeded(store: store, embeddingService: embeddingService)
+
+        // 追加 2 条真实数据（isSample=false）
+        let realItem1 = ClipItem.makeText(
+            "真实复制的文本内容",
+            contentType: .other,
+            sourceApp: "com.test.real",
+            sourceAppName: "RealApp",
+            isSample: false
+        )
+        let realItem2 = ClipItem.makeText(
+            "另一条真实复制内容",
+            contentType: .other,
+            sourceApp: "com.test.real",
+            sourceAppName: "RealApp",
+            isSample: false
+        )
+        do {
+            try store.save(realItem1)
+            try store.save(realItem2)
+            NotificationCenter.default.post(
+                name: ClipCaptureService.clipDidUpdateNotification,
+                object: nil
+            )
+        } catch {
+            LogCategory.storage.error("预置真实测试数据失败: \(error.localizedDescription)")
         }
     }
 
