@@ -1,4 +1,4 @@
-> 最后更新：2026-07-13 | 版本：v1.5
+> 最后更新：2026-07-14 | 版本：v1.6
 
 # ClipMind 初赛 MVP 设计规范
 
@@ -396,7 +396,7 @@ flowchart LR
 | 菜单栏图标（NSStatusItem） | 系统菜单栏常驻 | 点击弹出 popover |
 | popover | 点击菜单栏图标 | 显示最近 5-10 条剪贴内容 + 搜索框 + 查看全部 |
 | 主窗口 | popover "查看全部" / 快捷键 | 完整历史、搜索、详情、设置 |
-| 全局搜索（快捷键） | Cmd+Shift+V（默认） | 唤起主窗口并聚焦搜索框 |
+| 全局搜索（快捷键） | Cmd+Shift+V（默认） | 唤起主窗口 |
 | 首次启动引导 | 首次启动 .app | 权限请求 + API Key + 隐私提示 |
 
 ---
@@ -734,6 +734,33 @@ class MultiProviderLLMService: LLMService {
 - 错误处理：网络错误不阻塞本地功能，弹出提示
 - 请求体：包含 system prompt（指导 LLM 输出格式）+ user content
 
+#### 5.2.5 全局快捷键（Carbon RegisterEventHotKey）
+
+```swift
+protocol HotkeyRegistering {
+    func register(keyCode: UInt32, modifiers: UInt32, onTriggered: @escaping () -> Void) -> Bool
+    func unregister()
+}
+
+class CarbonHotkeyRegistrar: HotkeyRegistering {
+    // 基于 Carbon RegisterEventHotKey + InstallEventHandler 实现
+    // 注册时传入 keyCode（虚拟键码）与 modifiers（cmdKey/shiftKey/optionKey/controlKey 组合）
+    // 触发时回调 onTriggered 闭包
+}
+
+class GlobalHotkeyService {
+    // 读取 AppSettings.hotkey，通过 HotkeyFormatter.parse(stored:) 解析为 (keyCode, modifiers)
+    // 解析成功后调用 HotkeyRegistering.register(keyCode:modifiers:onTriggered:)
+    // 触发时发送 .openMainWindow 通知，由 AppDelegate 接收并唤起主窗口
+}
+```
+
+**接口约束**：
+- `HotkeyRegistering` 协议定义注册/注销接口，`CarbonHotkeyRegistrar` 为基于 Carbon 的生产实现，测试中通过 mock 注册器注入
+- `GlobalHotkeyService` 读取 `AppSettings.hotkey` 字符串，通过 `HotkeyFormatter.parse(stored:)` 解析为 `(keyCode, modifiers)` 元组；解析失败（格式无效/空字符串/无修饰键/未知键）时不注册
+- 注册约束：`hasCompletedOnboarding == true` 时才注册全局快捷键；快捷键至少包含一个主修饰键（cmdKey/shiftKey/optionKey/controlKey）
+- 触发行为：发送 `.openMainWindow` 通知，由 AppDelegate 监听并唤起主窗口到前台
+
 ### 5.3 配置项
 
 | 配置项 | 类型 | 默认值 | 存储位置 | 加密 |
@@ -1033,7 +1060,7 @@ struct DebugConfig {
 
 ## 8. 验收标准 AC
 
-### 8.1 AC 列表（共 25 条，覆盖 F1.1-F1.7）
+### 8.1 AC 列表（共 26 条，覆盖 F1.1-F1.7）
 
 > **格式约定**：每条 AC 包含「场景 + 预期 + 验证方式」，验证方式必须包含测试框架（XCTest/XCUITest/手动）。
 
@@ -1250,6 +1277,14 @@ struct DebugConfig {
   - curl：`curl -I <URL>` 检查 URL 可访问性（HTTP 200）
 - **测试框架**：手动 + curl
 
+**AC-26：全局快捷键唤醒主窗口**
+
+- **场景**：用户完成首启引导后，App 处于菜单栏常驻状态，按下默认快捷键 Cmd+Shift+V
+- **预期**：主窗口被唤起到前台
+- **验证方式**：
+  - 自动化：XCTest 验证 `GlobalHotkeyService` 通过 mock 注册器注册了正确的 `(keyCode, modifiers)`；触发时发送了 `.openMainWindow` 通知
+  - 手动：真实按下快捷键 Cmd+Shift+V，观察主窗口唤起到前台
+
 ### 8.2 AC 覆盖矩阵
 
 | AC 编号 | 对应功能 | 测试框架 | 自动化 | 手动 |
@@ -1279,6 +1314,7 @@ struct DebugConfig {
 | AC-23 | F1.7 | XCUITest | 是 | 是 |
 | AC-24 | F1.7 | XCUITest | 是 | 是 |
 | AC-25 | F1.7/Web | 手动 + curl | 否 | 是 |
+| AC-26 | F1.7 | XCTest + 手动 | 是 | 是 |
 
 ---
 
@@ -1854,7 +1890,7 @@ flowchart LR
 |------|---------|---------|---------|
 | 嵌入模型最终选择（MiniLM-L6 vs L12） | Phase 1 性能 | 推荐 L6（22MB，384 维，平衡速度与质量） | Phase 1 开始前 |
 | 数据库方案（SQLCipher vs 手动加密 SQLite） | Phase 0 实现 | 推荐手动加密（CryptoKit + SQLite.swift，避免 SQLCipher 依赖） | Phase 0 开始前 |
-| 快捷键默认值（Cmd+Shift+V vs 其他） | Phase 3 设置 | 推荐 Cmd+Shift+V（不与系统冲突） | Phase 3 实现时 |
+| 快捷键默认值（Cmd+Shift+V vs 其他） | Phase 3 设置 | 已采用 Cmd+Shift+V，与系统无冲突 | 已决策 (v1.6) |
 | 清理周期是否可由用户自定义（除 30 天外） | Phase 3 设置 | 支持 7/14/30/90 天四档选择 | Phase 3 实现时 |
 | Web 交互预览页是否需要后端 | Phase 4 实现 | 不需要后端，纯前端模拟（静态 HTML + JS） | Phase 4 开始前 |
 | 是否提供 .app 签名 | Phase 4 发布 | 初赛不强制签名（用户需手动信任）；如时间允许则 ad-hoc 签名 | Phase 4 发布前 |
@@ -1873,3 +1909,4 @@ flowchart LR
 | v1.3 | 2026-07-12 | 修复第三轮审查：同步 9.2.2/9.2.4 测试集数量（220+20）、时机（Phase 1）、3.3 流程图与 Phase 1 表述统一为 11 种入库类型 |
 | v1.4 | 2026-07-13 | 第 10 节 UI 可观测性矩阵新增"手动验收证据延后说明"：标注截图/录屏手动验收证据延后至 Phase 4 T4.4 Demo 帖准备时统一补充，Phase 2 期间通过 XCUITest 自动化证据覆盖 UI AC（Layer 1-2 证据层级） |
 | v1.5 | 2026-07-13 | 同步剪贴板捕获管线接线修复：5.2.1 节代码示例更新为实际实现；3.3 节补充实现说明（通知机制 + ClipStore 刷新链路） |
+| v1.6 | 2026-07-14 | 同步快捷键唤醒修复（新增 GlobalHotkeyService + CarbonHotkeyRegistrar + HotkeyFormatter.parse(stored:)）；新增 AC-26 全局快捷键唤醒主窗口；5.2 节新增 5.2.5 全局快捷键服务接口描述；3.9 节对齐描述为"唤起主窗口"（移除"聚焦搜索框"）；12.4 节快捷键默认值标记为已决策 |
