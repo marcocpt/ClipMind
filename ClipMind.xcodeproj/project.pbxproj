@@ -85,6 +85,12 @@
 		D97F6F290EC621643D3B256B /* EncryptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63DEB7531FB7A28A9CCC7372 /* EncryptionTests.swift */; };
 		DB5971D08DA6334C80621EFC /* BlacklistManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E45398F36D9B149271B1E5E /* BlacklistManagementView.swift */; };
 		DF67DCB9D662E8F4BF29374D /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C112D9C6C100B46BDA490C /* Logger.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2D3C4B5A6978869504132 /* NotificationManager.swift */; };
+		SB1A2B3C4D5E6F789012345A /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB1A2B3C4D5E6F7890123456 /* OnboardingView.swift */; };
+		SB2A3B4C5D6E7F890123456B /* APIKeyGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB2A3B4C5D6E7F8901234567 /* APIKeyGuideView.swift */; };
+		SB3A4B5C6D7E8F901234567C /* PrivacyNoticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB3A4B5C6D7E8F9012345678 /* PrivacyNoticeView.swift */; };
+		SB4A5B6C7D8E9F012345678D /* PermissionRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB4A5B6C7D8E9F0123456789 /* PermissionRequestView.swift */; };
+		SB5A6B7C8D9E0F123456789E /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB5A6B7C8D9E0F1234567890 /* WelcomeView.swift */; };
 		E16263F9D40B217D1361988D /* ClipTestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD5B39F7DAEF07E5F2DAB3F /* ClipTestData.swift */; };
 		E1673812CB0303A76F1EDF24 /* MockLLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39FF982F24EBCA3F0FEEB0C7 /* MockLLMService.swift */; };
 		E323B17597A465510DE54C29 /* ContentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1769A4084EFA0F4DEF90BA /* ContentType.swift */; };
@@ -193,6 +199,12 @@
 		C928A4DF6FF221CC9BB23013 /* ContentTypeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentTypeTests.swift; sourceTree = "<group>"; };
 		CEAD6A3DC6A94528FD16BF3C /* ClipMindApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMindApp.swift; sourceTree = "<group>"; };
 		D3C112D9C6C100B46BDA490C /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		F1E2D3C4B5A6978869504132 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		OB1A2B3C4D5E6F7890123456 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		OB2A3B4C5D6E7F8901234567 /* APIKeyGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyGuideView.swift; sourceTree = "<group>"; };
+		OB3A4B5C6D7E8F9012345678 /* PrivacyNoticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyNoticeView.swift; sourceTree = "<group>"; };
+		OB4A5B6C7D8E9F0123456789 /* PermissionRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequestView.swift; sourceTree = "<group>"; };
+		OB5A6B7C8D9E0F1234567890 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		D638C38476AE5D6F481CE3F1 /* LocalEmbeddingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalEmbeddingServiceTests.swift; sourceTree = "<group>"; };
 		D64543ED3209103A6DD19590 /* ClipContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipContent.swift; sourceTree = "<group>"; };
 		D8027A219CAC00E9A37F2D76 /* ProcessingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingUITests.swift; sourceTree = "<group>"; };
@@ -282,6 +294,7 @@
 			children = (
 				BAA849BA839FB893A007C667 /* MainWindow */,
 				A506D7BB9B0576AC78480FE2 /* MenuBar */,
+				A1B2C3D4E5F67890ABCDEF01 /* Onboarding */,
 				FC821463AA3A9F94F8C22E4F /* Settings */,
 			);
 			path = UI;
@@ -379,6 +392,18 @@
 				F4832B3D710F4E4A900C69C3 /* TypeTagView.swift */,
 			);
 			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F67890ABCDEF01 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				OB1A2B3C4D5E6F7890123456 /* OnboardingView.swift */,
+				OB2A3B4C5D6E7F8901234567 /* APIKeyGuideView.swift */,
+				OB3A4B5C6D7E8F9012345678 /* PrivacyNoticeView.swift */,
+				OB4A5B6C7D8E9F0123456789 /* PermissionRequestView.swift */,
+				OB5A6B7C8D9E0F1234567890 /* WelcomeView.swift */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		A5F5D1821FBC91029EB7C3C1 /* ClipMindTests */ = {
@@ -496,6 +521,7 @@
 				ABD5B39F7DAEF07E5F2DAB3F /* ClipTestData.swift */,
 				9B1B8368514454F691F2FB00 /* LogCategory.swift */,
 				D3C112D9C6C100B46BDA490C /* Logger.swift */,
+				F1E2D3C4B5A6978869504132 /* NotificationManager.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -712,6 +738,12 @@
 				71DE531FC0DC9C0413FF20CB /* LocalEmbeddingService.swift in Sources */,
 				68EF95C36F7FA4E7F4CF5BCC /* LogCategory.swift in Sources */,
 				DF67DCB9D662E8F4BF29374D /* Logger.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* NotificationManager.swift in Sources */,
+				SB1A2B3C4D5E6F789012345A /* OnboardingView.swift in Sources */,
+				SB2A3B4C5D6E7F890123456B /* APIKeyGuideView.swift in Sources */,
+				SB3A4B5C6D7E8F901234567C /* PrivacyNoticeView.swift in Sources */,
+				SB4A5B6C7D8E9F012345678D /* PermissionRequestView.swift in Sources */,
+				SB5A6B7C8D9E0F123456789E /* WelcomeView.swift in Sources */,
 				A298ECBA04CC7B7012B93C9E /* MainWindow.swift in Sources */,
 				EBDAA500420ECDC840AF4833 /* MultiProviderLLMService.swift in Sources */,
 				B0EF50AFB4D773CA27277F30 /* PasteboardWatcher.swift in Sources */,

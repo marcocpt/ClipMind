@@ -3,12 +3,19 @@ import SwiftUI
 @main
 struct ClipMindApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @AppStorage("hasCompletedOnboarding")
+    var hasCompletedOnboarding = false
 
     var body: some Scene {
         WindowGroup {
-            MainWindow()
+            if hasCompletedOnboarding {
+                MainWindow()
+                    .frame(minWidth: 900, minHeight: 600)
+            } else {
+                OnboardingView()
+                    .frame(width: 560, height: 480)
+            }
         }
-        .defaultSize(width: 900, height: 600)
 
         Settings {
             SettingsView()
@@ -18,8 +25,17 @@ struct ClipMindApp: App {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
+    private var cleanupService: CleanupService?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // UITEST_RESET_ONBOARDING: 重置引导状态，确保测试间状态隔离
+        if CommandLine.arguments.contains("--UITEST_RESET_ONBOARDING") {
+            UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        }
+        // UITEST_SHOW_MAIN_WINDOW: 跳过引导直接显示主窗口
+        if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW") {
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        }
         // UITEST_RESET_SETTINGS: 重置隐私相关 UserDefaults，确保测试间状态隔离
         if CommandLine.arguments.contains("--UITEST_RESET_SETTINGS") {
             let keys = [
@@ -34,13 +50,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 UserDefaults.standard.removeObject(forKey: key)
             }
         }
-        if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW") {
-            NSApp.setActivationPolicy(.regular)
+
+        let hasCompletedOnboarding = UserDefaults.standard.bool(
+            forKey: "hasCompletedOnboarding"
+        )
+        if hasCompletedOnboarding {
+            // 已完成引导，使用菜单栏模式
+            if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW") {
+                NSApp.setActivationPolicy(.regular)
+            } else {
+                NSApp.setActivationPolicy(.accessory)
+            }
+            statusItemController = StatusItemController()
+            statusItemController?.setup()
+
+            // 接入清理服务：启动时清理一次，并启动定时清理
+            setupCleanupService()
         } else {
-            NSApp.setActivationPolicy(.accessory)
+            // 未完成引导，显示常规窗口
+            NSApp.setActivationPolicy(.regular)
         }
-        statusItemController = StatusItemController()
-        statusItemController?.setup()
+
         if CommandLine.arguments.contains("--UITEST_POPOVER_WINDOW") {
             showPopoverContentInWindow()
         }
@@ -50,6 +80,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .openMainWindow,
             object: nil
         )
+    }
+
+    /// 初始化清理服务并启动
+    private func setupCleanupService() {
+        do {
+            let store = try EncryptedStore()
+            let settings = AppSettings()
+            cleanupService = CleanupService(store: store, settings: settings)
+            cleanupService?.cleanupOnLaunch()
+            cleanupService?.startPeriodicCleanup()
+        } catch {
+            LogCategory.storage.error("清理服务初始化失败: \(error.localizedDescription)")
+        }
     }
 
     private func showPopoverContentInWindow() {
