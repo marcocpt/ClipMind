@@ -2,7 +2,11 @@ import SwiftUI
 
 struct HistoryListView: View {
     @Binding var selectedClip: ClipItem?
-    @State private var clips: [ClipItem] = ClipTestData.isUITesting ? ClipTestData.previewClips : []
+    @StateObject private var clipStore = ClipStore()
+
+    private var clips: [ClipItem] {
+        ClipTestData.isUITesting ? ClipTestData.previewClips : clipStore.clips
+    }
 
     var body: some View {
         if clips.isEmpty {

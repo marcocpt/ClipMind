@@ -6,7 +6,11 @@ struct MainWindow: View {
     @State private var searchResults: [ClipItem] = []
     @State private var isSearching = false
     @State private var selectedSourceApp: String?
-    @State private var allClips: [ClipItem] = ClipTestData.isUITesting ? ClipTestData.previewClips : []
+    @StateObject private var clipStore = ClipStore()
+
+    private var allClips: [ClipItem] {
+        ClipTestData.isUITesting ? ClipTestData.previewClips : clipStore.clips
+    }
 
     var body: some View {
         NavigationView {
