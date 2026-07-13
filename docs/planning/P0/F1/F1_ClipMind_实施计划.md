@@ -1,4 +1,4 @@
-> 最后更新：2026-07-13 | 版本：v1.2（基于设计规范 v1.3，同步测试用例表 v1.2 覆盖状态，标注 T2.6 验证即保存 UX）
+> 最后更新：2026-07-13 | 版本：v1.3（基于设计规范 v1.5，新增测试执行策略：禁止本地执行测试，所有测试必须在 CI 上完成）
 
 # ClipMind 初赛 MVP 实施计划
 
@@ -273,7 +273,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Models/ClipItem.swift`、`ClipMind/Models/ClipContent.swift`、`ClipMind/Models/ContentType.swift`、`ClipMind/Models/TodoItem.swift`、`ClipMind/Models/AppSettings.swift`、`ClipMind/Models/APIProvider.swift`、`ClipMind/Models/RewriteMode.swift`、`ClipMind/Models/BlacklistEntry.swift`、`ClipMindTests/Models/ClipItemModelTests.swift` |
 | AC 映射 | AC-01（ClipItem 模型支持文本捕获）、AC-13~16（TodoItem/RewriteMode 支持处理功能） |
 | 测试用例映射 | TC-01-01（间接，文本捕获需要 ClipItem 模型）、TC-16-01（间接，待办提取需要 TodoItem 模型） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/ClipItemModelTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/ClipItemModelTests） |
 | 工时估算 | 2h |
 | Session | Session-02 |
 | MVP | ✅ 必做 |
@@ -289,7 +289,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Storage/EncryptedStore.swift`、`ClipMindTests/Storage/EncryptedStoreTests.swift`、`ClipMindTests/Storage/EncryptionTests.swift` |
 | AC 映射 | AC-18（AES-256 加密，数据文件无法直接读取） |
 | 测试用例映射 | TC-18-01（加密后数据库文件无明文）、TC-18-02（SQLite Browser 无法打开）、TC-18-03（十六进制查看器显示乱码） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/EncryptedStoreTests`；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/EncryptionTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/EncryptedStoreTests、ClipMindTests/EncryptionTests） |
 | 工时估算 | 4h |
 | Session | Session-03 |
 | MVP | ✅ 必做 |
@@ -305,7 +305,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Capture/PasteboardWatcher.swift`、`ClipMind/Capture/ContentReader.swift`、`ClipMindTests/Capture/PasteboardWatcherTests.swift`、`ClipMindTests/Capture/ContentReaderTests.swift`、`ClipMindTests/Capture/DeduplicationTests.swift` |
 | AC 映射 | AC-01（复制文本 3 秒内出现）、AC-02（图片缩略图捕获）、AC-03（文件路径捕获）、AC-04（相同内容不重复入库） |
 | 测试用例映射 | TC-01-01（复制文本出现在 popover）、TC-01-03（文本捕获手动验证）、TC-02-01（图片被捕获为缩略图）、TC-03-01（文件路径被捕获）、TC-04-01（连续复制相同内容不重复入库） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/PasteboardWatcherTests`；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/ContentReaderTests`；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/DeduplicationTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/PasteboardWatcherTests、ClipMindTests/ContentReaderTests、ClipMindTests/DeduplicationTests） |
 | 工时估算 | 4h |
 | Session | Session-04 |
 | MVP | ✅ 必做 |
@@ -321,7 +321,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Capture/AppDetector.swift`、`ClipMindTests/Capture/AppDetectorTests.swift` |
 | AC 映射 | AC-12（间接，来源 App 识别支持搜索过滤） |
 | 测试用例映射 | TC-12-01（间接，来源 App 过滤需要 AppDetector 识别 bundleId） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/AppDetectorTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/AppDetectorTests） |
 | 工时估算 | 1.5h |
 | Session | Session-05 |
 | MVP | ✅ 必做 |
@@ -337,7 +337,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Utils/Logger.swift`、`ClipMind/Utils/LogCategory.swift`、`ClipMindTests/Utils/LoggerTests.swift` |
 | AC 映射 | AC-01（间接，捕获流程需要日志记录可观测性）、AC-19（间接，日志系统支持数据不出本机的可观测性验证） |
 | 测试用例映射 | TC-01-01（间接，捕获流程日志辅助验证）、TC-19-01（间接，URLProtocol 拦截验证需要日志辅助） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/LoggerTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/LoggerTests） |
 | 工时估算 | 1.5h |
 | Session | Session-06 |
 | MVP | ✅ 必做 |
@@ -353,7 +353,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/UI/MenuBar/StatusItemController.swift`、`ClipMind/UI/MenuBar/PopoverView.swift`、`ClipMind/UI/MenuBar/ClipRowView.swift`、`ClipMindUITests/PopoverUITests.swift` |
 | AC 映射 | AC-23（菜单栏图标常驻，点击弹出 popover） |
 | 测试用例映射 | TC-01-01（复制文本后 3 秒内出现在 popover）、TC-01-02（复制文本后主窗口历史同步出现）、TC-23-01（菜单栏图标常驻）、TC-23-02（点击菜单栏图标弹出 popover）、TC-23-03（popover 手动验证） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindUITests/PopoverUITests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindUITests/PopoverUITests） |
 | 工时估算 | 4h |
 | Session | Session-07 |
 | MVP | ✅ 必做 |
@@ -369,7 +369,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/UI/MainWindow/MainWindow.swift`、`ClipMind/UI/MainWindow/HistoryListView.swift`、`ClipMind/UI/MainWindow/DetailPanel.swift`、`ClipMindUITests/MainWindowUITests.swift` |
 | AC 映射 | AC-01（主窗口历史同步出现）、AC-02（图片缩略图 UI 展示）、AC-03（文件路径 UI 展示） |
 | 测试用例映射 | TC-01-02（复制文本后主窗口历史同步出现）、TC-02-02（复制图片被捕获为缩略图 UI 手动验证）、TC-03-02（复制文件路径 UI 验证） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindUITests/MainWindowUITests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindUITests/MainWindowUITests） |
 | 工时估算 | 4h |
 | Session | Session-08 |
 | MVP | ✅ 必做 |
@@ -391,7 +391,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/ML/convert_onnx_to_coreml.py`、`ClipMind/ML/MiniLM-L6-v2.mlmodelc`、`ClipMind/ML/ModelLoader.swift`、`ClipMindTests/ML/ModelLoaderTests.swift` |
 | AC 映射 | AC-05（间接，嵌入模型支持分类准确率）、AC-09（间接，嵌入模型支持搜索响应） |
 | 测试用例映射 | TC-05-01（间接，分类测试集需要模型加载）、TC-09-01（间接，搜索性能测试需要模型加载） |
-| 验证方式 | `python3 ClipMind/ML/convert_onnx_to_coreml.py` 转换成功；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/ModelLoaderTests` |
+| 验证方式 | `python3 ClipMind/ML/convert_onnx_to_coreml.py` 转换成功；CI 验证（push 后自动触发 ClipMindTests/ModelLoaderTests） |
 | 工时估算 | 3h |
 | Session | Session-09 |
 | MVP | ✅ 必做 |
@@ -407,7 +407,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/ML/LocalEmbeddingService.swift`、`ClipMind/ML/EmbeddingService.swift`、`ClipMindTests/ClassifyTests/LocalEmbeddingServiceTests.swift` |
 | AC 映射 | AC-05（11 种入库类型分类准确率 ≥ 80%）、AC-06（代码片段识别为 code）、AC-07（报错日志识别为 error） |
 | 测试用例映射 | TC-06-01（Swift 代码片段识别为 code）、TC-06-02（Python 代码片段识别为 code）、TC-07-01（Swift 报错识别为 error）、TC-07-02（Python 堆栈报错识别为 error） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/LocalEmbeddingServiceTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/LocalEmbeddingServiceTests） |
 | 工时估算 | 4h |
 | Session | Session-10 |
 | MVP | ✅ 必做 |
@@ -423,7 +423,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Classify/ClassificationService.swift`、`ClipMind/Classify/TypeEmbeddings.swift`、`ClipMindTests/ClassifyTests/ClassificationAccuracyTests.swift`、`ClipMindTests/ClassifyTests/ContentTypeTests.swift` |
 | AC 映射 | AC-05（11 种入库类型分类准确率 ≥ 80%）、AC-06（代码片段识别为 code）、AC-07（报错日志识别为 error） |
 | 测试用例映射 | TC-05-01（11 种入库类型分类准确率 ≥ 80%） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/ClassificationAccuracyTests`；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/ContentTypeTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/ClassificationAccuracyTests、ClipMindTests/ContentTypeTests） |
 | 工时估算 | 3h |
 | Session | Session-11 |
 | MVP | ✅ 必做 |
@@ -439,7 +439,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Search/SearchService.swift`、`ClipMindTests/SearchTests/SearchServiceTests.swift`、`ClipMindTests/SearchTests/CrossLanguageSearchTests.swift`、`ClipMindTests/SearchTests/SourceFilterTests.swift` |
 | AC 映射 | AC-09（搜索返回结果 < 500ms）、AC-10（Top-5 命中率 ≥ 70%）、AC-11（跨语言搜索）、AC-12（来源 App 过滤） |
 | 测试用例映射 | TC-09-01（搜索响应时间 < 500ms）、TC-10-01（Top-5 命中率 ≥ 70%）、TC-11-01（中文查询匹配英文内容）、TC-11-02（英文查询匹配中文内容）、TC-12-01（来源 App 过滤生效） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/SearchServiceTests`；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/CrossLanguageSearchTests`；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/SourceFilterTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/SearchServiceTests、ClipMindTests/CrossLanguageSearchTests、ClipMindTests/SourceFilterTests） |
 | 工时估算 | 4h |
 | Session | Session-12 |
 | MVP | ✅ 必做 |
@@ -503,7 +503,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/UI/MenuBar/TypeTagView.swift`、`ClipMind/UI/MenuBar/ClipRowView.swift`（增强）、`ClipMindUITests/PopoverUITests.swift`（增强） |
 | AC 映射 | AC-06（间接，分类标签在 UI 正确显示） |
 | 测试用例映射 | TC-23-03（popover 手动验证，含类型标签 + 内容预览 + 来源 + 时间） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindUITests/PopoverUITests`；手动复制代码/链接/报错，观察 popover 分类标签正确显示 |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindUITests/PopoverUITests）；手动复制代码/链接/报错，观察 popover 分类标签正确显示 |
 | 工时估算 | 3h |
 | Session | Session-16 |
 | MVP | ✅ 必做 |
@@ -519,7 +519,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/UI/MainWindow/SearchBar.swift`、`ClipMind/UI/MainWindow/SearchResultsView.swift`、`ClipMind/UI/MainWindow/SourceFilter.swift`、`ClipMindUITests/SearchUITests.swift` |
 | AC 映射 | AC-09（搜索交互）、AC-12（来源 App 筛选 UI） |
 | 测试用例映射 | TC-12-02（来源 App 筛选 UI 验证） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindUITests/SearchUITests`；手动输入查询，观察结果列表与来源筛选器 |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindUITests/SearchUITests）；手动输入查询，观察结果列表与来源筛选器 |
 | 工时估算 | 4h |
 | Session | Session-17 |
 | MVP | ✅ 必做 |
@@ -541,7 +541,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/LLM/LLMService.swift`、`ClipMind/LLM/MultiProviderLLMService.swift`、`ClipMind/LLM/LLMError.swift`、`ClipMindTests/LLMTests/LLMServiceTests.swift`、`ClipMindTests/LLMTests/SummarizeTests.swift`、`ClipMindTests/LLMTests/TranslateTests.swift`、`ClipMindTests/LLMTests/RewriteTests.swift`、`ClipMindTests/LLMTests/ExtractTodoTests.swift`、`ClipMindTests/Helpers/MockLLMService.swift` |
 | AC 映射 | AC-13（智能总结 3-5 句）、AC-14（即时翻译中英对照）、AC-15（智能改写 3 模式）、AC-16（提取待办结构化）、AC-19（数据不出本机，URLProtocol 拦截验证） |
 | 测试用例映射 | TC-13-01（智能总结 mock）、TC-13-04（总结 API 错误不阻塞）、TC-14-01（翻译 mock）、TC-14-04（翻译超时不阻塞）、TC-15-01（改写 3 模式 mock）、TC-15-04（改写限流处理）、TC-16-01（待办 mock）、TC-16-04（待办解析失败处理）、TC-19-01（数据不出本机 URLProtocol 拦截） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/LLMServiceTests`；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/SummarizeTests`；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/TranslateTests`；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/RewriteTests`；`xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/ExtractTodoTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/LLMServiceTests、ClipMindTests/SummarizeTests、ClipMindTests/TranslateTests、ClipMindTests/RewriteTests、ClipMindTests/ExtractTodoTests） |
 | 工时估算 | 5h |
 | Session | Session-18 |
 | MVP | ✅ 必做 |
@@ -557,7 +557,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/LLM/APIKeyManager.swift`、`ClipMindTests/LLMTests/APIKeyManagerTests.swift` |
 | AC 映射 | AC-17（间接，API Key 管理支持未配置时置灰判断） |
 | 测试用例映射 | TC-17-01（间接，未配置 API Key 时按钮置灰需要 APIKeyManager 判断状态）、TC-17-02（间接，未配置时点击提示） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/APIKeyManagerTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/APIKeyManagerTests） |
 | 工时估算 | 2h |
 | Session | Session-19 |
 | MVP | ✅ 必做 |
@@ -589,7 +589,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/LLM/PromptTemplates.swift`、`ClipMindTests/LLMTests/PromptTemplateTests.swift` |
 | AC 映射 | AC-13（总结 Prompt 指导 3-5 句输出）、AC-14（翻译 Prompt 指导中英对照 + 术语保留）、AC-15（改写 Prompt 支持 3 种模式）、AC-16（待办 Prompt 指导结构化 JSON 输出） |
 | 测试用例映射 | TC-13-01（间接，总结 mock 验证 Prompt 输出格式）、TC-14-01（间接，翻译 mock 验证术语保留）、TC-15-01（间接，改写 mock 验证 3 模式）、TC-16-01（间接，待办 mock 验证结构化输出） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/PromptTemplateTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/PromptTemplateTests） |
 | 工时估算 | 2h |
 | Session | Session-21 |
 | MVP | ✅ 必做 |
@@ -605,7 +605,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/UI/MainWindow/DetailPanel.swift`（增强）、`ClipMind/UI/MainWindow/ProcessingButtons.swift`、`ClipMind/UI/MainWindow/ResultBlockView.swift`、`ClipMindUITests/ProcessingUITests.swift` |
 | AC 映射 | AC-13（总结结果展示）、AC-14（翻译结果展示）、AC-15（改写模式选择 UI）、AC-16（待办结果展示）、AC-17（未配置 API Key 时按钮置灰） |
 | 测试用例映射 | TC-13-02（总结结果写入 ClipItem.summary 持久化验证）、TC-13-03（总结真实 API 集成手动验证）、TC-14-02（翻译结果写入 ClipItem.translation）、TC-14-03（翻译真实 API 集成手动验证）、TC-15-02（改写模式选择 UI）、TC-15-03（改写真实 API 集成手动验证）、TC-16-02（待办结果写入 ClipItem.todos）、TC-16-03（待办真实 API 集成手动验证）、TC-17-01（未配置 API Key 时按钮置灰）、TC-17-02（未配置 API Key 时点击提示）、TC-17-03（未配置 API Key 手动验证） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindUITests/ProcessingUITests`；手动配置真实 API Key，点击 4 种处理，观察结果 |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindUITests/ProcessingUITests）；手动配置真实 API Key，点击 4 种处理，观察结果 |
 | 工时估算 | 5h |
 | Session | Session-22 |
 | MVP | ✅ 必做 |
@@ -621,7 +621,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/UI/Settings/APIKeyConfigView.swift`、`ClipMind/UI/Settings/SettingsView.swift`、`ClipMindUITests/SettingsUITests.swift` |
 | AC 映射 | AC-17（API Key 配置 UI 支持未配置状态判断） |
 | 测试用例映射 | TC-17-01（未配置 API Key 时按钮置灰，依赖配置 UI 状态）、TC-17-02（未配置时点击提示，依赖配置 UI）、TC-17-03（未配置 API Key 手动验证） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindUITests/SettingsUITests`；手动打开设置面板，输入 API Key，点击验证，观察状态显示 |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindUITests/SettingsUITests）；手动打开设置面板，输入 API Key，点击验证，观察状态显示 |
 | 工时估算 | 3h |
 | Session | Session-23 |
 | MVP | ✅ 必做 |
@@ -644,7 +644,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Privacy/SensitiveDetector.swift`、`ClipMindTests/PrivacyTests/SensitiveDetectorTests.swift` |
 | AC 映射 | AC-08（密码 Token 被识别为敏感内容且不入库）、AC-22（敏感识别开关可关闭） |
 | 测试用例映射 | TC-08-01（Token 被识别为敏感内容且不入库）、TC-08-02（密码模式被识别）、TC-08-03（银行卡号被识别）、TC-08-04（身份证号被识别）、TC-08-05（验证码被识别）、TC-08-06（敏感关键词被识别）、TC-08-07（复制 Token 弹出通知提示）、TC-22-01（关闭敏感识别后 Token 入库）、TC-22-02（开启敏感识别后 Token 不入库） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/SensitiveDetectorTests`；手动复制 Token，观察通知弹出 |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/SensitiveDetectorTests）；手动复制 Token，观察通知弹出 |
 | 工时估算 | 3h |
 | Session | Session-24 |
 | MVP | ✅ 必做 |
@@ -660,7 +660,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Privacy/BlacklistService.swift`、`ClipMindTests/PrivacyTests/BlacklistServiceTests.swift` |
 | AC 映射 | AC-20（应用黑名单中的 App 复制内容自动忽略） |
 | 测试用例映射 | TC-20-01（1Password 黑名单忽略）、TC-20-02（钥匙串访问黑名单忽略）、TC-20-03（自定义黑名单添加与生效） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/BlacklistServiceTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/BlacklistServiceTests） |
 | 工时估算 | 2h |
 | Session | Session-25 |
 | MVP | ✅ 必做 |
@@ -676,7 +676,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Storage/CleanupService.swift`、`ClipMindTests/Storage/CleanupServiceTests.swift` |
 | AC 映射 | AC-21（30 天前内容自动清理） |
 | 测试用例映射 | TC-21-01（30 天前内容自动清理）、TC-21-02（29 天前内容不被清理）、TC-21-03（应用启动时自动触发清理）、TC-21-04（恰好 30 天前内容被清理边界用例） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/CleanupServiceTests` |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/CleanupServiceTests） |
 | 工时估算 | 2.5h |
 | Session | Session-26 |
 | MVP | ⚡ 可简化（MVP 跳过） |
@@ -692,7 +692,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/Privacy/DefaultBlacklist.swift`、`ClipMindTests/PrivacyTests/DefaultBlacklistTests.swift` |
 | AC 映射 | AC-20（默认黑名单预置后自动忽略） |
 | 测试用例映射 | TC-20-01（1Password 黑名单忽略，依赖默认预置）、TC-20-02（钥匙串访问黑名单忽略，依赖默认预置） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindTests/DefaultBlacklistTests`；校验预置 7 个条目（1Password + 钥匙串 + 5 家银行） |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindTests/DefaultBlacklistTests）；校验预置 7 个条目（1Password + 钥匙串 + 5 家银行） |
 | 工时估算 | 1h |
 | Session | Session-27 |
 | MVP | ✅ 必做 |
@@ -708,7 +708,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/UI/Settings/PrivacySettingsView.swift`、`ClipMind/UI/Settings/BlacklistManagementView.swift`、`ClipMindUITests/PrivacyUITests.swift`（增强） |
 | AC 映射 | AC-22（敏感识别开关 UI 切换）、AC-21（清理周期配置 UI） |
 | 测试用例映射 | TC-22-03（敏感识别开关 UI 切换）、TC-21-03（间接，清理周期 UI 配置后启动触发） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindUITests/PrivacyUITests`；手动切换敏感识别开关，保存后复制 Token，查询数据库 |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindUITests/PrivacyUITests）；手动切换敏感识别开关，保存后复制 Token，查询数据库 |
 | 工时估算 | 4h |
 | Session | Session-28 |
 | MVP | ⚡ 可简化（MVP 跳过） |
@@ -724,7 +724,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/UI/Settings/GeneralSettingsView.swift`、`ClipMind/UI/Settings/HotkeyRecorder.swift`、`ClipMindUITests/SettingsUITests.swift`（增强） |
 | AC 映射 | AC-23（间接，通用设置支持菜单栏图标常驻配置） |
 | 测试用例映射 | TC-23-01（间接，菜单栏图标常驻需要通用设置支持开机启动） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindUITests/SettingsUITests`；手动切换开机启动开关，配置快捷键 |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindUITests/SettingsUITests）；手动切换开机启动开关，配置快捷键 |
 | 工时估算 | 2h |
 | Session | Session-29 |
 | MVP | ⚡ 可简化（MVP 跳过） |
@@ -740,7 +740,7 @@ CI 工作流在以下场景自动触发：
 | 输出 | `ClipMind/UI/Onboarding/OnboardingView.swift`、`ClipMind/UI/Onboarding/WelcomeView.swift`、`ClipMind/UI/Onboarding/PermissionRequestView.swift`、`ClipMind/UI/Onboarding/APIKeyGuideView.swift`、`ClipMind/UI/Onboarding/PrivacyNoticeView.swift`、`ClipMindUITests/FirstLaunchUITests.swift` |
 | AC 映射 | AC-24（首次启动引导流程完整） |
 | 测试用例映射 | TC-24-01（首次启动引导流程完整 UI 自动化）、TC-24-02（API Key 配置引导可跳过）、TC-24-03（首次启动引导手动验证） |
-| 验证方式 | `xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind -destination 'platform=macOS' -only-testing:ClipMindUITests/FirstLaunchUITests`；手动删除 App 偏好后重新启动，观察引导流程 |
+| 验证方式 | CI 验证（push 后自动触发 ClipMindUITests/FirstLaunchUITests）；手动删除 App 偏好后重新启动，观察引导流程 |
 | 工时估算 | 5h |
 | Session | Session-30 |
 | MVP | ⚡ 可简化（MVP 跳过） |
@@ -1372,10 +1372,10 @@ flowchart TD
 
 每个任务完成前必须满足以下检查项：
 
-- [ ] 测试代码已编写并运行通过（`xcodebuild test` 对应测试类 PASS）
+- [ ] 测试代码已编写，CI 验证通过（push 后 `gh run watch` 确认对应测试类 PASS，**禁止本地执行 xcodebuild test**）
 - [ ] 实现代码已编写并编译通过（`xcodebuild build` 成功）
 - [ ] SwiftLint 检查通过（`swiftlint lint --strict` 无错误）
-- [ ] AC 映射的验收标准已验证（自动化测试通过或手动验证记录）
+- [ ] AC 映射的验收标准已验证（CI 自动化测试通过或手动验证记录）
 - [ ] 代码已提交（`git commit` 触发 pre-commit hook 通过）
 - [ ] **CI 持续集成通过**（GitHub Actions CI 在远程仓库运行通过，推送后等待 CI 完成并确认绿色）
 - [ ] 任务状态更新为 ✅ DONE（在本实施计划文档中标注）
@@ -1459,8 +1459,8 @@ flowchart LR
 
 **提交前检查清单**：
 1. `swiftlint lint --strict` 通过
-2. `xcodebuild test` 相关测试通过
-3. `xcodebuild build` 编译通过
+2. `xcodebuild build` 编译通过
+3. 提交并 push 后，CI 验证通过（**禁止本地执行 xcodebuild test**）
 4. 提交信息符合上述格式
 
 ### 9.5 Session 管理规范

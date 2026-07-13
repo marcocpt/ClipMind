@@ -1,4 +1,4 @@
-> 最后更新：2026-07-13 | 版本：v1.4
+> 最后更新：2026-07-13 | 版本：v1.5
 
 # ClipMind 初赛 MVP 设计规范
 
@@ -1282,6 +1282,14 @@ struct DebugConfig {
 | XCTest | 单元测试 + 性能测试 | 核心模块逻辑、数据模型、服务层 |
 | XCUITest | UI 测试 | 关键用户路径、首启流程、菜单栏交互 |
 | SwiftLint | 代码风格检查 | 全部 Swift 源码 |
+| GitHub Actions CI | 自动化测试执行 | 全部测试（单元+UI+Lint），**禁止本地执行测试** |
+
+**测试执行策略（CI 优先，禁止本地）**：
+
+- **所有测试必须在 CI 上执行**：代码提交后 push 到远端，由 GitHub Actions CI 自动触发测试
+- **禁止本地执行 xcodebuild test**：本地环境差异（签名、SDK、系统通知干扰）会掩盖问题，CI 是唯一权威验证环境
+- **本地仅允许编译检查**：`xcodebuild build` 确认编译通过，不等同于测试验证
+- **CI 触发流程**：`git push` → CI 自动运行 `ClipMindTests` + `ClipMindUITests` + `swiftlint lint --strict` → `gh run watch <run-id> --exit-status` 等待结果
 
 ### 9.2 单元测试（XCTest）
 
@@ -1489,30 +1497,51 @@ fi
 
 ### 9.5 测试执行命令
 
+> **禁止本地执行测试**：所有测试必须在 CI 上运行。以下本地命令仅供参考，不得在实际开发中使用。
+
+**CI 执行（唯一授权方式）**：
+
 ```bash
-# 运行全部单元测试
-xcodebuild test \
+# 提交代码并 push 触发 CI
+git push origin <branch>
+
+# 等待 CI 运行结果
+gh run watch <run-id> --exit-status
+
+# 查看 CI 运行列表
+gh run list --workflow ci.yml --branch <branch> --limit 5
+
+# 查看 CI 失败日志
+gh run view <run-id> --log-failed
+```
+
+**本地仅允许编译检查（不等同于测试验证）**：
+
+```bash
+# 编译检查（确认代码无编译错误，不运行测试）
+xcodebuild build \
   -project ClipMind.xcodeproj \
   -scheme ClipMind \
-  -destination 'platform=macOS' \
-  -only-testing:ClipMindTests
+  -destination 'platform=macOS'
 
-# 运行 UI 测试
-xcodebuild test \
-  -project ClipMind.xcodeproj \
-  -scheme ClipMind \
-  -destination 'platform=macOS' \
-  -only-testing:ClipMindUITests
-
-# 生成覆盖率报告
-xcodebuild test \
-  -project ClipMind.xcodeproj \
-  -scheme ClipMind \
-  -destination 'platform=macOS' \
-  -enableCodeCoverage YES
-
-# SwiftLint 检查
+# SwiftLint 检查（提交前本地 lint，CI 也会再次检查）
 swiftlint lint --strict
+```
+
+**已禁止的本地命令（仅供参考，不得执行）**：
+
+```bash
+# ❌ 禁止：本地运行单元测试
+# xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind \
+#   -destination 'platform=macOS' -only-testing:ClipMindTests
+
+# ❌ 禁止：本地运行 UI 测试
+# xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind \
+#   -destination 'platform=macOS' -only-testing:ClipMindUITests
+
+# ❌ 禁止：本地生成覆盖率报告
+# xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind \
+#   -destination 'platform=macOS' -enableCodeCoverage YES
 ```
 
 ---
