@@ -106,4 +106,84 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(validateButton.waitForExistence(timeout: 5))
         XCTAssertFalse(validateButton.isEnabled, "输入为空时验证按钮应禁用")
     }
+
+    // MARK: - 通用设置（T3.6）
+
+    /// 通用设置测试统一的启动参数
+    private var generalLaunchArguments: [String] {
+        ["--UITEST_SHOW_MAIN_WINDOW", "--UITEST_RESET_SETTINGS", "--UITEST_INITIAL_TAB=general"]
+    }
+
+    /// 获取 Toggle 的布尔值（macOS 上 Toggle.value 为 NSNumber 1/0）
+    private func toggleValue(_ toggle: XCUIElement) -> Int {
+        if let intValue = toggle.value as? Int {
+            return intValue
+        }
+        if let stringValue = toggle.value as? String {
+            return Int(stringValue) ?? 0
+        }
+        return 0
+    }
+
+    /// 启动 App 并打开设置面板（通用标签已通过启动参数定位）
+    private func launchAndOpenGeneralSettings() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = generalLaunchArguments
+        app.launch()
+        app.activate()
+
+        let settingsButton = app.buttons["settingsButton"].firstMatch
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5), "设置按钮应存在")
+        settingsButton.click()
+
+        // 等待通用标签内容加载（launchAtLoginToggle 是通用页独有元素）
+        let launchToggle = element("launchAtLoginToggle", in: app)
+        XCTAssertTrue(
+            launchToggle.waitForExistence(timeout: 5),
+            "通用标签应已激活，开机启动开关应存在"
+        )
+        return app
+    }
+
+    /// 验证通用设置组件存在
+    func testGeneralSettingsComponentsExist() {
+        let app = launchAndOpenGeneralSettings()
+
+        XCTAssertTrue(
+            element("launchAtLoginToggle", in: app).exists,
+            "应有开机启动开关"
+        )
+        XCTAssertTrue(
+            element("hotkeyRecorder", in: app).exists,
+            "应有快捷键录制器"
+        )
+    }
+
+    /// 验证开机启动开关可切换。
+    ///
+    /// click 前调用 `app.activate()` 确保窗口有焦点，click 后短暂 sleep
+    /// 让 @AppStorage 写入完成。本地运行受系统通知/焦点切换干扰，
+    /// CI 环境更稳定。
+    func testLaunchAtLoginToggleSwitches() {
+        let app = launchAndOpenGeneralSettings()
+
+        let toggle = element("launchAtLoginToggle", in: app)
+        XCTAssertTrue(toggle.exists)
+
+        let initialValue = toggleValue(toggle)
+
+        app.activate()
+        toggle.click()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        let newValue = toggleValue(toggle)
+        XCTAssertNotEqual(initialValue, newValue, "切换后状态应改变")
+
+        // 再次切换验证可重复操作
+        app.activate()
+        toggle.click()
+        Thread.sleep(forTimeInterval: 0.5)
+        let backValue = toggleValue(toggle)
+        XCTAssertEqual(backValue, initialValue, "再次切换应回到初始值")
+    }
 }
