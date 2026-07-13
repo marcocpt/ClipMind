@@ -126,10 +126,7 @@ final class FirstLaunchUITests: XCTestCase {
     /// 如有弹窗则关闭
     private func dismissAlertIfExists(in app: XCUIApplication) {
         // 在 alert sheet 中查找确定按钮，避免匹配到 Touch Bar 元素
-        let alerts = app.sheets
-        if alerts.waitForExistence(timeout: 2) {
-            let confirm = alerts.buttons["确定"].firstMatch
-            if confirm.exists { confirm.click() }
-        }
+        let confirm = app.sheets.buttons["确定"].firstMatch
+        if confirm.waitForExistence(timeout: 2) { confirm.click() }
     }
 }
