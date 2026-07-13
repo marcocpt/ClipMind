@@ -84,6 +84,42 @@ final class FirstLaunchUITests: XCTestCase {
         )
     }
 
+    // MARK: - TC-24-03 重置标志位后首启引导应显示
+
+    /// 验证 hasCompletedOnboarding 被设为 true 后，通过通用重置参数应恢复首启引导显示
+    ///
+    /// 场景：用户之前已完成引导（标志位=true），使用 --reset-onboarding 重置后
+    /// 应重新显示引导而非主窗口。
+    /// --reset-onboarding 是面向所有启动场景的通用重置参数（不限于 UI 测试），
+    /// 在 applicationWillFinishLaunching 中执行重置，确保在 SwiftUI 读取
+    /// @AppStorage 之前生效，避免先渲染 MainWindow 再切换的时序问题。
+    func testOnboardingShowsAfterResetFromCompletedState() {
+        // Step 1: 设置 hasCompletedOnboarding=true（模拟已完成引导）
+        let setupApp = XCUIApplication()
+        setupApp.launchArguments = ["--UITEST_SHOW_MAIN_WINDOW"]
+        setupApp.launch()
+        XCTAssertTrue(
+            setupApp.windows.firstMatch.waitForExistence(timeout: 10),
+            "设置阶段：主窗口应出现"
+        )
+        setupApp.terminate()
+
+        // Step 2: 使用通用重置参数验证首启引导显示
+        let app = XCUIApplication()
+        app.launchArguments = ["--reset-onboarding"]
+        app.launch()
+        let window = app.windows.firstMatch
+        _ = window.waitForExistence(timeout: 10)
+        app.activate()
+
+        // 验证 OnboardingView 出现（而非 MainWindow）
+        let startButton = findButton(app, identifier: "startButton")
+        XCTAssertTrue(
+            startButton.waitForExistence(timeout: 20),
+            "使用 --reset-onboarding 重置后应显示首启引导，而非主窗口"
+        )
+    }
+
     // MARK: - 辅助方法
 
     /// 查找按钮元素
