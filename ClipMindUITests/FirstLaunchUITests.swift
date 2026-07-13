@@ -80,8 +80,10 @@ final class FirstLaunchUITests: XCTestCase {
 
     /// 启动带引导重置参数的 App
     ///
+    /// 使用独立的 bundle identifier 来完全隔离 UserDefaults，避免其他 UI 测试的
+    /// hasCompletedOnboarding=true 残留影响引导流程。
     /// 注意：不能使用 --UITEST_SHOW_MAIN_WINDOW，该参数会设置 hasCompletedOnboarding=true，
-    /// 导致引导流程被跳过。引导模式下 AppDelegate 已设置 .regular 激活策略，窗口可见。
+    /// 导致引导流程被跳过。
     private func launchFreshApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
