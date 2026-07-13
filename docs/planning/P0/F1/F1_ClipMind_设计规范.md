@@ -1,4 +1,4 @@
-> 最后更新：2026-07-12 | 版本：v1.3
+> 最后更新：2026-07-13 | 版本：v1.4
 
 # ClipMind 初赛 MVP 设计规范
 
@@ -1554,6 +1554,8 @@ swiftlint lint --strict
 | 录屏 | `UI-AC-{编号}_{场景描述}.mov` | `docs/planning/P0/F1/recordings/` |
 | XCUITest | `UI{编号}{场景}Tests.swift` | `ClipMindUITests/` |
 
+> **手动验收证据延后说明**：手动验收证据（截图/录屏）将延后至 Phase 4 T4.4 Demo 帖准备时统一补充。Phase 2 期间通过 XCUITest 自动化证据覆盖 UI AC，所有 UI AC 已达到 Layer 1-2 证据层级（Layer 1 = XCUITest 自动化断言通过，Layer 2 = 人工确认自动化测试覆盖了正确的交互路径）。截图/录屏证据存储目录 `screenshots/` 与 `recordings/` 已预先创建占位，待 Phase 4 统一填充。
+
 ### 10.3 UI 设计风格参考
 
 基于 `docs/ClipMind.html` 设计风格：
@@ -1831,3 +1833,4 @@ flowchart LR
 | v1.1 | 2026-07-12 | 修复 3 轮审查发现的 13 项必须修复问题 + YAGNI 清理 |
 | v1.2 | 2026-07-12 | 修复第二轮审查：AC-19 域名白名单与实际 API 端点对齐；AC-05 分类测试集改为 11 种入库类型 220 条 + 敏感样本独立 20 条；统一 11 种入库类型表述 |
 | v1.3 | 2026-07-12 | 修复第三轮审查：同步 9.2.2/9.2.4 测试集数量（220+20）、时机（Phase 1）、3.3 流程图与 Phase 1 表述统一为 11 种入库类型 |
+| v1.4 | 2026-07-13 | 第 10 节 UI 可观测性矩阵新增"手动验收证据延后说明"：标注截图/录屏手动验收证据延后至 Phase 4 T4.4 Demo 帖准备时统一补充，Phase 2 期间通过 XCUITest 自动化证据覆盖 UI AC（Layer 1-2 证据层级） |
