@@ -1,10 +1,10 @@
-> 最后更新：2026-07-12 | 版本：v1.1（基于设计规范 v1.3，新增 CI 持续集成配置）
+> 最后更新：2026-07-13 | 版本：v1.2（基于设计规范 v1.3，同步测试用例表 v1.2 覆盖状态，标注 T2.6 验证即保存 UX）
 
 # ClipMind 初赛 MVP 实施计划
 
 **功能编号**：F1.x（Phase 01 · P0 · 初赛必做）
 **文档存放路径**：`docs/planning/P0/F1/F1_ClipMind_实施计划.md`
-**上游输入**：设计规范 v1.3、测试用例表 v1.1、视觉原型
+**上游输入**：设计规范 v1.3、测试用例表 v1.2、视觉原型
 **适用阶段**：TRAE AI 创造力大赛初赛（2026-07-15 截止）
 
 ---
@@ -625,6 +625,7 @@ CI 工作流在以下场景自动触发：
 | 工时估算 | 3h |
 | Session | Session-23 |
 | MVP | ✅ 必做 |
+| 实现说明 | **验证即保存**：实际实现中 API Key 保存逻辑隐含在验证流程内——用户点击"验证"按钮（`accessibilityIdentifier("validateButton")`）时，`validateKey()` 方法先调用 `keyManager.saveKey()` 将 Key 写入 Keychain，再调用 `keyManager.validateKey()` 发起真实 API 验证请求。因此不设独立的"保存"按钮，也不需要 `saveButton` accessibility identifier。此 UX 设计减少了用户操作步骤（无需先保存再验证），验证通过即代表 Key 已安全持久化到 Keychain。 |
 
 ---
 
@@ -1492,3 +1493,4 @@ flowchart LR
 |------|------|---------|
 | v1.0 | 2026-07-12 | 初始版本，基于设计规范 v1.3 和测试用例表 v1.1，覆盖 25 条 AC 和 69 个测试用例，拆分 35 个任务（Phase 0: 8 + Phase 1: 9 + Phase 2: 6 + Phase 3: 7 + Phase 4: 5），总工时 105.5h，MVP 兜底路径 92h |
 | v1.1 | 2026-07-12 | 新增 3.6 节 CI 持续集成配置；更新 3.5 节测试工具表加入 GitHub Actions/XcodeGen/xcbeautify；DoD 检查表新增 CI 通过要求；状态变更流程新增 CI 检查节点 |
+| v1.2 | 2026-07-13 | 同步测试用例表 v1.2 覆盖状态（上游输入引用更新）；T2.6 新增"实现说明"字段，标注"验证即保存"UX 设计：API Key 保存逻辑隐含在验证流程内（`validateKey()` 先调用 `saveKey()` 写入 Keychain 再发起验证请求），不设独立"保存"按钮，不需要 `saveButton` accessibility identifier，验证按钮 identifier 为 `validateButton` |

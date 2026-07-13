@@ -1,0 +1,81 @@
+{
+  "responses": {
+    "summarize": [
+      "项目采用 Swift 5.7 开发，部署目标为 macOS 13.0。数据存储使用 SQLite.swift 并配合 AES-256-GCM 加密。分类服务基于本地词向量实现，无需联网。",
+      "本次会议讨论了 Phase 2 的 LLM 集成方案。团队决定支持 OpenAI、智谱、通义、DeepSeek 四家提供商。请求超时统一为 30 秒，最多重试 2 次。错误处理采用不阻塞本地功能的原则。",
+      "ClipMind 是一款 macOS 剪贴板增强应用。它将剪贴板升级为 AI 信息库，支持智能分类和语义搜索。Phase 0 完成了基础设施搭建，包括加密存储和日志系统。Phase 1 实现了基于本地词向量的内容分类。Phase 2 将集成云端 LLM 提供一键 AI 处理能力。"
+    ],
+    "translate": [
+      "原文：The URLSession class provides an API for downloading data from URLs.\n译文：URLSession 类提供了从 URL 下载数据的 API。",
+      "原文：我们需要在 NSWindowController 中处理键盘事件。\n译文：We need to handle keyboard events in NSWindowController.",
+      "原文：使用 Codable 协议可以方便地进行 JSON 序列化。\n译文：Using the Codable protocol makes JSON serialization convenient."
+    ],
+    "rewrite": {
+      "adjust_tone": "您好，建议您在提交代码前先运行单元测试，以确保改动不会破坏现有功能。",
+      "condense": "先跑测试再提交。",
+      "expand": "在将代码合并到主分支之前，强烈建议先在本地运行完整的单元测试套件，确保所有测试用例都能通过。这样可以有效避免引入回归问题，维护代码库的稳定性。如果测试失败，应先修复问题再提交。"
+    },
+    "extract_todo": [
+      {
+        "todos": [
+          {
+            "task": "完成 LLM 服务集成",
+            "assignee": "张三",
+            "dueDate": "2025-01-15"
+          },
+          {
+            "task": "编写 UI 集成测试",
+            "assignee": "李四",
+            "dueDate": "2025-01-20"
+          },
+          {
+            "task": "更新设计文档",
+            "assignee": null,
+            "dueDate": null
+          }
+        ]
+      },
+      {
+        "todos": [
+          {
+            "task": "修复登录页面样式问题",
+            "assignee": "王五",
+            "dueDate": "2025-01-10"
+          }
+        ]
+      },
+      {
+        "todos": [
+          {
+            "task": "实现用户注册接口",
+            "assignee": "赵六",
+            "dueDate": "2025-02-01"
+          },
+          {
+            "task": "编写接口文档",
+            "assignee": "赵六",
+            "dueDate": "2025-02-05"
+          }
+        ]
+      }
+    ]
+  },
+  "errors": {
+    "rate_limited": {
+      "status": 429,
+      "body": "{\"error\": {\"message\": \"Rate limit reached. Please retry later.\", \"type\": \"rate_limit_error\"}}"
+    },
+    "invalid_key": {
+      "status": 401,
+      "body": "{\"error\": {\"message\": \"Invalid API key provided.\", \"type\": \"authentication_error\"}}"
+    },
+    "timeout": {
+      "error": "timeout",
+      "message": "Request timed out after 30 seconds"
+    },
+    "server_error": {
+      "status": 500,
+      "body": "{\"error\": {\"message\": \"Internal server error.\", \"type\": \"server_error\"}}"
+    }
+  }
+}
