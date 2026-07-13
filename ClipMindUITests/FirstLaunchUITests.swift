@@ -13,10 +13,35 @@ final class FirstLaunchUITests: XCTestCase {
     func testFirstLaunchOnboardingFlow() {
         let app = launchFreshApp()
 
+        // 等待窗口存在
+        let windowExists = app.windows.firstMatch.waitForExistence(timeout: 15)
+        if !windowExists {
+            let screenshot = XCUIScreen.main.screenshot()
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = "NoWindow"
+            attachment.lifetime = .alwaysOnFailure
+            add(attachment)
+            XCTFail("应用窗口未出现")
+            return
+        }
+
+        // 截图查看当前 UI 状态
+        let screenshot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = "AfterLaunch"
+        attachment.lifetime = .alwaysOnFailure
+        add(attachment)
+
+        // 打印当前可访问性树中的按钮
+        let allButtons = app.buttons.allElementsBoundByIndex
+        let buttonIds = allButtons.map { $0.identifier }.filter { !$0.isEmpty }
+        let buttonLabels = allButtons.map { $0.label }.filter { !$0.isEmpty }
+        print("DEBUG: Found \(allButtons.count) buttons, identifiers: \(buttonIds), labels: \(buttonLabels)")
+
         // 欢迎页：等待 "开始使用" 按钮出现并点击
         XCTAssertTrue(
             app.buttons["startButton"].waitForExistence(timeout: 20),
-            "欢迎页的'开始使用'按钮应出现"
+            "欢迎页的'开始使用'按钮应出现。当前按钮: \(buttonIds)"
         )
         app.buttons["startButton"].click()
 
