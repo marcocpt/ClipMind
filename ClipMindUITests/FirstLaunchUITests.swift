@@ -5,6 +5,24 @@ final class FirstLaunchUITests: XCTestCase {
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
+        cleanUpDatabase()
+    }
+
+    override func tearDown() {
+        XCUIApplication().terminate()
+        super.tearDown()
+    }
+
+    /// 清除上一轮测试残留的数据库文件（F1.8 示例数据注入后需清理）。
+    private func cleanUpDatabase() {
+        let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        )[0]
+        let dbPath = appSupport.appendingPathComponent("ClipMind/clipmind.db")
+        for suffix in ["", "-wal", "-shm"] {
+            try? FileManager.default.removeItem(atPath: dbPath.path + suffix)
+        }
     }
 
     // MARK: - TC-24-01 首次启动引导流程完整
@@ -46,10 +64,11 @@ final class FirstLaunchUITests: XCTestCase {
         )
         finishButton.click()
 
-        // 引导完成后应进入主界面
+        // 引导完成后应进入主界面（F1.8 后示例数据注入较快，historyList 也算主界面已出现）
         XCTAssertTrue(
-            app.staticTexts["暂无剪贴历史"].waitForExistence(timeout: 5)
-                || app.staticTexts["复制任何内容，它将自动出现在这里"].waitForExistence(timeout: 5),
+            app.staticTexts["暂无剪贴历史"].waitForExistence(timeout: 3)
+                || app.staticTexts["复制任何内容，它将自动出现在这里"].waitForExistence(timeout: 3)
+                || app.descendants(matching: .any)["historyList"].firstMatch.waitForExistence(timeout: 5),
             "引导完成后应进入主界面"
         )
     }
