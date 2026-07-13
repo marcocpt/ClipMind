@@ -1,10 +1,10 @@
-> 最后更新：2026-07-13 | 版本：v1.2（基于设计规范 v1.3）
+> 最后更新：2026-07-14 | 版本：v1.5（基于设计规范 v1.7）
 
 # ClipMind 初赛 MVP 测试用例表
 
 **功能编号**：F1.x（Phase 01 · P0 · 初赛必做）
 **文档存放路径**：`docs/planning/P0/F1/F1_ClipMind_测试用例表.md`
-**关联设计规范**：`docs/planning/P0/F1/F1_ClipMind_设计规范.md` v1.3
+**关联设计规范**：`docs/planning/P0/F1/F1_ClipMind_设计规范.md` v1.6
 **适用阶段**：TRAE AI 创造力大赛初赛（2026-07-15 截止）
 
 ---
@@ -25,7 +25,7 @@
 
 ### 1.1 覆盖范围
 
-本测试用例表覆盖设计规范 v1.3 中定义的全部 25 条验收标准（AC-01 ~ AC-25），按功能模块组织：
+本测试用例表覆盖设计规范 v1.6 中定义的全部 26 条验收标准（AC-01 ~ AC-26），按功能模块组织：
 
 | 模块 | AC 数量 | AC 编号范围 |
 |------|---------|------------|
@@ -35,8 +35,8 @@
 | F1.4 一键处理 | 5 | AC-13 ~ AC-17 |
 | F1.5 本地加密存储 | 2 | AC-18 ~ AC-19 |
 | F1.6 隐私保护 | 3 | AC-20 ~ AC-22 |
-| F1.7 主界面与交互 | 3 | AC-23 ~ AC-25 |
-| **合计** | **25** | — |
+| F1.7 主界面与交互 | 4 | AC-23 ~ AC-26 |
+| **合计** | **26** | — |
 
 ### 1.2 覆盖状态说明
 
@@ -62,6 +62,9 @@
 
 ```
 ClipMindTests/
+├── App/
+│   ├── GlobalHotkeyServiceTests.swift
+│   └── AppIconAssetTests.swift   # 新增
 ├── Capture/
 │   ├── PasteboardWatcherTests.swift
 │   ├── ClipCaptureServiceTests.swift
@@ -91,6 +94,10 @@ ClipMindTests/
 │   └── LocalEmbeddingServiceTests.swift
 ├── Models/
 │   └── ClipItemModelTests.swift
+├── Privacy/                       # 新增
+│   └── PermissionRequesterTests.swift   # 新增
+├── UI/                            # 新增
+│   └── PermissionIconSymbolTests.swift   # 新增
 ├── Utils/
 │   └── LoggerTests.swift
 ├── Fixtures/
@@ -181,12 +188,27 @@ ClipMindUITests/
 | TC-23-01 | AC-23 | 菜单栏图标常驻 | App 已启动 | 1. 启动 App<br>2. 观察系统菜单栏 | 菜单栏出现 ClipMind 图标 | XCUITest | ✅ COVERED | PopoverUITests.testStatusBarItemExists 覆盖 |
 | TC-23-02 | AC-23 | 点击菜单栏图标弹出 popover | App 已启动，菜单栏图标可见 | 1. 点击菜单栏 ClipMind 图标<br>2. 观察 popover | popover 弹出<br>显示最近 5-10 条剪贴内容 + 搜索框 + "查看全部"按钮 | XCUITest | ✅ COVERED | PopoverUITests.testPopoverAppearsOnIconClick + testPopoverContainsSearchField + testPopoverContainsViewAllButton |
 | TC-23-03 | AC-23 | popover 手动验证 | App 已启动，已有复制内容 | 1. 点击菜单栏图标<br>2. 观察 popover 内容 | popover 显示最近条目<br>含类型标签 + 内容预览 + 来源 + 时间 | 手动 | ⏸️ DEFERRED | UX 验证，延后至 Phase 4 T4.4 |
-| TC-24-01 | AC-24 | 首次启动引导流程完整（UI 自动化） | UserDefaults 已清空 | 1. 清空 UserDefaults<br>2. 启动 App<br>3. 遍历引导流程<br>4. 断言每个步骤页面出现 | 依次显示：欢迎页 → 权限请求 → API Key 配置引导（可跳过）→ 隐私默认值提示 → 进入主界面 | XCUITest | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
-| TC-24-02 | AC-24 | API Key 配置引导可跳过 | UserDefaults 已清空 | 1. 启动 App 进入引导<br>2. 到达 API Key 配置步骤<br>3. 点击"跳过"<br>4. 观察提示 | 提示"分类/搜索本地可用，处理需配置"<br>进入隐私默认值提示步骤 | XCUITest | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
+| TC-24-01 | AC-24 | 首次启动引导流程完整（UI 自动化） | UserDefaults 已清空 | 1. 清空 UserDefaults<br>2. 启动 App<br>3. 遍历引导流程<br>4. 断言每个步骤页面出现 | 依次显示：欢迎页 → 权限请求 → API Key 配置引导（可跳过）→ 隐私默认值提示 → 进入主界面 | XCUITest | ✅ COVERED | FirstLaunchUITests.testFirstLaunchOnboardingFlow |
+| TC-24-02 | AC-24 | API Key 配置引导可跳过 | UserDefaults 已清空 | 1. 启动 App 进入引导<br>2. 到达 API Key 配置步骤<br>3. 点击"跳过"<br>4. 观察提示 | 提示"分类/搜索本地可用，处理需配置"<br>进入隐私默认值提示步骤 | XCUITest | ✅ COVERED | FirstLaunchUITests.testAPIKeyGuideCanBeSkipped |
 | TC-24-03 | AC-24 | 首次启动引导手动验证 | App 偏好已删除 | 1. 删除 App 偏好<br>2. 启动 App<br>3. 观察引导流程 | 5 个步骤依次出现<br>权限请求正确展示 | 手动 | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
+| TC-24-04 | AC-24 | 重置标志位后首启引导应显示 | hasCompletedOnboarding=true | 1. 设置 hasCompletedOnboarding=true<br>2. 使用 --reset-onboarding 启动<br>3. 验证 OnboardingView 出现 | 显示首启引导而非主窗口 | XCUITest | ✅ COVERED | FirstLaunchUITests.testOnboardingShowsAfterResetFromCompletedState |
+| TC-24-05 | AC-24 | 辅助功能请求触发 TCC 提示 | PermissionRequester.axTrustedCheck 可注入 mock | 1. 注入 mock 闭包记录 prompt 参数<br>2. 调用 `PermissionRequester.requestAccessibility()`<br>3. 读取 mock 记录的 prompt 值 | mock 闭包被调用<br>prompt 参数为 true（触发系统 TCC 提示对话框） | XCTest | ✅ COVERED | PermissionRequesterTests.testRequestAccessibilityPassesPromptTrue |
 | TC-25-01 | AC-25 | Web 预览页可访问（curl） | Web 页已部署到 GitHub Pages | 1. 执行 `curl -I https://marcocpt.github.io/ClipMind/`<br>2. 检查 HTTP 状态码 | 返回 HTTP 200 | curl | ⏸️ DEFERRED | 延后至 Phase 4 T4.2 GitHub Pages 部署 |
 | TC-25-02 | AC-25 | Web 预览页 4 个交互流程可点击 | 浏览器已打开 Web 预览页 URL | 1. 浏览器打开 Web URL<br>2. 点击"复制演示内容"按钮<br>3. 点击"自动分类"按钮<br>4. 点击"搜索"按钮<br>5. 点击"一键处理"按钮<br>6. 观察响应 | 4 个核心流程按钮均可点击<br>每个按钮有交互响应 | 手动 | ✅ COVERED | Phase 4 已完成，browser_use 子代理验证 4 个交互流程 PASS，截图存于 docs/planning/P0/F1/screenshots/ |
 | TC-25-03 | AC-25 | Web 预览页内容完整 | 浏览器已打开 Web URL | 1. 浏览器打开 Web URL<br>2. 检查页面内容 | 包含产品介绍 + 交互式模拟<br>4 个核心流程可体验 | 手动 | ✅ COVERED | Phase 4 已完成，Web 页面包含产品介绍 + 4 个交互流程演示 |
+| TC-26-01 | AC-26 | "cmd+shift+v" 解析为正确 keyCode 与修饰键 | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "cmd+shift+v")`<br>2. 读取返回值 | 返回 `(keyCode=9, modifiers=cmdKey\|shiftKey)` | XCTest | ✅ COVERED | testParseStoredHotkey_CmdShiftV_ReturnsCorrectModifierAndKeyCode |
+| TC-26-02 | AC-26 | "ctrl+opt+a" 解析为正确 keyCode 与修饰键 | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "ctrl+opt+a")`<br>2. 读取返回值 | 返回 `(keyCode=0, modifiers=controlKey\|optionKey)` | XCTest | ✅ COVERED | testParseStoredHotkey_CtrlOptA_ReturnsCorrectModifierAndKeyCode |
+| TC-26-03 | AC-26 | "cmd+a" 解析为正确 keyCode 与修饰键 | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "cmd+a")`<br>2. 读取返回值 | 返回 `(keyCode=0, modifiers=cmdKey)` | XCTest | ✅ COVERED | testParseStoredHotkey_CmdOnly_ReturnsCorrectModifierAndKeyCode |
+| TC-26-04 | AC-26 | 无效格式返回 nil | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "invalid")`<br>2. 读取返回值 | 返回 nil | XCTest | ✅ COVERED | testParseStoredHotkey_InvalidFormat_ReturnsNil |
+| TC-26-05 | AC-26 | 空字符串返回 nil | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "")`<br>2. 读取返回值 | 返回 nil | XCTest | ✅ COVERED | testParseStoredHotkey_EmptyString_ReturnsNil |
+| TC-26-06 | AC-26 | 无修饰键返回 nil | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "v")`<br>2. 读取返回值 | 返回 nil | XCTest | ✅ COVERED | testParseStoredHotkey_NoModifier_ReturnsNil |
+| TC-26-07 | AC-26 | 未知字母返回 nil | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "cmd+zzz")`<br>2. 读取返回值 | 返回 nil | XCTest | ✅ COVERED | testParseStoredHotkey_UnknownKey_ReturnsNil |
+| TC-26-08 | AC-26 | 有效快捷键注册正确参数 | GlobalHotkeyService + mock 注册器就绪 | 1. 设置 AppSettings.hotkey = "cmd+shift+v"<br>2. 初始化 GlobalHotkeyService<br>3. 检查 mock 注册器收到的参数 | mock 注册器收到 `keyCode=9, modifiers=cmdKey\|shiftKey`<br>注册成功 | XCTest | ✅ COVERED | testGlobalHotkeyService_InitWithValidHotkey_RegistersWithCorrectParams |
+| TC-26-09 | AC-26 | 无效快捷键不注册 | GlobalHotkeyService + mock 注册器就绪 | 1. 设置 AppSettings.hotkey = "invalid"<br>2. 初始化 GlobalHotkeyService<br>3. 检查注册状态 | 未调用注册器<br>未标记为已注册 | XCTest | ✅ COVERED | testGlobalHotkeyService_InitWithInvalidHotkey_IsNotRegistered |
+| TC-26-10 | AC-26 | 注销清理注册状态 | GlobalHotkeyService 已注册快捷键 | 1. 初始化 GlobalHotkeyService（有效快捷键）<br>2. 调用 `unregister()`<br>3. 检查注册状态 | 注册器 `unregister()` 被调用<br>已注册状态清除 | XCTest | ✅ COVERED | testGlobalHotkeyService_Unregister_ClearsRegistration |
+| TC-26-11 | AC-26 | 空快捷键不注册 | GlobalHotkeyService + mock 注册器就绪 | 1. 设置 AppSettings.hotkey = ""<br>2. 初始化 GlobalHotkeyService<br>3. 检查注册状态 | 未调用注册器<br>未标记为已注册 | XCTest | ✅ COVERED | testGlobalHotkeyService_EmptyHotkey_IsNotRegistered |
+| TC-26-12 | AC-26 | 注册器失败时不标记为已注册 | GlobalHotkeyService + mock 注册器（register 返回 false） | 1. 配置 mock 注册器 `register()` 返回 false<br>2. 初始化 GlobalHotkeyService（有效快捷键）<br>3. 检查注册状态 | 注册器 `register()` 被调用但返回 false<br>未标记为已注册 | XCTest | ✅ COVERED | testGlobalHotkeyService_RegistrarFails_IsNotRegistered |
+| TC-26-13 | AC-26 | 快捷键触发发送 .openMainWindow 通知 | GlobalHotkeyService 已注册快捷键 | 1. 初始化 GlobalHotkeyService（有效快捷键）<br>2. 监听 `.openMainWindow` 通知<br>3. 模拟快捷键触发（调用 onTriggered 回调）<br>4. 检查通知是否发送 | `.openMainWindow` 通知被发送 | XCTest | ✅ COVERED | testGlobalHotkeyService_HotkeyPressed_PostsOpenMainWindowNotification |
 
 ---
 
@@ -1329,6 +1351,37 @@ ClipMindUITests/
 - **覆盖状态**：❌ MISSING
 - **备注**：真实场景验证
 
+**TC-24-04：重置标志位后首启引导应显示**
+
+- **前置条件**：
+  - `hasCompletedOnboarding=true`（模拟已完成引导）
+- **测试步骤**：
+  1. 使用 `--UITEST_SHOW_MAIN_WINDOW` 设置 `hasCompletedOnboarding=true`
+  2. 终止 App
+  3. 使用 `--reset-onboarding` 重新启动
+  4. 验证 OnboardingView 出现
+- **预期结果**：
+  - 显示首启引导而非主窗口
+  - `startButton` 可见
+- **测试框架**：XCUITest
+- **覆盖状态**：✅ COVERED
+- **备注**：验证 `applicationWillFinishLaunching` 中的通用重置机制
+
+**TC-24-05：辅助功能请求触发 TCC 提示**
+
+- **前置条件**：
+  - `PermissionRequester.axTrustedCheck` 闭包可注入 mock
+- **测试步骤**：
+  1. 注入 mock 闭包记录 prompt 参数
+  2. 调用 `PermissionRequester.requestAccessibility()`
+  3. 读取 mock 记录的 prompt 值
+- **预期结果**：
+  - mock 闭包被调用
+  - prompt 参数为 `true`（触发系统 TCC 提示对话框，自动把 ClipMind 加入辅助功能权限列表）
+- **测试框架**：XCTest
+- **覆盖状态**：✅ COVERED
+- **备注**：覆盖 Bug 2 修复 — 点击「打开系统设置」前先调用 `AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt: true])`，确保系统自动弹出 TCC 提示并把当前 App 加入权限列表
+
 ---
 
 #### AC-25：Web 交互预览页可访问且模拟核心流程
@@ -1654,7 +1707,7 @@ ClipMindUITests/
 | AC-21 | TC-21-01, TC-21-02, TC-21-03, TC-21-04 | XCTest | 30 天清理 + 边界（29/30/31 天）+ 启动触发 |
 | AC-22 | TC-22-01, TC-22-02, TC-22-03 | XCTest + XCUITest | 敏感识别开关 |
 | AC-23 | TC-23-03 | 手动 | popover 完整内容 |
-| AC-24 | TC-24-01, TC-24-02, TC-24-03 | XCUITest + 手动 | 首启引导完整流程 |
+| AC-24 | TC-24-01, TC-24-02, TC-24-03, TC-24-04 | XCUITest + 手动 | 首启引导完整流程 |
 
 **完成标志**：
 - 敏感内容自动识别并忽略（6 种模式）
@@ -1690,10 +1743,10 @@ ClipMindUITests/
 
 | 指标 | 数值 |
 |------|------|
-| AC 总数 | 25 |
-| 测试用例总数 | 69 |
-| 平均每 AC 用例数 | 2.76 |
-| AC 覆盖率 | 100%（25/25） |
+| AC 总数 | 26 |
+| 测试用例总数 | 83 |
+| 平均每 AC 用例数 | 3.19 |
+| AC 覆盖率 | 100%（26/26） |
 
 ### 6.2 按 AC 覆盖率
 
@@ -1724,18 +1777,19 @@ ClipMindUITests/
 | AC-21 | 4 | ✅2 ❌2 |
 | AC-22 | 3 | ❌3 |
 | AC-23 | 3 | ✅2 ⏸️1 |
-| AC-24 | 3 | ❌3 |
+| AC-24 | 4 | ✅3 ❌1 |
 | AC-25 | 3 | ⏸️3 |
+| AC-26 | 13 | ✅13 |
 
 ### 6.3 按测试框架分布
 
 | 测试框架 | 用例数 | 占比 |
 |---------|--------|------|
-| XCTest | 41 | 59.42% |
-| XCUITest | 11 | 15.94% |
-| 手动 | 16 | 23.19% |
-| curl | 1 | 1.45% |
-| **合计** | **69** | **100%** |
+| XCTest | 55 | 66.27% |
+| XCUITest | 11 | 13.25% |
+| 手动 | 16 | 19.28% |
+| curl | 1 | 1.21% |
+| **合计** | **83** | **100%** |
 
 **说明**：部分用例同时涉及 XCTest（mock）与手动（真实 API），统计时按主框架归类。
 
@@ -1743,13 +1797,13 @@ ClipMindUITests/
 
 | 覆盖状态 | 用例数 | 占比 |
 |---------|--------|------|
-| ✅ COVERED | 30 | 43.48% |
-| 🟡 PARTIAL | 8 | 11.59% |
-| ❌ MISSING | 18 | 26.09% |
-| ⏸️ DEFERRED | 13 | 18.84% |
-| **合计** | **69** | **100%** |
+| ✅ COVERED | 44 | 53.01% |
+| 🟡 PARTIAL | 8 | 9.64% |
+| ❌ MISSING | 18 | 21.69% |
+| ⏸️ DEFERRED | 13 | 15.66% |
+| **合计** | **83** | **100%** |
 
-> **当前状态**：Phase 4（Web + Demo 帖）已完成。28 条用例通过 XCTest/XCUITest 自动化覆盖；8 条因数据集缩减或仅 UI 路径覆盖标注为 PARTIAL；13 条真实 API 集成与截图/录屏手动验证用例延后（TC-25-01 curl 验证需合并到 main 后执行）；18 条依赖 Phase 3 任务（SensitiveDetector / BlacklistService / CleanupService / 首启引导）尚未实现，标注为 MISSING。Phase 4 的 TC-25-02/03 已通过 browser_use 子代理验证并更新为 ✅ COVERED。
+> **当前状态**：Phase 4（Web + Demo 帖）已完成。42 条用例通过 XCTest/XCUITest 自动化覆盖；8 条因数据集缩减或仅 UI 路径覆盖标注为 PARTIAL；13 条真实 API 集成与截图/录屏手动验证用例延后（TC-25-01 curl 验证需合并到 main 后执行）；18 条依赖 Phase 3 任务（SensitiveDetector / BlacklistService / CleanupService / 首启引导）尚未实现，标注为 MISSING。Phase 4 的 TC-25-02/03 已通过 browser_use 子代理验证并更新为 ✅ COVERED。TC-26-01 ~ TC-26-13（全局快捷键唤醒主窗口）已通过 XCTest 自动化覆盖。TC-24-05（辅助功能请求触发 TCC 提示）已通过 XCTest 自动化覆盖。
 
 ### 6.5 按模块分布
 
@@ -1761,10 +1815,10 @@ ClipMindUITests/
 | F1.4 一键处理 | 5 | 19 | 11 | 3 | 5 | 0 |
 | F1.5 本地加密存储 | 2 | 5 | 2 | 0 | 3 | 0 |
 | F1.6 隐私保护 | 3 | 10 | 9 | 1 | 0 | 0 |
-| F1.7 主界面与交互 | 3 | 9 | 0 | 4 | 4 | 1 |
-| **合计** | **25** | **69** | **41** | **11** | **16** | **1** |
+| F1.7 主界面与交互 | 4 | 23 | 14 | 4 | 4 | 1 |
+| **合计** | **26** | **83** | **55** | **11** | **16** | **1** |
 
-> **说明**：每条用例按"主测试框架"归类一次，无双重计数。F1.2 中 TC-08-07（复制 Token 弹通知）归类为手动；F1.4 新增 4 条 LLM API 错误路径用例（TC-13-04/14-04/15-04/16-04）归类为 XCTest；F1.6 新增 TC-21-04（恰好 30 天边界）归类为 XCTest。
+> **说明**：每条用例按"主测试框架"归类一次，无双重计数。F1.2 中 TC-08-07（复制 Token 弹通知）归类为手动；F1.4 新增 4 条 LLM API 错误路径用例（TC-13-04/14-04/15-04/16-04）归类为 XCTest；F1.6 新增 TC-21-04（恰好 30 天边界）归类为 XCTest；F1.7 新增 13 条全局快捷键用例（TC-26-01 ~ TC-26-13）归类为 XCTest；F1.7 新增 TC-24-05（辅助功能请求触发 TCC 提示，PermissionRequesterTests）归类为 XCTest。
 
 ---
 
@@ -1776,3 +1830,5 @@ ClipMindUITests/
 | v1.1 | 2026-07-12 | 修复 6.1~6.5 节统计错误（原 63 条实际为 64 条）；补充 AC-13~AC-16 LLM API 错误路径测试各 1 条（共 4 条）；补充 AC-21 恰好 30 天边界用例（TC-21-04）；同步 4.4 LLM mock 响应数据集（新增 4 条错误响应）；统计总数 69 条；解决 6.3 与 6.5 节 XCTest 数量矛盾；删除 6.5 节 TC-08-07 双重计数的过时备注 |
 | v1.2 | 2026-07-13 | Phase 2（F1.4 一键处理）完成后根据实际测试代码逐项核对覆盖状态：第 2 节总表与第 3 节详情的 69 条用例覆盖状态全部更新（✅ COVERED 28 / 🟡 PARTIAL 8 / ❌ MISSING 18 / ⏸️ DEFERRED 15）；1.2 节当前状态说明更新；1.4 节测试组织结构树同步为实际目录结构（含 Capture/ClassifyTests/SearchTests/LLMTests/Storage/ML/Models/Utils/Fixtures/Helpers）；6.2 节改为按 AC 汇总覆盖状态分布；6.4 节统计从 0/0/69/0 更新为 28/8/18/15；备注列补充具体测试方法名或延后理由便于追溯 |
 | v1.3 | 2026-07-13 | 剪贴板捕获管线接线修复后同步：TC-01-01/TC-01-02/TC-04-01 备注列补充 ClipCaptureServiceTests 测试方法名；1.4 节测试组织结构树补充 ClipCaptureServiceTests.swift；统计数字不变 |
+| v1.4 | 2026-07-14 | 同步快捷键唤醒修复（基于设计规范 v1.6）：新增 AC-26 全局快捷键唤醒主窗口，新增 13 条 XCTest 测试用例（TC-26-01 ~ TC-26-13，覆盖 HotkeyFormatter.parse(stored:) 解析与 GlobalHotkeyService 注册/注销/触发）；1.1 节 F1.7 AC 数量 3→4、合计 25→26；1.4 节测试组织结构树补充 App/GlobalHotkeyServiceTests.swift；6.1 节总数 69→82、AC 覆盖率 26/26；6.3 节 XCTest 41→54；6.4 节 ✅ COVERED 30→43；6.5 节 F1.7 用例数 9→22、XCTest 0→13 |
+| v1.5 | 2026-07-14 | 同步权限图标/TCC/AppIcon 修复（基于设计规范 v1.7）：新增 TC-24-05 辅助功能请求触发 TCC 提示（PermissionRequesterTests.testRequestAccessibilityPassesPromptTrue，验证 `AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt: true])` 调用时 prompt 参数为 true）；6.1 节总数 82→83、平均每 AC 用例数 3.15→3.19；6.2 节 AC-24 用例数 3→4（✅3 ❌1）；6.3 节 XCTest 54→55（占比 65.85%→66.27%）、合计 82→83；6.4 节 ✅ COVERED 43→44（占比 52.44%→53.01%）、合计 82→83；6.5 节 F1.7 用例数 22→23、XCTest 13→14、合计 82→83 |

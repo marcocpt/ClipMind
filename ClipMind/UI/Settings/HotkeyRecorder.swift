@@ -136,6 +136,41 @@ enum HotkeyFormatter {
         return parts.joined(separator: "+")
     }
 
+    /// 从存储格式解析出 Carbon API 需要的修饰键 mask 和 keyCode。
+    ///
+    /// 用于全局快捷键注册（RegisterEventHotKey）。
+    /// - Parameter stored: 存储格式，如 "cmd+shift+v"
+    /// - Returns: 解析结果，无效格式返回 nil
+    static func parse(stored: String) -> ParsedHotkey? {
+        let tokens = stored.split(separator: "+").map { $0.lowercased() }
+        guard !tokens.isEmpty else { return nil }
+
+        var modifiers: UInt32 = 0
+        var keyToken: String?
+
+        for token in tokens {
+            switch token {
+            case "cmd":
+                modifiers |= 0x0100 // cmdKey
+            case "shift":
+                modifiers |= 0x0200 // shiftKey
+            case "opt", "option":
+                modifiers |= 0x0800 // optionKey
+            case "ctrl", "control":
+                modifiers |= 0x1000 // controlKey
+            default:
+                keyToken = token
+            }
+        }
+
+        // 至少需要一个修饰键和一个普通键
+        guard modifiers != 0, let key = keyToken else { return nil }
+
+        guard let keyCode = keyCode(for: key) else { return nil }
+
+        return ParsedHotkey(modifiers: modifiers, keyCode: keyCode)
+    }
+
     /// 将 keyCode 映射为小写字母或数字字符串。
     private static func keyName(for keyCode: UInt16) -> String? {
         let keyMap: [UInt16: String] = [
@@ -148,4 +183,23 @@ enum HotkeyFormatter {
         ]
         return keyMap[keyCode]
     }
+
+    /// 将小写字母或数字字符串映射回 keyCode。
+    private static func keyCode(for key: String) -> UInt32? {
+        let keyMap: [String: UInt32] = [
+            "a": 0, "s": 1, "d": 2, "f": 3, "h": 4, "g": 5,
+            "z": 6, "x": 7, "c": 8, "v": 9, "b": 11, "q": 12,
+            "w": 13, "e": 14, "r": 15, "y": 16, "t": 17, "1": 18,
+            "2": 19, "3": 20, "4": 21, "6": 22, "5": 23, "9": 25,
+            "7": 26, "8": 28, "0": 29, "o": 31, "u": 32, "i": 34,
+            "p": 35, "l": 37, "j": 38, "k": 40, "n": 45, "m": 46
+        ]
+        return keyMap[key]
+    }
+}
+
+/// 解析后的快捷键参数，用于 Carbon API 注册。
+struct ParsedHotkey {
+    let modifiers: UInt32
+    let keyCode: UInt32
 }
