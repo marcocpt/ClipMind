@@ -61,6 +61,6 @@
 
 ## 影响范围
 
-- 新增文件：8 个（Web 页面 3 个 + workflow 1 个 + Demo 帖 1 个 + 截图 3 个 + Session ID 清单 1 个）
+- 新增文件：10 个（Web 页面 3 个 + workflow 1 个 + Demo 帖 1 个 + 截图 3 个 + Session ID 清单 1 个 + 开发日志 1 个）
 - 修改文件：1 个（project.pbxproj）
 - 不影响 Phase 0-3 的已有功能

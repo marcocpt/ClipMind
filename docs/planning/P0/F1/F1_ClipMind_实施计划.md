@@ -775,10 +775,10 @@ CI 工作流在以下场景自动触发：
 | 任务名称 | GitHub Pages 部署（部署到 GitHub Pages，验证可访问） |
 | 依赖 | T4.1 |
 | 输入 | T4.1 产出的 Web 页面文件、GitHub 仓库 |
-| 输出 | GitHub Pages 部署配置（`.github/workflows/deploy-web.yml` 或 `docs/` 目录配置）、可访问的 URL `https://<github-username>.github.io/ClipMind/` |
+| 输出 | GitHub Pages 部署配置（`.github/workflows/deploy-web.yml` 或 `docs/` 目录配置）、可访问的 URL `https://marcocpt.github.io/ClipMind/` |
 | AC 映射 | AC-25（Web 页面可访问，HTTP 200） |
 | 测试用例映射 | TC-25-01（Web 预览页可访问 curl 验证） |
-| 验证方式 | `curl -I https://<github-username>.github.io/ClipMind/` 返回 HTTP 200；浏览器打开 URL 确认页面加载 |
+| 验证方式 | `curl -I https://marcocpt.github.io/ClipMind/` 返回 HTTP 200；浏览器打开 URL 确认页面加载 |
 | 工时估算 | 1.5h |
 | Session | Session-32 |
 | MVP | ✅ 必做 |

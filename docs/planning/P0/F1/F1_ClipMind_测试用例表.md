@@ -47,7 +47,7 @@
 | MISSING | 未覆盖，测试代码尚未实现 | ❌ |
 | DEFERRED | 延后覆盖，计划在后续阶段实现 | ⏸️ |
 
-> **当前状态**：Phase 2（F1.4 一键处理）已全部完成，本表根据实际测试代码逐项核对覆盖状态。已实现的测试用例标注为 ✅ COVERED；部分覆盖（如仅 mock 路径或数据集缩减）标注为 🟡 PARTIAL；真实 API 集成与截图/录屏手动验证用例统一延后至 Phase 4 T4.4，标注为 ⏸️ DEFERRED；尚未实现的（依赖 Phase 3 任务）标注为 ❌ MISSING。
+> **当前状态**：Phase 4（Web + Demo 帖）已全部完成，本表根据实际测试代码逐项核对覆盖状态。已实现的测试用例标注为 ✅ COVERED；部分覆盖（如仅 mock 路径或数据集缩减）标注为 🟡 PARTIAL；真实 API 集成与截图/录屏手动验证用例统一延后至 Phase 4 T4.4，标注为 ⏸️ DEFERRED；尚未实现的（依赖 Phase 3 任务）标注为 ❌ MISSING。Phase 4 的 TC-25-02/03 已通过 browser_use 子代理验证并更新为 ✅ COVERED，TC-25-01（curl HTTP 200）需合并到 main 触发 GitHub Pages 部署后验证。
 
 ### 1.3 测试框架
 
@@ -183,9 +183,9 @@ ClipMindUITests/
 | TC-24-01 | AC-24 | 首次启动引导流程完整（UI 自动化） | UserDefaults 已清空 | 1. 清空 UserDefaults<br>2. 启动 App<br>3. 遍历引导流程<br>4. 断言每个步骤页面出现 | 依次显示：欢迎页 → 权限请求 → API Key 配置引导（可跳过）→ 隐私默认值提示 → 进入主界面 | XCUITest | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
 | TC-24-02 | AC-24 | API Key 配置引导可跳过 | UserDefaults 已清空 | 1. 启动 App 进入引导<br>2. 到达 API Key 配置步骤<br>3. 点击"跳过"<br>4. 观察提示 | 提示"分类/搜索本地可用，处理需配置"<br>进入隐私默认值提示步骤 | XCUITest | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
 | TC-24-03 | AC-24 | 首次启动引导手动验证 | App 偏好已删除 | 1. 删除 App 偏好<br>2. 启动 App<br>3. 观察引导流程 | 5 个步骤依次出现<br>权限请求正确展示 | 手动 | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
-| TC-25-01 | AC-25 | Web 预览页可访问（curl） | Web 页已部署到 GitHub Pages | 1. 执行 `curl -I https://<github-username>.github.io/ClipMind/`<br>2. 检查 HTTP 状态码 | 返回 HTTP 200 | curl | ⏸️ DEFERRED | 延后至 Phase 4 T4.2 GitHub Pages 部署 |
-| TC-25-02 | AC-25 | Web 预览页 4 个交互流程可点击 | 浏览器已打开 Web 预览页 URL | 1. 浏览器打开 Web URL<br>2. 点击"复制演示内容"按钮<br>3. 点击"自动分类"按钮<br>4. 点击"搜索"按钮<br>5. 点击"一键处理"按钮<br>6. 观察响应 | 4 个核心流程按钮均可点击<br>每个按钮有交互响应 | 手动 | ⏸️ DEFERRED | 延后至 Phase 4 T4.1 Web 预览页 + T4.4 手动验收 |
-| TC-25-03 | AC-25 | Web 预览页内容完整 | 浏览器已打开 Web URL | 1. 浏览器打开 Web URL<br>2. 检查页面内容 | 包含产品介绍 + 交互式模拟<br>4 个核心流程可体验 | 手动 | ⏸️ DEFERRED | 延后至 Phase 4 T4.1 Web 预览页 + T4.4 手动验收 |
+| TC-25-01 | AC-25 | Web 预览页可访问（curl） | Web 页已部署到 GitHub Pages | 1. 执行 `curl -I https://marcocpt.github.io/ClipMind/`<br>2. 检查 HTTP 状态码 | 返回 HTTP 200 | curl | ⏸️ DEFERRED | 延后至 Phase 4 T4.2 GitHub Pages 部署 |
+| TC-25-02 | AC-25 | Web 预览页 4 个交互流程可点击 | 浏览器已打开 Web 预览页 URL | 1. 浏览器打开 Web URL<br>2. 点击"复制演示内容"按钮<br>3. 点击"自动分类"按钮<br>4. 点击"搜索"按钮<br>5. 点击"一键处理"按钮<br>6. 观察响应 | 4 个核心流程按钮均可点击<br>每个按钮有交互响应 | 手动 | ✅ COVERED | Phase 4 已完成，browser_use 子代理验证 4 个交互流程 PASS，截图存于 docs/planning/P0/F1/screenshots/ |
+| TC-25-03 | AC-25 | Web 预览页内容完整 | 浏览器已打开 Web URL | 1. 浏览器打开 Web URL<br>2. 检查页面内容 | 包含产品介绍 + 交互式模拟<br>4 个核心流程可体验 | 手动 | ✅ COVERED | Phase 4 已完成，Web 页面包含产品介绍 + 4 个交互流程演示 |
 
 ---
 
@@ -1338,9 +1338,9 @@ ClipMindUITests/
 
 - **前置条件**：
   - Web 页已部署到 GitHub Pages
-  - URL: `https://<github-username>.github.io/ClipMind/`
+  - URL: `https://marcocpt.github.io/ClipMind/`
 - **测试步骤**：
-  1. 执行 `curl -I https://<github-username>.github.io/ClipMind/`
+  1. 执行 `curl -I https://marcocpt.github.io/ClipMind/`
   2. 检查 HTTP 状态码
 - **预期结果**：
   - 返回 HTTP 200
@@ -1742,13 +1742,13 @@ ClipMindUITests/
 
 | 覆盖状态 | 用例数 | 占比 |
 |---------|--------|------|
-| ✅ COVERED | 28 | 40.58% |
+| ✅ COVERED | 30 | 43.48% |
 | 🟡 PARTIAL | 8 | 11.59% |
 | ❌ MISSING | 18 | 26.09% |
-| ⏸️ DEFERRED | 15 | 21.74% |
+| ⏸️ DEFERRED | 13 | 18.84% |
 | **合计** | **69** | **100%** |
 
-> **当前状态**：Phase 2（F1.4 一键处理）已完成。28 条用例通过 XCTest/XCUITest 自动化覆盖；8 条因数据集缩减或仅 UI 路径覆盖标注为 PARTIAL，待 Phase 1 完整测试集落地后升级；15 条真实 API 集成与截图/录屏手动验证用例延后至 Phase 4 T4.4；18 条依赖 Phase 3 任务（SensitiveDetector / BlacklistService / CleanupService / 首启引导）尚未实现，标注为 MISSING。
+> **当前状态**：Phase 4（Web + Demo 帖）已完成。28 条用例通过 XCTest/XCUITest 自动化覆盖；8 条因数据集缩减或仅 UI 路径覆盖标注为 PARTIAL；13 条真实 API 集成与截图/录屏手动验证用例延后（TC-25-01 curl 验证需合并到 main 后执行）；18 条依赖 Phase 3 任务（SensitiveDetector / BlacklistService / CleanupService / 首启引导）尚未实现，标注为 MISSING。Phase 4 的 TC-25-02/03 已通过 browser_use 子代理验证并更新为 ✅ COVERED。
 
 ### 6.5 按模块分布
 
