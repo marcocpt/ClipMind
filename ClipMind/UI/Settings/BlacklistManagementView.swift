@@ -110,8 +110,17 @@ struct BlacklistManagementView: View {
         LogCategory.privacy.info("已加载 \(DefaultBlacklist.entries.count) 个默认黑名单条目")
     }
 
-    /// 添加自定义黑名单条目
+    /// 添加自定义黑名单条目。
+    ///
+    /// 按 bundleId 去重，已存在相同 bundleId 的条目时跳过添加并记录日志。
     private func addEntry() {
+        guard !blacklistService.getAll().contains(where: { $0.bundleId == newBundleId }) else {
+            LogCategory.privacy.info("黑名单已存在 bundleId: \(newBundleId)，跳过添加")
+            newBundleId = ""
+            newAppName = ""
+            showAddForm = false
+            return
+        }
         blacklistService.addCustom(bundleId: newBundleId, appName: newAppName)
         LogCategory.privacy.info("添加自定义黑名单: \(newBundleId)")
         newBundleId = ""

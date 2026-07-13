@@ -27,7 +27,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 "autoCleanupEnabled",
                 "cleanupDays",
                 "launchAtLogin",
-                "hotkey"
+                "hotkey",
+                BlacklistService.storageKey
             ]
             for key in keys {
                 UserDefaults.standard.removeObject(forKey: key)

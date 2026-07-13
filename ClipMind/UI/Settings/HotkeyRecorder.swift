@@ -8,6 +8,14 @@ import SwiftUI
 /// 支持 Esc 键取消录制，显示格式如 "⌘⇧V"。
 ///
 /// 对应设计规范 3.8 节快捷键配置。
+///
+/// ## UI 验证状态
+///
+/// - 组件存在性：已由 SettingsUITests.testGeneralSettingsComponentsExist 覆盖（Layer 1 XCUITest）
+/// - 录制流程（点击→按键→更新显示）：**手动验收项**
+///   XCUITest 难以模拟 NSEvent.addLocalMonitorForEvents 的键盘事件捕获，
+///   录制流程需在 Phase 4 T4.4 补充手动验收证据（截图/录屏）
+/// - 重置功能（resetHotkeyButton）：**手动验收项**，同上原因
 struct HotkeyRecorder: View {
     @Binding var hotkey: String
     @State private var isRecording = false
