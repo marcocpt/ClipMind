@@ -30,6 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var cleanupService: CleanupService?
     private var captureService: ClipCaptureService?
+    private var hotkeyService: GlobalHotkeyService?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         // 在 SwiftUI 读取 @AppStorage 之前执行通用重置，避免先渲染错误视图再切换
@@ -105,6 +106,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             statusItemController = StatusItemController()
             statusItemController?.setup()
             setupServices()
+            setupHotkeyService()
         } else {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
@@ -138,6 +140,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         cleanupService = CleanupService(store: store, settings: settings)
         cleanupService?.cleanupOnLaunch()
         cleanupService?.startPeriodicCleanup()
+    }
+
+    /// 初始化全局快捷键服务
+    private func setupHotkeyService() {
+        let settings = AppSettings()
+        hotkeyService = GlobalHotkeyService(hotkey: settings.hotkey)
     }
 
     private func showPopoverContentInWindow() {
