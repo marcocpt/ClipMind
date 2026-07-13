@@ -84,7 +84,7 @@ final class FirstLaunchUITests: XCTestCase {
         )
     }
 
-    // MARK: - TC-24-03 重置标志位后首启引导应显示
+    // MARK: - TC-24-04 重置标志位后首启引导应显示
 
     /// 验证 hasCompletedOnboarding 被设为 true 后，通过通用重置参数应恢复首启引导显示
     ///
