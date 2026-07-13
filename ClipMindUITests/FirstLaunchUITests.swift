@@ -19,7 +19,7 @@ final class FirstLaunchUITests: XCTestCase {
             let screenshot = XCUIScreen.main.screenshot()
             let attachment = XCTAttachment(screenshot: screenshot)
             attachment.name = "NoWindow"
-            attachment.lifetime = .alwaysOnFailure
+            attachment.lifetime = .keepAlways
             add(attachment)
             XCTFail("应用窗口未出现")
             return
@@ -29,7 +29,7 @@ final class FirstLaunchUITests: XCTestCase {
         let screenshot = XCUIScreen.main.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = "AfterLaunch"
-        attachment.lifetime = .alwaysOnFailure
+        attachment.lifetime = .keepAlways
         add(attachment)
 
         // 打印当前可访问性树中的按钮
