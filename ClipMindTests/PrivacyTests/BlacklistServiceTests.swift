@@ -194,4 +194,32 @@ final class BlacklistServiceTests: XCTestCase {
         XCTAssertFalse(service.contains(bundleId: "com.any.app"), "空黑名单不应匹配任何 bundleId")
         XCTAssertTrue(service.getAll().isEmpty, "初始状态应为空")
     }
+
+    // MARK: - 默认黑名单集成
+
+    func testDefaultBlacklistEntriesDetected() {
+        for entry in DefaultBlacklist.entries {
+            service.add(entry)
+        }
+
+        // 精确匹配
+        XCTAssertTrue(
+            service.contains(bundleId: "com.agilebits.onepassword-os"),
+            "应匹配 1Password"
+        )
+        XCTAssertTrue(
+            service.contains(bundleId: "com.apple.keychainaccess"),
+            "应匹配钥匙串访问"
+        )
+
+        // 通配符匹配
+        XCTAssertTrue(service.contains(bundleId: "com.icbc.macbank"), "应匹配工商银行")
+        XCTAssertTrue(service.contains(bundleId: "com.cmb.client"), "应匹配招商银行")
+        XCTAssertTrue(service.contains(bundleId: "com.chinaccb.app"), "应匹配建设银行")
+        XCTAssertTrue(service.contains(bundleId: "com.abchina.phone"), "应匹配农业银行")
+        XCTAssertTrue(service.contains(bundleId: "com.boc.mobile"), "应匹配中国银行")
+
+        // 非默认条目不应匹配
+        XCTAssertFalse(service.contains(bundleId: "com.random.app"), "不应匹配随机应用")
+    }
 }

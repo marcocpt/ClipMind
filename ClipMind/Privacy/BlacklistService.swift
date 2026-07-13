@@ -42,7 +42,11 @@ final class BlacklistService {
     /// - Parameter bundleId: 待检查的 bundleId
     /// - Returns: true 表示在黑名单中（支持通配符匹配）
     func contains(bundleId: String) -> Bool {
-        entries.contains { matches($0.bundleId, bundleId) }
+        let matched = entries.contains { matches($0.bundleId, bundleId) }
+        if matched {
+            LogCategory.privacy.info("Blacklist matched: \(bundleId)")
+        }
+        return matched
     }
 
     /// 获取全部黑名单条目

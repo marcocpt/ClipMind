@@ -45,7 +45,10 @@ struct SensitiveDetector {
     /// - Parameter text: 待检测文本
     /// - Returns: true 表示包含敏感内容
     func detect(_ text: String) -> Bool {
-        guard sensitiveDetectionEnabled else { return false }
+        guard sensitiveDetectionEnabled else {
+            LogCategory.privacy.debug("敏感识别已关闭，跳过检测")
+            return false
+        }
         return performDetection(text) != nil
     }
 
@@ -53,7 +56,10 @@ struct SensitiveDetector {
     /// - Parameter text: 待检测文本
     /// - Returns: 敏感类型，非敏感时返回 nil
     func detect(_ text: String) -> SensitiveType? {
-        guard sensitiveDetectionEnabled else { return nil }
+        guard sensitiveDetectionEnabled else {
+            LogCategory.privacy.debug("敏感识别已关闭，跳过检测")
+            return nil
+        }
         return performDetection(text)
     }
 }
@@ -61,15 +67,21 @@ struct SensitiveDetector {
 // MARK: - 检测调度
 
 private extension SensitiveDetector {
-    /// 执行敏感内容检测（按优先级依次检查）
+    /// 执行敏感内容检测（按设计规范 4.2 节优先级依次检查）
     func performDetection(_ text: String) -> SensitiveType? {
-        if let type = detectPassword(text) { return type }
-        if let type = detectToken(text) { return type }
-        if let type = detectIDCard(text) { return type }
-        if let type = detectBankCard(text) { return type }
-        if let type = detectVerificationCode(text) { return type }
-        if let type = detectKeyword(text) { return type }
+        if let type = detectPassword(text) { return logAndReturn(type) }
+        if let type = detectToken(text) { return logAndReturn(type) }
+        if let type = detectVerificationCode(text) { return logAndReturn(type) }
+        if let type = detectBankCard(text) { return logAndReturn(type) }
+        if let type = detectIDCard(text) { return logAndReturn(type) }
+        if let type = detectKeyword(text) { return logAndReturn(type) }
         return nil
+    }
+
+    /// 记录检测命中日志并返回类型
+    private func logAndReturn(_ type: SensitiveType) -> SensitiveType {
+        LogCategory.privacy.info("Detected sensitive: \(type.rawValue), ignored")
+        return type
     }
 
     // MARK: 密码模式
