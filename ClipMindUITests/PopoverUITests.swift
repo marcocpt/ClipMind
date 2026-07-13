@@ -4,6 +4,24 @@ final class PopoverUITests: XCTestCase {
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
+        cleanUpDatabase()
+    }
+
+    override func tearDown() {
+        XCUIApplication().terminate()
+        super.tearDown()
+    }
+
+    /// 清除上一轮测试残留的数据库文件（F1.8 示例数据注入后需清理）。
+    private func cleanUpDatabase() {
+        let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        )[0]
+        let dbPath = appSupport.appendingPathComponent("ClipMind/clipmind.db")
+        for suffix in ["", "-wal", "-shm"] {
+            try? FileManager.default.removeItem(atPath: dbPath.path + suffix)
+        }
     }
 
     func testStatusBarItemExists() {

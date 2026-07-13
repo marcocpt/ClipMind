@@ -1,19 +1,22 @@
 import ServiceManagement
 import SwiftUI
 
-/// 通用设置视图（T3.6）
+/// 通用设置视图（T3.6 + F1.8 清除示例数据）。
 ///
 /// 对应设计规范 3.8 节通用设置分区，包含：
 /// - 开机启动开关（默认开）
 /// - 快捷键配置（默认 cmd+shift+v）
+/// - 清除示例数据按钮（F1.8 新增）
 struct GeneralSettingsView: View {
     @AppStorage("launchAtLogin") private var launchAtLogin = true
     @AppStorage("hotkey") private var hotkey = "cmd+shift+v"
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         Form {
             launchAtLoginSection
             hotkeySection
+            sampleDataSection
         }
         .padding()
     }
@@ -43,6 +46,50 @@ struct GeneralSettingsView: View {
             Text("用于唤起 ClipMind 剪贴板历史窗口。")
                 .font(.caption)
                 .foregroundColor(.secondary)
+        }
+    }
+
+    // MARK: - 清除示例数据（F1.8 新增）
+
+    private var sampleDataSection: some View {
+        Section("示例数据") {
+            Button("清除示例数据") {
+                showDeleteConfirmation = true
+            }
+            .accessibilityIdentifier("clearSampleDataButton")
+
+            Text("清除首启注入的示例剪贴内容，真实复制内容不受影响。")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .confirmationDialog(
+            "确定清除所有示例数据吗？",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("清除示例数据", role: .destructive) {
+                clearSampleData()
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("此操作将删除所有标记为示例的剪贴条目，不可撤销。真实复制的内容将保留。")
+        }
+    }
+
+    /// 清除示例数据并通知 UI 刷新。
+    ///
+    /// 删除 is_sample=1 的行，发送 clipDidUpdateNotification 让 ClipStore 自动 loadClips。
+    private func clearSampleData() {
+        do {
+            let store = try EncryptedStore()
+            try store.deleteSamples()
+            NotificationCenter.default.post(
+                name: ClipCaptureService.clipDidUpdateNotification,
+                object: nil
+            )
+            LogCategory.app.info("用户已清除示例数据")
+        } catch {
+            LogCategory.storage.error("清除示例数据失败: \(error.localizedDescription)")
         }
     }
 
