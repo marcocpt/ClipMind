@@ -109,7 +109,7 @@ final class SampleDataUITests: XCTestCase {
         let codeTag = app.descendants(matching: .any)["typeTag_code"].firstMatch
         XCTAssertTrue(codeTag.waitForExistence(timeout: 5), "应存在 CODE 类型标签")
         let errorTag = app.descendants(matching: .any)["typeTag_error"].firstMatch
-        XCTAssertTrue(errorTag.exists, "应存在 ERROR 类型标签")
+        XCTAssertTrue(errorTag.waitForExistence(timeout: 5), "应存在 ERROR 类型标签")
     }
 
     // MARK: - UI-SD-02 清除示例数据（TC-F18-024 / TC-F18-025 / TC-F18-026）
@@ -295,6 +295,10 @@ final class SampleDataUITests: XCTestCase {
     // MARK: - UI-SD-05 UI 搜索"报错"命中 error 类型示例（TC-F18-033）
 
     /// 验证主窗口搜索框输入"报错"后命中 error 类型示例。
+    ///
+    /// 注意：此测试验证的是 MainWindow.performSearch 的**文本匹配**（localizedCaseInsensitiveContains），
+    /// 而非 SearchService 的语义搜索。AC2 的语义搜索由 SampleDataSearchTests（XCTest）验证。
+    /// UI 层的语义搜索验证待 SearchService 接入 MainWindow 后补充。
     ///
     /// 使用 --UITEST_PREPOPULATE_SAMPLE_AND_REAL 预置数据（含 error 示例），
     /// 在搜索框输入"报错"后等待搜索结果列表出现，验证结果包含 ERROR 类型标签。

@@ -50,8 +50,9 @@ final class SampleDataSeeder {
                 object: nil
             )
         } catch {
-            // 注入失败仅记录 error 日志，不阻塞主窗口显示，不影响真实捕获
-            LogCategory.app.error("示例数据注入失败: \(error.localizedDescription)")
+            // 注入失败：清理已写入的部分示例数据，确保下次启动可重试（设计规范 4.1 状态机）
+            LogCategory.app.error("示例数据注入失败，清理已写入数据: \(error.localizedDescription)")
+            try? store.deleteSamples()
         }
     }
 }
