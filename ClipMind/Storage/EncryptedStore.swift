@@ -23,6 +23,7 @@ final class EncryptedStore {
     private let timestampColumn = Expression<Double>("timestamp")
     private let sourceAppColumn = Expression<String?>("source_app")
     private let embeddingsBlob = Expression<Data?>("embeddings_blob")
+    private let isSampleColumn = Expression<Bool>("is_sample")
 
     // MARK: - 初始化
 
@@ -67,6 +68,7 @@ final class EncryptedStore {
         let contentType = item.contentType.rawValue
         let timestamp = item.timestamp.timeIntervalSince1970
         let sourceApp = item.sourceApp
+        let isSample = item.isSample
 
         let insert = clips.insert(
             idColumn <- id,
@@ -74,7 +76,8 @@ final class EncryptedStore {
             contentTypeColumn <- contentType,
             timestampColumn <- timestamp,
             sourceAppColumn <- sourceApp,
-            embeddingsBlob <- embeddingsData
+            embeddingsBlob <- embeddingsData,
+            isSampleColumn <- isSample
         )
         try database.run(insert)
     }
@@ -145,6 +148,20 @@ final class EncryptedStore {
         try database.run(clips.delete())
     }
 
+    /// 统计示例数据条数（用于幂等检查）
+    func countSamples() throws -> Int {
+        try database.scalar(clips.filter(isSampleColumn == true).count)
+    }
+
+    /// 删除所有示例数据（is_sample=1），真实数据不受影响
+    /// - Returns: 实际删除的行数
+    @discardableResult
+    func deleteSamples() throws -> Int {
+        let changes = try database.run(clips.filter(isSampleColumn == true).delete())
+        LogCategory.storage.info("已删除 \(changes) 条示例数据")
+        return changes
+    }
+
     // MARK: - 内部辅助
 
     private func createTables() throws {
@@ -155,11 +172,36 @@ final class EncryptedStore {
             table.column(timestampColumn)
             table.column(sourceAppColumn)
             table.column(embeddingsBlob)
+            table.column(isSampleColumn, defaultValue: false)
         })
 
         try database.run(clips.createIndex(timestampColumn, ifNotExists: true))
         try database.run(clips.createIndex(contentTypeColumn, ifNotExists: true))
         try database.run(clips.createIndex(sourceAppColumn, ifNotExists: true))
+
+        // 对已有表迁移（补充 is_sample 列）
+        try migrateSchemaIfNeeded()
+    }
+
+    /// 迁移：为已有 clips 表补充 is_sample 列。
+    ///
+    /// SQLite.swift 的 create(ifNotExists: true) 不会给已有表添加新列，
+    /// 需通过 PRAGMA table_info 检查列存在性后 ALTER TABLE 补充。
+    private func migrateSchemaIfNeeded() throws {
+        let pragma = try database.prepare("PRAGMA table_info(clips)")
+        var hasIsSample = false
+        for row in pragma {
+            // PRAGMA table_info 返回 6 列，第 2 列（index 1）为列名
+            let name = row[1] as? String
+            if name == "is_sample" {
+                hasIsSample = true
+                break
+            }
+        }
+        if !hasIsSample {
+            try database.run("ALTER TABLE clips ADD COLUMN is_sample INTEGER DEFAULT 0")
+            LogCategory.storage.info("迁移: 已添加 clips.is_sample 列")
+        }
     }
 
     // MARK: - 加密 / 解密
