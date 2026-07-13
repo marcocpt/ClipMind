@@ -236,6 +236,11 @@ flowchart TD
     S --> T
 ```
 
+**实现说明**：
+- PasteboardWatcher 负责变化检测、黑名单、敏感检测、去重，通过 onPasteboardChange 回调交付 ClipContent
+- ClipCaptureService 注册回调，负责分类（文本）、创建 ClipItem、存入 EncryptedStore、发送 clipDidUpdateNotification
+- ClipStore（UI 层 ObservableObject）监听 clipDidUpdateNotification，调用 EncryptedStore.loadAll() 刷新 @Published clips，SwiftUI 自动重渲染
+
 ### 3.4 分类入库流程
 
 ```mermaid
@@ -640,10 +645,14 @@ class PasteboardWatcher {
         }
     }
     
-    private func handlePasteboardChange() {
-        // 1. 读取内容（text/image/fileURL）
-        // 2. 获取前台 App bundleId
-        // 3. 调用 ClipCaptureService.process()
+    @objc func handlePasteboardChange() {
+        // 1. 检测 changeCount 变化
+        // 2. 黑名单检查（BlacklistService.contains）
+        // 3. 读取内容（ContentReader.readContent）
+        // 4. 敏感内容检测（SensitiveDetector.detect）
+        // 5. 去重（Deduplicator.isDuplicate）
+        // 6. 通过 onPasteboardChange 回调通知 ClipCaptureService
+        //    （ClipCaptureService 注册回调，在 handleClipContent 中处理）
     }
 }
 ```
@@ -1863,3 +1872,4 @@ flowchart LR
 | v1.2 | 2026-07-12 | 修复第二轮审查：AC-19 域名白名单与实际 API 端点对齐；AC-05 分类测试集改为 11 种入库类型 220 条 + 敏感样本独立 20 条；统一 11 种入库类型表述 |
 | v1.3 | 2026-07-12 | 修复第三轮审查：同步 9.2.2/9.2.4 测试集数量（220+20）、时机（Phase 1）、3.3 流程图与 Phase 1 表述统一为 11 种入库类型 |
 | v1.4 | 2026-07-13 | 第 10 节 UI 可观测性矩阵新增"手动验收证据延后说明"：标注截图/录屏手动验收证据延后至 Phase 4 T4.4 Demo 帖准备时统一补充，Phase 2 期间通过 XCUITest 自动化证据覆盖 UI AC（Layer 1-2 证据层级） |
+| v1.5 | 2026-07-13 | 同步剪贴板捕获管线接线修复：5.2.1 节代码示例更新为实际实现；3.3 节补充实现说明（通知机制 + ClipStore 刷新链路） |

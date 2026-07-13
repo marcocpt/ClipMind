@@ -29,6 +29,7 @@ struct ClipMindApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var cleanupService: CleanupService?
+    private var captureService: ClipCaptureService?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         applyUITestOverrides()
@@ -87,24 +88,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             statusItemController = StatusItemController()
             statusItemController?.setup()
-            setupCleanupService()
+            setupServices()
         } else {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
         }
     }
 
-    /// 初始化清理服务并启动
-    private func setupCleanupService() {
+    /// 初始化共享 EncryptedStore 并启动捕获与清理服务
+    private func setupServices() {
         do {
             let store = try EncryptedStore()
-            let settings = AppSettings()
-            cleanupService = CleanupService(store: store, settings: settings)
-            cleanupService?.cleanupOnLaunch()
-            cleanupService?.startPeriodicCleanup()
+            setupCaptureService(store: store)
+            setupCleanupService(store: store)
         } catch {
-            LogCategory.storage.error("清理服务初始化失败: \(error.localizedDescription)")
+            LogCategory.storage.error("EncryptedStore 初始化失败: \(error.localizedDescription)")
         }
+    }
+
+    /// 初始化并启动剪贴板捕获服务
+    private func setupCaptureService(store: EncryptedStore) {
+        let embeddingService = LocalEmbeddingService()
+        let classifier = ClassificationService(embeddingService: embeddingService)
+        let watcher = PasteboardWatcher()
+        captureService = ClipCaptureService(watcher: watcher, store: store, classifier: classifier)
+        captureService?.start()
+        LogCategory.app.info("剪贴板捕获服务已启动")
+    }
+
+    /// 初始化清理服务并启动
+    private func setupCleanupService(store: EncryptedStore) {
+        let settings = AppSettings()
+        cleanupService = CleanupService(store: store, settings: settings)
+        cleanupService?.cleanupOnLaunch()
+        cleanupService?.startPeriodicCleanup()
     }
 
     private func showPopoverContentInWindow() {

@@ -64,6 +64,7 @@
 ClipMindTests/
 ├── Capture/
 │   ├── PasteboardWatcherTests.swift
+│   ├── ClipCaptureServiceTests.swift
 │   ├── ContentReaderTests.swift
 │   ├── DeduplicationTests.swift
 │   └── AppDetectorTests.swift
@@ -117,14 +118,14 @@ ClipMindUITests/
 
 | 用例编号 | AC 编号 | 用例名称 | 前置条件 | 测试步骤 | 预期结果 | 测试框架 | 覆盖状态 | 备注 |
 |---------|---------|---------|---------|---------|---------|---------|---------|------|
-| TC-01-01 | AC-01 | 复制文本后 3 秒内出现在 popover | App 已启动，菜单栏图标可见 | 1. 清空 NSPasteboard<br>2. 写入字符串 "test content"<br>3. 触发 PasteboardWatcher.handlePasteboardChange()<br>4. 等待最多 3 秒 | popover 列表首条包含 "test content" | XCUITest | ✅ COVERED | PasteboardWatcherTests 覆盖 changeCount 检测与回调 |
-| TC-01-02 | AC-01 | 复制文本后主窗口历史同步出现 | App 已启动，主窗口已打开 | 1. 清空 NSPasteboard<br>2. 写入字符串 "main window test"<br>3. 触发 handlePasteboardChange()<br>4. 等待最多 3 秒<br>5. 打开主窗口历史列表 | 主窗口历史列表顶部出现 "main window test" | XCUITest | 🟡 PARTIAL | 主窗口 UI 测试 MainWindowUITests 覆盖空状态，与 popover 同步路径未直接 UI 自动化 |
+| TC-01-01 | AC-01 | 复制文本后 3 秒内出现在 popover | App 已启动，菜单栏图标可见 | 1. 清空 NSPasteboard<br>2. 写入字符串 "test content"<br>3. 触发 PasteboardWatcher.handlePasteboardChange()<br>4. 等待最多 3 秒 | popover 列表首条包含 "test content" | XCUITest | ✅ COVERED | PasteboardWatcherTests 覆盖 changeCount 检测与回调；ClipCaptureServiceTests.testClipboardTextChangeSavesClipItem 覆盖端到端入库；testClipUpdateNotificationPosted 覆盖 UI 刷新通知触发 |
+| TC-01-02 | AC-01 | 复制文本后主窗口历史同步出现 | App 已启动，主窗口已打开 | 1. 清空 NSPasteboard<br>2. 写入字符串 "main window test"<br>3. 触发 handlePasteboardChange()<br>4. 等待最多 3 秒<br>5. 打开主窗口历史列表 | 主窗口历史列表顶部出现 "main window test" | XCUITest | 🟡 PARTIAL | MainWindowUITests 覆盖空状态；ClipCaptureServiceTests.testClipUpdateNotificationPosted 验证 clipDidUpdateNotification 发送（ClipStore 监听此通知刷新）；UI 重渲染未直接自动化，保持 PARTIAL |
 | TC-01-03 | AC-01 | 文本捕获手动验证 | App 已启动 | 1. 在 Safari 选中一段文本<br>2. 按 Cmd+C<br>3. 观察菜单栏 popover | 3 秒内 popover 顶部出现该文本 | 手动 | ⏸️ DEFERRED | Safari 真实场景，延后至 Phase 4 T4.4 |
 | TC-02-01 | AC-02 | 复制图片被捕获为缩略图（单元） | EncryptedStore 测试库就绪 | 1. 构造 NSImage test fixture（64x64）<br>2. 调用 PasteboardWatcher.handlePasteboardChange()<br>3. 查询数据库最新记录 | ClipItem.content 为 .image(_)<br>数据库存在该记录 | XCTest | ✅ COVERED | ContentReaderTests.testReadImage + testImageThumbnailSize 覆盖（缩略图上限 200） |
 | TC-02-02 | AC-02 | 复制图片被捕获为缩略图（UI） | App 已启动 | 1. 在预览 App 复制一张图片<br>2. 打开 popover<br>3. 观察首条条目 | 显示 64x64 缩略图，原始数据加密存储 | 手动 | ⏸️ DEFERRED | 预览 App 真实场景，延后至 Phase 4 T4.4 |
 | TC-03-01 | AC-03 | 复制文件路径被捕获 | App 已启动 | 1. 构造 NSPasteboard 写入 [NSURL(fileURLWithPath: "/tmp/test.txt")]<br>2. 调用 handlePasteboardChange()<br>3. 查询数据库最新记录 | ClipItem.content 为 .filePath([URL])<br>包含 "/tmp/test.txt" | XCTest | ✅ COVERED | ContentReaderTests.testReadFilePaths + testReadContentFilePath 覆盖 |
 | TC-03-02 | AC-03 | 复制文件路径 UI 验证 | App 已启动 | 1. 在 Finder 选中文件<br>2. 按 Cmd+C<br>3. 打开 popover 与详情面板 | popover 显示文件路径文本<br>详情面板展示完整路径列表 | 手动 | ⏸️ DEFERRED | Finder 真实场景，延后至 Phase 4 T4.4 |
-| TC-04-01 | AC-04 | 连续复制相同内容不重复入库 | EncryptedStore 测试库就绪 | 1. 记录数据库当前条目数 N<br>2. 调用 handlePasteboardChange() 传入 "duplicate content"<br>3. 再次调用 handlePasteboardChange() 传入相同 "duplicate content"<br>4. 查询数据库条目数 | 数据库条目数为 N+1（仅新增 1 条） | XCTest | ✅ COVERED | DeduplicationTests + PasteboardWatcherTests.testDuplicateContentNotForwarded 覆盖 |
+| TC-04-01 | AC-04 | 连续复制相同内容不重复入库 | EncryptedStore 测试库就绪 | 1. 记录数据库当前条目数 N<br>2. 调用 handlePasteboardChange() 传入 "duplicate content"<br>3. 再次调用 handlePasteboardChange() 传入相同 "duplicate content"<br>4. 查询数据库条目数 | 数据库条目数为 N+1（仅新增 1 条） | XCTest | ✅ COVERED | DeduplicationTests + PasteboardWatcherTests.testDuplicateContentNotForwarded 覆盖去重；ClipCaptureServiceTests.testDifferentContentSavesMultipleItems 覆盖不同内容入库多条（逆向对照） |
 | TC-05-01 | AC-05 | 11 种入库类型分类准确率 ≥ 80% | 分类测试集就绪（220 条） | 1. 加载 classification_samples.json（220 条）<br>2. 遍历每条样本调用 LocalEmbeddingService.classify()<br>3. 统计正确数 / 总数 | 准确率 ≥ 0.80（≥ 176 条正确） | XCTest | 🟡 PARTIAL | ClassificationAccuracyTests 使用 33 条内联样本（11 类 × 3 条）验证准确率，220 条完整测试集待 T1.5 补充 |
 | TC-06-01 | AC-06 | 代码片段识别为 code 类型 | LocalEmbeddingService 实例化 | 1. 输入内容 `func test() { print("hello") }`<br>2. 调用 classify(content:)<br>3. 读取返回值 | 返回 ContentType.code | XCTest | ✅ COVERED | ContentTypeTests.testClassifySwiftCode 覆盖 |
 | TC-06-02 | AC-06 | 多语言代码片段识别为 code 类型 | LocalEmbeddingService 实例化 | 1. 输入 Python 代码 `def hello(): print("hi")`<br>2. 调用 classify(content:)<br>3. 读取返回值 | 返回 ContentType.code | XCTest | ✅ COVERED | ContentTypeTests.testClassifyPythonCode 覆盖 |
@@ -1774,3 +1775,4 @@ ClipMindUITests/
 | v1.0 | 2026-07-12 | 初始版本，基于设计规范 v1.3，覆盖 25 条 AC，共 63 个测试用例 |
 | v1.1 | 2026-07-12 | 修复 6.1~6.5 节统计错误（原 63 条实际为 64 条）；补充 AC-13~AC-16 LLM API 错误路径测试各 1 条（共 4 条）；补充 AC-21 恰好 30 天边界用例（TC-21-04）；同步 4.4 LLM mock 响应数据集（新增 4 条错误响应）；统计总数 69 条；解决 6.3 与 6.5 节 XCTest 数量矛盾；删除 6.5 节 TC-08-07 双重计数的过时备注 |
 | v1.2 | 2026-07-13 | Phase 2（F1.4 一键处理）完成后根据实际测试代码逐项核对覆盖状态：第 2 节总表与第 3 节详情的 69 条用例覆盖状态全部更新（✅ COVERED 28 / 🟡 PARTIAL 8 / ❌ MISSING 18 / ⏸️ DEFERRED 15）；1.2 节当前状态说明更新；1.4 节测试组织结构树同步为实际目录结构（含 Capture/ClassifyTests/SearchTests/LLMTests/Storage/ML/Models/Utils/Fixtures/Helpers）；6.2 节改为按 AC 汇总覆盖状态分布；6.4 节统计从 0/0/69/0 更新为 28/8/18/15；备注列补充具体测试方法名或延后理由便于追溯 |
+| v1.3 | 2026-07-13 | 剪贴板捕获管线接线修复后同步：TC-01-01/TC-01-02/TC-04-01 备注列补充 ClipCaptureServiceTests 测试方法名；1.4 节测试组织结构树补充 ClipCaptureServiceTests.swift；统计数字不变 |

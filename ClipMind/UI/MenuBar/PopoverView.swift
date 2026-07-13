@@ -2,7 +2,11 @@ import SwiftUI
 
 struct PopoverView: View {
     @State private var searchText = ""
-    @State private var clips: [ClipItem] = ClipTestData.isUITesting ? ClipTestData.previewClips : []
+    @StateObject private var clipStore = ClipStore()
+
+    private var clips: [ClipItem] {
+        ClipTestData.isUITesting ? ClipTestData.previewClips : clipStore.clips
+    }
 
     var body: some View {
         VStack(spacing: 0) {
