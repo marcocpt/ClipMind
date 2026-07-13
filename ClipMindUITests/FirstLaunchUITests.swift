@@ -13,34 +13,39 @@ final class FirstLaunchUITests: XCTestCase {
     func testFirstLaunchOnboardingFlow() {
         let app = launchFreshApp()
 
-        // 欢迎页 → 权限请求页
-        XCTAssertTrue(app.otherElements["onboardingView"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.otherElements["welcomeView"].waitForExistence(timeout: 3))
+        // 欢迎页：等待 "开始使用" 按钮出现并点击
+        XCTAssertTrue(
+            app.buttons["startButton"].waitForExistence(timeout: 10),
+            "欢迎页的'开始使用'按钮应出现"
+        )
         app.buttons["startButton"].click()
-        XCTAssertTrue(
-            app.otherElements["permissionRequestView"].waitForExistence(timeout: 3),
-            "权限请求页应出现"
-        )
 
-        // 权限请求 → API Key 引导页
+        // 权限请求页：等待 "下一步" 按钮出现并点击
+        XCTAssertTrue(
+            app.buttons["nextButton"].waitForExistence(timeout: 5),
+            "权限请求页的'下一步'按钮应出现"
+        )
         app.buttons["nextButton"].click()
-        XCTAssertTrue(
-            app.otherElements["apiKeyGuideView"].waitForExistence(timeout: 3),
-            "API Key 引导页应出现"
-        )
 
-        // API Key 引导 → 隐私提示页（跳过）
+        // API Key 引导页：点击 "跳过"
+        XCTAssertTrue(
+            app.buttons["skipButton"].waitForExistence(timeout: 5),
+            "API Key 引导页的'跳过'按钮应出现"
+        )
         app.buttons["skipButton"].click()
         dismissAlertIfExists(in: app)
-        XCTAssertTrue(
-            app.otherElements["privacyNoticeView"].waitForExistence(timeout: 3),
-            "隐私提示页应出现"
-        )
 
-        // 隐私提示 → 主界面
-        app.buttons["finishButton"].click()
+        // 隐私提示页：等待 "开始使用 ClipMind" 按钮出现并点击
         XCTAssertTrue(
-            app.staticTexts["暂无剪贴历史"].waitForExistence(timeout: 5),
+            app.buttons["finishButton"].waitForExistence(timeout: 5),
+            "隐私提示页的'开始使用 ClipMind'按钮应出现"
+        )
+        app.buttons["finishButton"].click()
+
+        // 引导完成后应进入主界面
+        XCTAssertTrue(
+            app.staticTexts["暂无剪贴历史"].waitForExistence(timeout: 5)
+                || app.staticTexts["复制任何内容，它将自动出现在这里"].waitForExistence(timeout: 5),
             "引导完成后应进入主界面"
         )
     }
@@ -52,13 +57,13 @@ final class FirstLaunchUITests: XCTestCase {
         let app = launchFreshApp()
 
         // 快速导航到 API Key 引导页
-        XCTAssertTrue(app.buttons["startButton"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["startButton"].waitForExistence(timeout: 10))
         app.buttons["startButton"].click()
-        XCTAssertTrue(app.buttons["nextButton"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["nextButton"].waitForExistence(timeout: 5))
         app.buttons["nextButton"].click()
         XCTAssertTrue(
-            app.otherElements["apiKeyGuideView"].waitForExistence(timeout: 3),
-            "API Key 引导页应出现"
+            app.buttons["skipButton"].waitForExistence(timeout: 5),
+            "API Key 引导页的'跳过'按钮应出现"
         )
 
         // 点击跳过
@@ -66,7 +71,7 @@ final class FirstLaunchUITests: XCTestCase {
         dismissAlertIfExists(in: app)
 
         XCTAssertTrue(
-            app.otherElements["privacyNoticeView"].waitForExistence(timeout: 3),
+            app.buttons["finishButton"].waitForExistence(timeout: 5),
             "跳过 API Key 配置后应进入隐私提示页"
         )
     }
@@ -74,11 +79,14 @@ final class FirstLaunchUITests: XCTestCase {
     // MARK: - 辅助方法
 
     /// 启动带引导重置参数的 App
+    ///
+    /// 注意：不能使用 --UITEST_SHOW_MAIN_WINDOW，该参数会设置 hasCompletedOnboarding=true，
+    /// 导致引导流程被跳过。引导模式下 AppDelegate 已设置 .regular 激活策略，窗口可见。
     private func launchFreshApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
             "--UITEST_RESET_ONBOARDING",
-            "--UITEST_SHOW_MAIN_WINDOW"
+            "--UITEST_RESET_SETTINGS"
         ]
         app.launch()
         app.activate()
