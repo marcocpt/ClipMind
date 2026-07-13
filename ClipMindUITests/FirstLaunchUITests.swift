@@ -13,59 +13,38 @@ final class FirstLaunchUITests: XCTestCase {
     func testFirstLaunchOnboardingFlow() {
         let app = launchFreshApp()
 
-        // 等待窗口存在
-        let windowExists = app.windows.firstMatch.waitForExistence(timeout: 15)
-        if !windowExists {
-            let screenshot = XCUIScreen.main.screenshot()
-            let attachment = XCTAttachment(screenshot: screenshot)
-            attachment.name = "NoWindow"
-            attachment.lifetime = .keepAlways
-            add(attachment)
-            XCTFail("应用窗口未出现")
-            return
-        }
-
-        // 截图查看当前 UI 状态
-        let screenshot = XCUIScreen.main.screenshot()
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = "AfterLaunch"
-        attachment.lifetime = .keepAlways
-        add(attachment)
-
-        // 打印当前可访问性树中的按钮
-        let allButtons = app.buttons.allElementsBoundByIndex
-        let buttonIds = allButtons.map { $0.identifier }.filter { !$0.isEmpty }
-        let buttonLabels = allButtons.map { $0.label }.filter { !$0.isEmpty }
-        print("DEBUG: Found \(allButtons.count) buttons, identifiers: \(buttonIds), labels: \(buttonLabels)")
-
         // 欢迎页：等待 "开始使用" 按钮出现并点击
+        let startButton = findButton(app, identifier: "startButton")
         XCTAssertTrue(
-            app.buttons["startButton"].waitForExistence(timeout: 20),
-            "欢迎页的'开始使用'按钮应出现。当前按钮: \(buttonIds)"
+            startButton.waitForExistence(timeout: 20),
+            "欢迎页的'开始使用'按钮应出现"
         )
-        app.buttons["startButton"].click()
+        startButton.click()
 
         // 权限请求页：等待 "下一步" 按钮出现并点击
+        let nextButton1 = findButton(app, identifier: "nextButton")
         XCTAssertTrue(
-            app.buttons["nextButton"].waitForExistence(timeout: 5),
+            nextButton1.waitForExistence(timeout: 5),
             "权限请求页的'下一步'按钮应出现"
         )
-        app.buttons["nextButton"].click()
+        nextButton1.click()
 
         // API Key 引导页：点击 "跳过"
+        let skipButton = findButton(app, identifier: "skipButton")
         XCTAssertTrue(
-            app.buttons["skipButton"].waitForExistence(timeout: 5),
+            skipButton.waitForExistence(timeout: 5),
             "API Key 引导页的'跳过'按钮应出现"
         )
-        app.buttons["skipButton"].click()
+        skipButton.click()
         dismissAlertIfExists(in: app)
 
         // 隐私提示页：等待 "开始使用 ClipMind" 按钮出现并点击
+        let finishButton = findButton(app, identifier: "finishButton")
         XCTAssertTrue(
-            app.buttons["finishButton"].waitForExistence(timeout: 5),
+            finishButton.waitForExistence(timeout: 5),
             "隐私提示页的'开始使用 ClipMind'按钮应出现"
         )
-        app.buttons["finishButton"].click()
+        finishButton.click()
 
         // 引导完成后应进入主界面
         XCTAssertTrue(
@@ -82,33 +61,40 @@ final class FirstLaunchUITests: XCTestCase {
         let app = launchFreshApp()
 
         // 快速导航到 API Key 引导页
-        XCTAssertTrue(app.buttons["startButton"].waitForExistence(timeout: 20))
-        app.buttons["startButton"].click()
-        XCTAssertTrue(app.buttons["nextButton"].waitForExistence(timeout: 5))
-        app.buttons["nextButton"].click()
+        let startButton = findButton(app, identifier: "startButton")
+        XCTAssertTrue(startButton.waitForExistence(timeout: 20))
+        startButton.click()
+        let nextButton = findButton(app, identifier: "nextButton")
+        XCTAssertTrue(nextButton.waitForExistence(timeout: 5))
+        nextButton.click()
+        let skipButton = findButton(app, identifier: "skipButton")
         XCTAssertTrue(
-            app.buttons["skipButton"].waitForExistence(timeout: 5),
+            skipButton.waitForExistence(timeout: 5),
             "API Key 引导页的'跳过'按钮应出现"
         )
 
         // 点击跳过
-        app.buttons["skipButton"].click()
+        skipButton.click()
         dismissAlertIfExists(in: app)
 
+        let finishButton = findButton(app, identifier: "finishButton")
         XCTAssertTrue(
-            app.buttons["finishButton"].waitForExistence(timeout: 5),
+            finishButton.waitForExistence(timeout: 5),
             "跳过 API Key 配置后应进入隐私提示页"
         )
     }
 
     // MARK: - 辅助方法
 
-    /// 启动带引导重置参数的 App
+    /// 查找按钮元素，使用 descendants 在整个可访问性树中搜索
     ///
-    /// 使用独立的 bundle identifier 来完全隔离 UserDefaults，避免其他 UI 测试的
-    /// hasCompletedOnboarding=true 残留影响引导流程。
-    /// 注意：不能使用 --UITEST_SHOW_MAIN_WINDOW，该参数会设置 hasCompletedOnboarding=true，
-    /// 导致引导流程被跳过。
+    /// macOS SwiftUI 中，按钮可能嵌套在 group 内，
+    /// app.buttons[identifier] 仅搜索顶层按钮，可能找不到。
+    private func findButton(_ app: XCUIApplication, identifier: String) -> XCUIElement {
+        app.descendants(matching: .button)[identifier]
+    }
+
+    /// 启动带引导重置参数的 App
     private func launchFreshApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
@@ -116,7 +102,6 @@ final class FirstLaunchUITests: XCTestCase {
             "--UITEST_RESET_SETTINGS"
         ]
         app.launch()
-        // 等待窗口出现后再激活，确保 SwiftUI WindowGroup 已完成初始化
         let window = app.windows.firstMatch
         _ = window.waitForExistence(timeout: 10)
         app.activate()
@@ -125,7 +110,7 @@ final class FirstLaunchUITests: XCTestCase {
 
     /// 如有弹窗则关闭
     private func dismissAlertIfExists(in app: XCUIApplication) {
-        let confirm = app.buttons["确定"]
+        let confirm = app.descendants(matching: .button)["确定"]
         if confirm.waitForExistence(timeout: 2) { confirm.click() }
     }
 }
