@@ -22,12 +22,14 @@ struct HistoryListView: View {
                     .foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .accessibilityIdentifier("historyEmptyState")
         } else {
             List(clips) { clip in
                 ClipRowView(clip: clip)
                     .contentShape(Rectangle())
                     .onTapGesture { selectedClip = clip }
             }
+            .accessibilityIdentifier("historyList")
         }
     }
 }
