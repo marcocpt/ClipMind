@@ -20,6 +20,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // UITEST_RESET_SETTINGS: 重置隐私相关 UserDefaults，确保测试间状态隔离
+        if CommandLine.arguments.contains("--UITEST_RESET_SETTINGS") {
+            let keys = ["sensitiveDetectionEnabled", "autoCleanupEnabled", "cleanupDays"]
+            for key in keys {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
         if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW") {
             NSApp.setActivationPolicy(.regular)
         } else {
