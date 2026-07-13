@@ -19,7 +19,7 @@ struct PermissionRequestView: View {
             VStack(spacing: 20) {
                 // 辅助功能权限
                 PermissionRow(
-                    icon: "accessibility",
+                    icon: "hand.raised.fill",
                     title: "辅助功能",
                     description: "获取复制内容的来源应用，支持按来源筛选",
                     isGranted: isAccessibilityGranted,
@@ -58,13 +58,18 @@ struct PermissionRequestView: View {
         }
     }
 
-    /// 打开系统偏好设置的辅助功能面板
+    /// 请求辅助功能权限并打开系统设置面板
+    ///
+    /// 先调用 `AXIsProcessTrustedWithOptions` 传入 prompt=true，触发系统级 TCC 提示对话框，
+    /// 自动把当前 app 加入辅助功能权限列表（用户只需点击开关）。
+    /// 同时打开系统设置的辅助功能面板，方便用户查看和管理权限。
     private func openAccessibilitySettings() {
+        PermissionRequester.requestAccessibility()
         let url = URL(
             string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
         )!
         NSWorkspace.shared.open(url)
-        LogCategory.app.info("已打开辅助功能系统设置")
+        LogCategory.app.info("已请求辅助功能权限并打开系统设置面板")
     }
 
     /// 请求通知权限
