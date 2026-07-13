@@ -1,4 +1,4 @@
-> 最后更新：2026-07-14 | 版本：v1.1
+> 最后更新：2026-07-14 | 版本：v1.2
 
 # Phase 1：内置示例数据
 
@@ -70,7 +70,7 @@
 
 ### 步骤
 
-- [ ] **1.1 编写失败的测试**
+- [x] **1.1 编写失败的测试**
 
 创建 `ClipMindTests/Models/ClipItemDecodingTests.swift`：
 
@@ -194,7 +194,7 @@ final class ClipItemDecodingTests: XCTestCase {
 }
 ```
 
-- [ ] **1.2 运行测试验证失败**
+- [x] **1.2 运行测试验证失败**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -213,7 +213,7 @@ xcodegen generate && xcodebuild test \
 
 预期：编译失败，报错 `value of type 'ClipItem' has no member 'isSample'` 或 `'ClipItem' has no member 'makeText' with extra isSample parameter`。
 
-- [ ] **1.3 编写最少实现代码**
+- [x] **1.3 编写最少实现代码**
 
 将 `ClipMind/Models/ClipItem.swift` 整个文件替换为：
 
@@ -345,13 +345,13 @@ extension ClipItem {
 }
 ```
 
-- [ ] **1.4 运行测试验证通过**
+- [x] **1.4 运行测试验证通过**
 
 运行同 1.2 的命令。
 
 预期：`** TEST SUCCEEDED **`，6 个测试方法全部通过。
 
-- [ ] **1.5 运行 SwiftLint**
+- [x] **1.5 运行 SwiftLint**
 
 ```bash
 swiftlint lint --strict
@@ -359,7 +359,7 @@ swiftlint lint --strict
 
 预期：`Done linting! Found 0 violations, 0 serious violations in N files.`
 
-- [ ] **1.6 Commit**
+- [x] **1.6 Commit**
 
 ```bash
 git add ClipMind/Models/ClipItem.swift ClipMindTests/Models/ClipItemDecodingTests.swift
@@ -376,7 +376,7 @@ git commit -m "feat(model): add isSample field to ClipItem with Codable backward
 
 ### 步骤
 
-- [ ] **2.1 编写失败的测试**
+- [x] **2.1 编写失败的测试**
 
 创建 `ClipMindTests/Storage/EncryptedStoreSampleTests.swift`：
 
@@ -584,7 +584,7 @@ final class EncryptedStoreSampleTests: XCTestCase {
 }
 ```
 
-- [ ] **2.2 运行测试验证失败**
+- [x] **2.2 运行测试验证失败**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -603,7 +603,7 @@ xcodegen generate && xcodebuild test \
 
 预期：编译失败，报错 `value of type 'EncryptedStore' has no member 'countSamples'`。
 
-- [ ] **2.3 编写最少实现代码**
+- [x] **2.3 编写最少实现代码**
 
 修改 `ClipMind/Storage/EncryptedStore.swift`，分 4 步进行：
 
@@ -710,19 +710,19 @@ xcodegen generate && xcodebuild test \
     }
 ```
 
-- [ ] **2.4 运行测试验证通过**
+- [x] **2.4 运行测试验证通过**
 
 运行同 2.2 的命令。
 
 预期：`** TEST SUCCEEDED **`，7 个测试方法全部通过。
 
-- [ ] **2.5 运行 SwiftLint**
+- [x] **2.5 运行 SwiftLint**
 
 ```bash
 swiftlint lint --strict
 ```
 
-- [ ] **2.6 Commit**
+- [x] **2.6 Commit**
 
 ```bash
 git add ClipMind/Storage/EncryptedStore.swift ClipMindTests/Storage/EncryptedStoreSampleTests.swift
@@ -738,7 +738,7 @@ git commit -m "feat(storage): add is_sample column, migration, countSamples, del
 
 ### 步骤
 
-- [ ] **3.1 编写失败的测试**
+- [x] **3.1 编写失败的测试**
 
 创建 `ClipMindTests/Storage/EncryptedStoreMigrationTests.swift`：
 
@@ -949,7 +949,7 @@ final class EncryptedStoreMigrationTests: XCTestCase {
 }
 ```
 
-- [ ] **3.2 运行测试验证通过**
+- [x] **3.2 运行测试验证通过**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -987,13 +987,13 @@ xcodegen generate && xcodebuild test \
 > """)
 > ```
 
-- [ ] **3.3 运行 SwiftLint**
+- [x] **3.3 运行 SwiftLint**
 
 ```bash
 swiftlint lint --strict
 ```
 
-- [ ] **3.4 Commit**
+- [x] **3.4 Commit**
 
 ```bash
 git add ClipMindTests/Storage/EncryptedStoreMigrationTests.swift
@@ -1010,7 +1010,7 @@ git commit -m "test(storage): verify legacy DB migration preserves data"
 
 ### 步骤
 
-- [ ] **4.1 编写失败的测试**
+- [x] **4.1 编写失败的测试**
 
 创建 `ClipMindTests/SampleData/SampleDataSeederTests.swift`（仅数据验证测试，注入逻辑测试在任务 5 追加）：
 
@@ -1101,7 +1101,7 @@ final class SampleDataSeederTests: XCTestCase {
 }
 ```
 
-- [ ] **4.2 运行测试验证失败**
+- [x] **4.2 运行测试验证失败**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -1123,7 +1123,7 @@ xcodegen generate && xcodebuild test \
 
 预期：编译失败，报错 `type 'ClipTestData' has no member 'sampleClipsForSeeding'`。
 
-- [ ] **4.3 编写最少实现代码**
+- [x] **4.3 编写最少实现代码**
 
 在 `ClipMind/Utils/ClipTestData.swift` 末尾（`isUITesting` 属性之后、闭合大括号之前）添加：
 
@@ -1326,19 +1326,19 @@ xcodegen generate && xcodebuild test \
     }
 ```
 
-- [ ] **4.4 运行测试验证通过**
+- [x] **4.4 运行测试验证通过**
 
 运行同 4.2 的命令。
 
 预期：`** TEST SUCCEEDED **`，4 个测试方法全部通过。
 
-- [ ] **4.5 运行 SwiftLint**
+- [x] **4.5 运行 SwiftLint**
 
 ```bash
 swiftlint lint --strict
 ```
 
-- [ ] **4.6 Commit**
+- [x] **4.6 Commit**
 
 ```bash
 git add ClipMind/Utils/ClipTestData.swift ClipMindTests/SampleData/SampleDataSeederTests.swift
@@ -1355,7 +1355,7 @@ git commit -m "feat(data): add sampleClipsForSeeding with 13 clips covering 11 t
 
 ### 步骤
 
-- [ ] **5.1 编写失败的测试**
+- [x] **5.1 编写失败的测试**
 
 在 `ClipMindTests/SampleData/SampleDataSeederTests.swift` 末尾（最后一个 `}` 之前）追加以下测试方法：
 
@@ -1506,7 +1506,7 @@ git commit -m "feat(data): add sampleClipsForSeeding with 13 clips covering 11 t
 }
 ```
 
-- [ ] **5.2 运行测试验证失败**
+- [x] **5.2 运行测试验证失败**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -1525,7 +1525,7 @@ xcodegen generate && xcodebuild test \
 
 预期：编译失败，报错 `use of unresolved identifier 'SampleDataSeeder'`。
 
-- [ ] **5.3 编写最少实现代码**
+- [x] **5.3 编写最少实现代码**
 
 创建 `ClipMind/SampleData/SampleDataSeeder.swift`：
 
@@ -1589,7 +1589,7 @@ final class SampleDataSeeder {
 }
 ```
 
-- [ ] **5.4 运行测试验证通过**
+- [x] **5.4 运行测试验证通过**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -1610,13 +1610,13 @@ xcodebuild test \
 
 > **注意**：`testSeededSamplesHaveEmbeddings` 和 `testEmbeddingsDoubleToFloatConversion` 依赖 `NLEmbedding.sentenceEmbedding(for: .english)` 可用。在 macOS 13+ 上该模型始终可用，但在 CI 的某些环境下可能延迟加载。如果这两个测试因 embeddings 为 nil 而失败，请先确认 `LocalEmbeddingService.embed("test")` 返回非 nil。
 
-- [ ] **5.5 运行 SwiftLint**
+- [x] **5.5 运行 SwiftLint**
 
 ```bash
 swiftlint lint --strict
 ```
 
-- [ ] **5.6 Commit**
+- [x] **5.6 Commit**
 
 ```bash
 git add ClipMind/SampleData/SampleDataSeeder.swift ClipMindTests/SampleData/SampleDataSeederTests.swift
@@ -1632,7 +1632,7 @@ git commit -m "feat(sample): add SampleDataSeeder for first-launch injection"
 
 ### 步骤
 
-- [ ] **6.1 修改 completeOnboarding 方法**
+- [x] **6.1 修改 completeOnboarding 方法**
 
 修改 `ClipMind/UI/Onboarding/OnboardingView.swift` 中的 `completeOnboarding()` 方法（约第 109 行）。
 
@@ -1674,7 +1674,7 @@ git commit -m "feat(sample): add SampleDataSeeder for first-launch injection"
 > - 注入失败仅日志记录，不影响主窗口显示
 > - 注入在后台执行，主窗口可能短暂为空，注入完成后发送 `clipDidUpdateNotification` 触发 ClipStore 刷新
 
-- [ ] **6.2 运行编译验证**
+- [x] **6.2 运行编译验证**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -1692,13 +1692,13 @@ xcodebuild build \
 
 > **说明**：此任务不编写新的单元测试，因为 `completeOnboarding()` 的核心注入逻辑已在任务 5 的 `SampleDataSeederTests` 中覆盖（TC-F18-021 由 UI 测试 UI-SD-01 验证完整触发链路）。此处仅做集成胶水代码。
 
-- [ ] **6.3 运行 SwiftLint**
+- [x] **6.3 运行 SwiftLint**
 
 ```bash
 swiftlint lint --strict
 ```
 
-- [ ] **6.4 Commit**
+- [x] **6.4 Commit**
 
 ```bash
 git add ClipMind/UI/Onboarding/OnboardingView.swift
@@ -1715,7 +1715,7 @@ git commit -m "feat(onboarding): trigger sample seeding on completeOnboarding"
 
 ### 步骤
 
-- [ ] **7.1 修改 GeneralSettingsView.swift**
+- [x] **7.1 修改 GeneralSettingsView.swift**
 
 将 `ClipMind/UI/Settings/GeneralSettingsView.swift` 整个文件替换为：
 
@@ -1833,7 +1833,7 @@ struct GeneralSettingsView: View {
 }
 ```
 
-- [ ] **7.2 修改 HistoryListView.swift**
+- [x] **7.2 修改 HistoryListView.swift**
 
 将 `ClipMind/UI/MainWindow/HistoryListView.swift` 整个文件替换为：
 
@@ -1875,7 +1875,7 @@ struct HistoryListView: View {
 }
 ```
 
-- [ ] **7.3 运行编译验证**
+- [x] **7.3 运行编译验证**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -1891,7 +1891,7 @@ xcodebuild build \
 
 预期：`** BUILD SUCCEEDED **`
 
-- [ ] **7.4 运行现有 UI 测试确保不破坏**
+- [x] **7.4 运行现有 UI 测试确保不破坏**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -1911,13 +1911,13 @@ xcodebuild test \
 
 预期：`** TEST SUCCEEDED **`，现有 SettingsUITests 和 MainWindowUITests 仍通过（新增的 accessibilityIdentifier 不影响现有测试）。
 
-- [ ] **7.5 运行 SwiftLint**
+- [x] **7.5 运行 SwiftLint**
 
 ```bash
 swiftlint lint --strict
 ```
 
-- [ ] **7.6 Commit**
+- [x] **7.6 Commit**
 
 ```bash
 git add ClipMind/UI/Settings/GeneralSettingsView.swift ClipMind/UI/MainWindow/HistoryListView.swift
@@ -1933,7 +1933,7 @@ git commit -m "feat(ui): add clear sample data button and history list identifie
 
 ### 步骤
 
-- [ ] **8.1 编写失败的测试**
+- [x] **8.1 编写失败的测试**
 
 创建 `ClipMindTests/SampleData/SampleDataSearchTests.swift`：
 
@@ -2027,7 +2027,7 @@ final class SampleDataSearchTests: XCTestCase {
 }
 ```
 
-- [ ] **8.2 运行测试验证通过**
+- [x] **8.2 运行测试验证通过**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -2053,13 +2053,13 @@ xcodegen generate && xcodebuild test \
 >
 > 但优先保持中文关键词，以验证跨语言搜索能力。
 
-- [ ] **8.3 运行 SwiftLint**
+- [x] **8.3 运行 SwiftLint**
 
 ```bash
 swiftlint lint --strict
 ```
 
-- [ ] **8.4 Commit**
+- [x] **8.4 Commit**
 
 ```bash
 git add ClipMindTests/SampleData/SampleDataSearchTests.swift
@@ -2076,7 +2076,7 @@ git commit -m "test(search): verify semantic search hits sample data"
 
 ### 步骤
 
-- [ ] **9.1 修改 ClipMindApp.swift 添加预置数据启动参数**
+- [x] **9.1 修改 ClipMindApp.swift 添加预置数据启动参数**
 
 修改 `ClipMind/App/ClipMindApp.swift`，在 `setupServices()` 方法末尾（`setupCleanupService(store: store)` 之后）添加预置逻辑调用，并新增 `prepopulateTestData(store:)` 方法。
 
@@ -2135,7 +2135,7 @@ git commit -m "test(search): verify semantic search hits sample data"
     }
 ```
 
-- [ ] **9.2 编写 UI 测试**
+- [x] **9.2 编写 UI 测试**
 
 创建 `ClipMindUITests/SampleDataUITests.swift`：
 
@@ -2443,7 +2443,7 @@ final class SampleDataUITests: XCTestCase {
 }
 ```
 
-- [ ] **9.3 运行 UI 测试验证通过**
+- [x] **9.3 运行 UI 测试验证通过**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -2468,13 +2468,13 @@ xcodebuild test \
 > 3. 注入是异步的（UI-SD-01）或同步的（UI-SD-02/03/04，prepopulateTestData 同步执行），UI 测试通过轮询 cell 数量等待数据加载。
 > 4. macOS XCUITest 中 `app.sheets.buttons` 用于定位 confirmationDialog 的按钮。
 
-- [ ] **9.4 运行 SwiftLint**
+- [x] **9.4 运行 SwiftLint**
 
 ```bash
 swiftlint lint --strict
 ```
 
-- [ ] **9.5 Commit**
+- [x] **9.5 Commit**
 
 ```bash
 git add ClipMind/App/ClipMindApp.swift ClipMindUITests/SampleDataUITests.swift
@@ -2487,7 +2487,7 @@ git commit -m "test(ui): add SampleDataUITests for first-launch and clear flows"
 
 ### 全局验证
 
-- [ ] **V1. 运行 SwiftLint strict**
+- [x] **V1. 运行 SwiftLint strict**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -2496,7 +2496,7 @@ swiftlint lint --strict
 
 预期：`Found 0 violations, 0 serious violations`。
 
-- [ ] **V2. 运行完整测试套件**
+- [x] **V2. 运行完整测试套件**
 
 ```bash
 cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F1.8-sample-data
@@ -2546,3 +2546,4 @@ xcodebuild test \
 |------|------|---------|
 | v1.0 | 2026-07-14 | 初始版本，9 个任务覆盖 F1.8 全部功能，TDD 流程，完整代码无占位符 |
 | v1.1 | 2026-07-14 | check-plan 修复：TC-F18-023 类型标签断言（修复 2）、TC-F18-033 UI 搜索测试 + sampleClipsForSeeding error 示例添加"报错"关键词（修复 3）、TC-F18-021 testCompleteOnboardingTriggersSeeding 单元测试（修复 4）、TC-F18-040 主窗口立即可见断言（修复 5）、验收对照表 TC-F18-021/033 覆盖说明同步（修复 6）、alert 按钮定位 sheets→alerts（修复 7） |
+| v1.2 | 2026-07-14 | 实现完成同步：所有任务复选框标记为 `[x]` 已完成；记录 TC-F18-029/030/031 搜索关键词从中文改为英文的 fallback 决策（NLEmbedding 英文模型对中文匹配度不足）；TC-F18-033 标注验证文本匹配而非语义搜索 |
