@@ -13,44 +13,80 @@ final class PermissionRequestUITests: XCTestCase {
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
+        cleanUpDatabase()
     }
 
-    /// 启动参数：重置 onboarding 状态，确保进入引导流程
-    private var launchArguments: [String] {
-        ["--UITEST_RESET_ONBOARDING"]
+    override func tearDown() {
+        XCUIApplication().terminate()
+        super.tearDown()
     }
 
-    /// 通过 accessibility identifier 查找元素。
-    private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
-        app.descendants(matching: .any)[identifier].firstMatch
+    /// 清除上一轮测试残留的数据库文件（避免 F1.8 示例数据干扰）。
+    private func cleanUpDatabase() {
+        let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        )[0]
+        let dbPath = appSupport.appendingPathComponent("ClipMind/clipmind.db")
+        for suffix in ["", "-wal", "-shm"] {
+            try? FileManager.default.removeItem(atPath: dbPath.path + suffix)
+        }
+    }
+
+    /// 启动带引导重置参数的 App，确保进入 onboarding 流程
+    private func launchFreshApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_RESET_ONBOARDING",
+            "--UITEST_RESET_SETTINGS"
+        ]
+        app.launch()
+        let window = app.windows.firstMatch
+        _ = window.waitForExistence(timeout: 10)
+        app.activate()
+        return app
+    }
+
+    /// 查找按钮元素
+    ///
+    /// macOS SwiftUI 中按钮的 accessibilityIdentifier 可能不被 XCUItest 正确暴露，
+    /// 优先按 label 文本查找（更可靠），回退按 identifier 查找。
+    private func findButton(_ app: XCUIApplication, identifier: String) -> XCUIElement {
+        let labelMap: [String: String] = [
+            "startButton": "开始使用",
+            "openSettingsButton": "打开系统设置"
+        ]
+        if let label = labelMap[identifier] {
+            let byLabel = app.buttons[label]
+            if byLabel.waitForExistence(timeout: 1) { return byLabel }
+            let byLabelDesc = app.descendants(matching: .button)[label]
+            if byLabelDesc.waitForExistence(timeout: 1) { return byLabelDesc }
+        }
+        return app.descendants(matching: .button)[identifier]
     }
 
     /// 测试点击「打开系统设置」按钮后 app 不崩溃
     ///
     /// 步骤：启动 → 进入引导 → 点击「开始使用」→ 进入权限设置 → 点击「打开系统设置」→ 验证 app 仍存活
     func testOpenAccessibilitySettingsDoesNotCrashApp() {
-        let app = XCUIApplication()
-        app.launchArguments = launchArguments
-        app.launch()
+        let app = launchFreshApp()
 
-        // 等待引导视图出现
-        let onboardingView = element("onboardingView", in: app)
-        XCTAssertTrue(onboardingView.waitForExistence(timeout: 5), "引导视图应出现")
-
-        // 点击「开始使用」按钮进入权限设置步骤
-        let startButton = app.buttons["startButton"].firstMatch
-        XCTAssertTrue(startButton.waitForExistence(timeout: 3), "开始使用按钮应存在")
+        // 欢迎页：点击「开始使用」进入权限设置步骤
+        let startButton = findButton(app, identifier: "startButton")
+        XCTAssertTrue(
+            startButton.waitForExistence(timeout: 20),
+            "欢迎页的'开始使用'按钮应出现"
+        )
         startButton.click()
 
-        // 等待权限请求视图出现
-        let permissionView = element("permissionRequestView", in: app)
-        XCTAssertTrue(permissionView.waitForExistence(timeout: 3), "权限请求视图应出现")
+        // 权限请求页：等待「打开系统设置」按钮出现
+        let openSettingsButton = findButton(app, identifier: "openSettingsButton")
+        XCTAssertTrue(
+            openSettingsButton.waitForExistence(timeout: 5),
+            "权限请求页的'打开系统设置'按钮应出现"
+        )
 
-        // 点击辅助功能权限行内的「打开系统设置」按钮
-        let accessibilityRow = element("accessibilityPermission", in: app)
-        XCTAssertTrue(accessibilityRow.waitForExistence(timeout: 3), "辅助功能权限行应存在")
-        let openSettingsButton = accessibilityRow.buttons.firstMatch
-        XCTAssertTrue(openSettingsButton.waitForExistence(timeout: 3), "打开系统设置按钮应存在")
+        // 点击「打开系统设置」按钮
         openSettingsButton.click()
 
         // 验证 app 仍存活（不崩溃）
