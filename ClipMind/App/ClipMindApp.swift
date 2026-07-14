@@ -11,7 +11,10 @@ struct ClipMindApp: App {
             Group {
                 if hasCompletedOnboarding {
                     MainWindow()
-                        .frame(minWidth: 900, minHeight: 600)
+                        .frame(
+                            minWidth: LayoutConstants.appWindowMinWidth,
+                            minHeight: LayoutConstants.appWindowMinHeight
+                        )
                 } else {
                     OnboardingView()
                         .frame(width: 560, height: 480)
