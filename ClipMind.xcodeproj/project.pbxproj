@@ -87,6 +87,7 @@
 		AFB9E71D5DB26DD1C1ECD2D7 /* PermissionRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EAA6D6E20E61EE8E12B6CA4 /* PermissionRequester.swift */; };
 		AFF6A2BD7AABFD3FC9DCCA1A /* llm_mock_responses.json in Resources */ = {isa = PBXBuildFile; fileRef = 476EDCC5B06E8BFF193C7245 /* llm_mock_responses.json */; };
 		B0EF50AFB4D773CA27277F30 /* PasteboardWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68549B8C3D2B23F12A5BED75 /* PasteboardWatcher.swift */; };
+		B4A8B7DD3E48D04312E91293 /* LayoutConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5872E9B5D6F6F8ACAF6BC5D8 /* LayoutConstants.swift */; };
 		B98BFF2606B3BD5E0C2CD533 /* DefaultBlacklistTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2EB6BA90539D3F2B3E68D1 /* DefaultBlacklistTests.swift */; };
 		BA7754C5642A7356E27B8C13 /* ClipMindUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37023D2FCB531B633F999B04 /* ClipMindUITests.swift */; };
 		BBCAA50968C7E78CD4004187 /* SourceFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD2B156E617C2E858E5D370 /* SourceFilter.swift */; };
@@ -119,6 +120,7 @@
 		EDFF80AF3F770B1509B29C0A /* ProcessingButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60416E2EE845CBDACE16E14 /* ProcessingButtons.swift */; };
 		EE34A9219E8C14256D693A4F /* RewriteMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5158584C25CC46619ABEC6 /* RewriteMode.swift */; };
 		F20494C358A2F50BDB4C311C /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01878445936BEBB51FA6E3A7 /* PopoverView.swift */; };
+		F7BA652A80058AD2704733A7 /* MainWindowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */; };
 		F890459CC5D9DCC2C5851603 /* APIKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CAABFDA44691DAFE1ECF36 /* APIKeyManager.swift */; };
 		FBD1A50D6B0DFCDBD92CDAFA /* LocalEmbeddingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D638C38476AE5D6F481CE3F1 /* LocalEmbeddingServiceTests.swift */; };
 		FDFD1191DD1C38DB7463F418 /* ClipMindTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */; };
@@ -181,6 +183,7 @@
 		5540717419444AC368BA3AED /* SearchServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchServiceTests.swift; sourceTree = "<group>"; };
 		56780EF1945B756B4C7124B2 /* Deduplicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deduplicator.swift; sourceTree = "<group>"; };
 		57F5C6C5728C128A2F2890A3 /* ClipItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipItem.swift; sourceTree = "<group>"; };
+		5872E9B5D6F6F8ACAF6BC5D8 /* LayoutConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutConstants.swift; sourceTree = "<group>"; };
 		58C63EC6C63F4468AA015F15 /* SettingsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUITests.swift; sourceTree = "<group>"; };
 		5A5158584C25CC46619ABEC6 /* RewriteMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewriteMode.swift; sourceTree = "<group>"; };
 		5A8B10F9863094000E49984C /* DefaultBlacklist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultBlacklist.swift; sourceTree = "<group>"; };
@@ -216,6 +219,7 @@
 		9B1B8368514454F691F2FB00 /* LogCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogCategory.swift; sourceTree = "<group>"; };
 		9B2B5CD59B45AE4B3332F739 /* BlacklistServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlacklistServiceTests.swift; sourceTree = "<group>"; };
 		9F130B71026DB662743A2D84 /* SensitiveDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveDetectorTests.swift; sourceTree = "<group>"; };
+		A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowLayoutTests.swift; sourceTree = "<group>"; };
 		A6E4A4AD7537A6295717721E /* ClipMindTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClipMindTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB1676FD1002DFCF2481517E /* TranslateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateTests.swift; sourceTree = "<group>"; };
 		ABD5B39F7DAEF07E5F2DAB3F /* ClipTestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipTestData.swift; sourceTree = "<group>"; };
@@ -394,6 +398,7 @@
 		6A6FAD4946013532FCE5F51E /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */,
 				34A320A2C325CDFC51979086 /* PermissionIconSymbolTests.swift */,
 			);
 			path = UI;
@@ -531,6 +536,7 @@
 			children = (
 				5C626C2E4480671EA68F3A65 /* DetailPanel.swift */,
 				69622D426196E6F573F69442 /* HistoryListView.swift */,
+				5872E9B5D6F6F8ACAF6BC5D8 /* LayoutConstants.swift */,
 				E59153AE33F9659029A0BEA1 /* MainWindow.swift */,
 				F60416E2EE845CBDACE16E14 /* ProcessingButtons.swift */,
 				675E43BBF6CBFE4F546BFC5A /* ResultBlockView.swift */,
@@ -845,6 +851,7 @@
 				C21B88E311DD8E9DD139EAFE /* HotkeyRecorder.swift in Sources */,
 				4339A7ACA7978229140AE1FF /* LLMError.swift in Sources */,
 				9E6726E6C58149DB0567BBAD /* LLMService.swift in Sources */,
+				B4A8B7DD3E48D04312E91293 /* LayoutConstants.swift in Sources */,
 				71DE531FC0DC9C0413FF20CB /* LocalEmbeddingService.swift in Sources */,
 				68EF95C36F7FA4E7F4CF5BCC /* LogCategory.swift in Sources */,
 				DF67DCB9D662E8F4BF29374D /* Logger.swift in Sources */,
@@ -907,6 +914,7 @@
 				995230116C9F1B2C0397E1A9 /* LLMServiceTests.swift in Sources */,
 				FBD1A50D6B0DFCDBD92CDAFA /* LocalEmbeddingServiceTests.swift in Sources */,
 				BD5D1B4DBB4F613CEF118C00 /* LoggerTests.swift in Sources */,
+				F7BA652A80058AD2704733A7 /* MainWindowLayoutTests.swift in Sources */,
 				E1673812CB0303A76F1EDF24 /* MockLLMService.swift in Sources */,
 				C4B895B2B488B0C870E2B9F8 /* MultiProviderLLMServiceTests.swift in Sources */,
 				1E5D28AA74E8DF3052E821B1 /* PasteboardWatcherTests.swift in Sources */,

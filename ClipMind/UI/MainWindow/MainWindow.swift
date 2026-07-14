@@ -19,7 +19,7 @@ struct MainWindow: View {
                 Divider()
                 contentArea
             }
-            .frame(minWidth: 700)
+            .frame(minWidth: LayoutConstants.sidebarMinWidth)
             DetailPanel(clip: selectedClip) { updated in
                 selectedClip = updated
             }
@@ -32,7 +32,7 @@ struct MainWindow: View {
                 .accessibilityIdentifier("settingsButton")
             }
         }
-        .frame(minWidth: 980, minHeight: 500)
+        .frame(minWidth: LayoutConstants.mainWindowMinWidth, minHeight: LayoutConstants.mainWindowMinHeight)
         .onAppear {
             if CommandLine.arguments.contains("--UITEST_AUTO_SELECT_FIRST") {
                 selectedClip = allClips.first
