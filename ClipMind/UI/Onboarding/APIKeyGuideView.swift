@@ -10,10 +10,9 @@ struct APIKeyGuideView: View {
     @State private var apiKey = ""
     @State private var validationResult: ValidationResult?
     @State private var isValidating = false
-    @State private var showSkipAlert = false
 
-    /// 外部触发跳过提示（由 OnboardingView 的跳过按钮绑定）
-    var triggerSkipAlert: Binding<Bool>?
+    /// 跳过提示框显示状态（由 OnboardingView 直接绑定）
+    @Binding var showSkipAlert: Bool
 
     /// 跳过确认后的回调
     var onSkipConfirmed: (() -> Void)?
@@ -77,12 +76,6 @@ struct APIKeyGuideView: View {
             Button("取消", role: .cancel) {}
         } message: {
             Text("分类和搜索本地可用，AI 处理需配置 API Key")
-        }
-        .onChange(of: triggerSkipAlert?.wrappedValue ?? false) { newValue in
-            if newValue {
-                showSkipAlert = true
-                triggerSkipAlert?.wrappedValue = false
-            }
         }
     }
 
