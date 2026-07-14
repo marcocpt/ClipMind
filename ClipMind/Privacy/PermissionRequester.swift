@@ -3,6 +3,15 @@ import ApplicationServices
 import Foundation
 import UserNotifications
 
+/// 通知权限状态获取闭包类型
+typealias NotificationStatusProvider = (@escaping (UNAuthorizationStatus) -> Void) -> Void
+
+/// 通知权限请求闭包类型
+typealias NotificationAuthorizationRequesterType = (
+    UNAuthorizationOptions,
+    @escaping (Bool, Error?) -> Void
+) -> Void
+
 /// 权限请求器
 ///
 /// 封装系统 TCC 权限请求逻辑，便于在 UI 层调用与测试中注入 mock。
@@ -39,8 +48,7 @@ enum PermissionRequester {
     ///
     /// 默认实现调用 `UNUserNotificationCenter.getNotificationSettings` 并返回 `authorizationStatus`。
     /// 测试中可替换为 mock 闭包以验证分支逻辑。
-    static var notificationAuthorizationStatusProvider:
-        (@escaping (UNAuthorizationStatus) -> Void) -> Void = { completion in
+    static var notificationAuthorizationStatusProvider: NotificationStatusProvider = { completion in
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             completion(settings.authorizationStatus)
         }
@@ -50,10 +58,7 @@ enum PermissionRequester {
     ///
     /// 默认实现调用 `UNUserNotificationCenter.requestAuthorization`。
     /// 测试中可替换为 mock 闭包以验证调用参数。
-    static var notificationAuthorizationRequester: (
-        UNAuthorizationOptions,
-        @escaping (Bool, Error?) -> Void
-    ) -> Void = { options, completion in
+    static var notificationAuthorizationRequester: NotificationAuthorizationRequesterType = { options, completion in
         UNUserNotificationCenter.current().requestAuthorization(
             options: options,
             completionHandler: completion
