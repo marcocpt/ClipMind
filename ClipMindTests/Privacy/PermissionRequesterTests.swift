@@ -1,4 +1,5 @@
 import ApplicationServices
+import UserNotifications
 import XCTest
 
 @testable import ClipMind
@@ -11,11 +12,17 @@ import XCTest
 final class PermissionRequesterTests: XCTestCase {
     private var originalCheck: ((Bool) -> Bool)?
     private var originalOpenSettings: (() -> Void)?
+    private var originalStatusProvider: NotificationStatusProvider?
+    private var originalRequester: NotificationAuthorizationRequesterType?
+    private var originalURLHandler: (() -> Void)?
 
     override func setUp() {
         super.setUp()
         originalCheck = PermissionRequester.axTrustedCheck
         originalOpenSettings = PermissionRequester.openSystemSettings
+        originalStatusProvider = PermissionRequester.notificationAuthorizationStatusProvider
+        originalRequester = PermissionRequester.notificationAuthorizationRequester
+        originalURLHandler = PermissionRequester.notificationSettingsURLHandler
     }
 
     override func tearDown() {
@@ -25,8 +32,20 @@ final class PermissionRequesterTests: XCTestCase {
         if let original = originalOpenSettings {
             PermissionRequester.openSystemSettings = original
         }
+        if let original = originalStatusProvider {
+            PermissionRequester.notificationAuthorizationStatusProvider = original
+        }
+        if let original = originalRequester {
+            PermissionRequester.notificationAuthorizationRequester = original
+        }
+        if let original = originalURLHandler {
+            PermissionRequester.notificationSettingsURLHandler = original
+        }
         originalCheck = nil
         originalOpenSettings = nil
+        originalStatusProvider = nil
+        originalRequester = nil
+        originalURLHandler = nil
         super.tearDown()
     }
 
@@ -94,6 +113,113 @@ final class PermissionRequesterTests: XCTestCase {
             callOrder,
             ["openSystemSettings", "requestAccessibility"],
             "应先打开系统设置面板，再触发 TCC 提示，让对话框显示在系统设置之上"
+        )
+    }
+
+    // MARK: - 通知权限请求测试
+
+    /// 通知权限状态为 .notDetermined 时，应调用 requestAuthorization 弹出系统对话框
+    ///
+    /// 回归保护：确保首次请求通知权限时走 requestAuthorization 路径，
+    /// 而非错误地打开系统设置页面。
+    func testRequestNotificationWhenNotDeterminedCallsAuthorization() {
+        var capturedOptions: UNAuthorizationOptions?
+        var openedSettings = false
+
+        PermissionRequester.notificationAuthorizationStatusProvider = { completion in
+            completion(.notDetermined)
+        }
+        PermissionRequester.notificationAuthorizationRequester = { options, completion in
+            capturedOptions = options
+            completion(true, nil)
+        }
+        PermissionRequester.notificationSettingsURLHandler = {
+            openedSettings = true
+        }
+
+        let expectation = XCTestExpectation(description: "requestNotification completion 被调用")
+        PermissionRequester.requestNotification {
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+
+        XCTAssertEqual(
+            capturedOptions,
+            [.alert, .sound],
+            "notDetermined 状态应请求 alert+sound 权限"
+        )
+        XCTAssertFalse(
+            openedSettings,
+            "notDetermined 状态不应打开系统设置页面"
+        )
+    }
+
+    /// 通知权限状态为 .denied 时，应打开系统设置通知页面引导用户手动开启
+    ///
+    /// 核心 bug 修复：用户曾拒绝通知权限后，macOS 不再弹出授权对话框，
+    /// 必须引导用户去系统设置手动开启，否则点击按钮无任何反应。
+    func testRequestNotificationWhenDeniedOpensSystemSettings() {
+        var requestedAuthorization = false
+        var openedSettings = false
+
+        PermissionRequester.notificationAuthorizationStatusProvider = { completion in
+            completion(.denied)
+        }
+        PermissionRequester.notificationAuthorizationRequester = { _, completion in
+            requestedAuthorization = true
+            completion(false, nil)
+        }
+        PermissionRequester.notificationSettingsURLHandler = {
+            openedSettings = true
+        }
+
+        let expectation = XCTestExpectation(description: "requestNotification completion 被调用")
+        PermissionRequester.requestNotification {
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+
+        XCTAssertTrue(
+            openedSettings,
+            "denied 状态应打开系统设置通知页面引导用户手动开启"
+        )
+        XCTAssertFalse(
+            requestedAuthorization,
+            "denied 状态不应再调用 requestAuthorization（系统不会弹窗）"
+        )
+    }
+
+    /// 通知权限状态为 .authorized 时，不应执行任何操作
+    ///
+    /// 回归保护：已授权时不应重复请求或打开系统设置。
+    func testRequestNotificationWhenAuthorizedDoesNothing() {
+        var requestedAuthorization = false
+        var openedSettings = false
+
+        PermissionRequester.notificationAuthorizationStatusProvider = { completion in
+            completion(.authorized)
+        }
+        PermissionRequester.notificationAuthorizationRequester = { _, completion in
+            requestedAuthorization = true
+            completion(true, nil)
+        }
+        PermissionRequester.notificationSettingsURLHandler = {
+            openedSettings = true
+        }
+
+        let expectation = XCTestExpectation(description: "requestNotification completion 被调用")
+        PermissionRequester.requestNotification {
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+
+        XCTAssertFalse(
+            requestedAuthorization,
+            "authorized 状态不应再调用 requestAuthorization"
+        )
+        XCTAssertFalse(
+            openedSettings,
+            "authorized 状态不应打开系统设置页面"
         )
     }
 }

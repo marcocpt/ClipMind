@@ -68,12 +68,14 @@ struct PermissionRequestView: View {
     }
 
     /// 请求通知权限
+    ///
+    /// 委托给 `PermissionRequester.requestNotification`，根据当前授权状态分支处理：
+    /// - 未决定时弹出系统授权对话框
+    /// - 已被拒绝时打开系统设置通知页面引导用户手动开启
+    /// - 已授权时不执行操作
     private func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, error in
-            if let error = error {
-                LogCategory.app.error("通知权限请求失败: \(error.localizedDescription)")
-            }
-            DispatchQueue.main.async { refreshPermissionStatus() }
+        PermissionRequester.requestNotification {
+            refreshPermissionStatus()
         }
     }
 }
