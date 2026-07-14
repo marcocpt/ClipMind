@@ -18,6 +18,14 @@ final class PermissionRequestUITests: XCTestCase {
 
     override func tearDown() {
         XCUIApplication().terminate()
+        // 恢复 hasCompletedOnboarding=true，避免污染后续依赖主窗口的测试（如 PopoverUITests）
+        // 本测试用 --UITEST_RESET_ONBOARDING 重置为 false，若不恢复，后续无启动参数的测试
+        // 会进入 OnboardingView 而非主窗口，导致菜单栏图标等主窗口元素缺失。
+        let cleanupApp = XCUIApplication()
+        cleanupApp.launchArguments = ["--UITEST_SHOW_MAIN_WINDOW"]
+        cleanupApp.launch()
+        _ = cleanupApp.windows.firstMatch.waitForExistence(timeout: 5)
+        cleanupApp.terminate()
         super.tearDown()
     }
 
