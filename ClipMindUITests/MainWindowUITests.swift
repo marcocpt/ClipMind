@@ -63,12 +63,12 @@ final class MainWindowUITests: XCTestCase {
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 5), "主窗口应包含设置按钮")
     }
 
-    /// 验证侧边栏最小宽度为 700pt（bug: 侧边栏宽度太窄）。
+    /// 验证侧边栏最小宽度为 350pt（F1.12: 原 700 太宽导致窗口缩小时内容溢出）。
     ///
     /// NavigationView 内的 VStack 无法被 XCUITest 直接定位，通过详情面板空状态文本
     /// 的居中位置反推侧边栏宽度：
     /// sidebar_width ≈ 2 * (text.midX - window.minX) - window.width - divider
-    func testSidebarMinWidth700() {
+    func testSidebarMinWidth350() {
         let app = XCUIApplication()
         app.launchArguments = ["--UITEST_SHOW_MAIN_WINDOW"]
         app.launch()
@@ -87,8 +87,8 @@ final class MainWindowUITests: XCTestCase {
         let sidebarWidth = 2 * (textMidX - windowMinX) - windowWidth - dividerWidth
 
         XCTAssertGreaterThanOrEqual(
-            sidebarWidth, 700,
-            "侧边栏宽度应至少为 700pt，实际约为 \(sidebarWidth)pt"
+            sidebarWidth, 350,
+            "侧边栏宽度应至少为 350pt，实际约为 \(sidebarWidth)pt"
         )
     }
 }
