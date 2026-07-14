@@ -41,4 +41,28 @@ final class MainWindowLayoutTests: XCTestCase {
         XCTAssertEqual(LayoutConstants.mainWindowMinWidth, 980, "窗口最小宽度应为 980")
         XCTAssertEqual(LayoutConstants.mainWindowMinHeight, 500, "窗口最小高度应为 500")
     }
+
+    /// F1.14: App 级外层 frame minWidth 不得小于 MainWindow 内层 minWidth。
+    ///
+    /// ClipMindApp 用外层 frame 包裹 MainWindow，若外层 minWidth < 内层 minWidth，
+    /// 窗口被外层限制到小于内层期望的宽度，NavigationView 布局冲突，
+    /// 缩窗时侧边栏内容（搜索栏 + 列表）被推出窗口可见区域。
+    func testAppWindowMinWidthNotSmallerThanMainWindowMinWidth() {
+        XCTAssertGreaterThanOrEqual(
+            LayoutConstants.appWindowMinWidth,
+            LayoutConstants.mainWindowMinWidth,
+            "appWindowMinWidth(\(LayoutConstants.appWindowMinWidth)) 不得小于 "
+            + "mainWindowMinWidth(\(LayoutConstants.mainWindowMinWidth)), 缩窗侧边栏溢出"
+        )
+    }
+
+    /// F1.14: App 级外层 frame minHeight 不得小于 MainWindow 内层 minHeight。
+    func testAppWindowMinHeightNotSmallerThanMainWindowMinHeight() {
+        XCTAssertGreaterThanOrEqual(
+            LayoutConstants.appWindowMinHeight,
+            LayoutConstants.mainWindowMinHeight,
+            "appWindowMinHeight(\(LayoutConstants.appWindowMinHeight)) 不得小于 "
+            + "mainWindowMinHeight(\(LayoutConstants.mainWindowMinHeight))"
+        )
+    }
 }
