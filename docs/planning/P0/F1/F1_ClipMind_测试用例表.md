@@ -1,10 +1,10 @@
-> 最后更新：2026-07-14 | 版本：v1.6（基于设计规范 v1.7）
+> 最后更新：2026-07-14 | 版本：v1.7（基于设计规范 v1.7）
 
 # ClipMind 初赛 MVP 测试用例表
 
 **功能编号**：F1.x（Phase 01 · P0 · 初赛必做）
 **文档存放路径**：`docs/planning/P0/F1/F1_ClipMind_测试用例表.md`
-**关联设计规范**：`docs/planning/P0/F1/F1_ClipMind_设计规范.md` v1.6
+**关联设计规范**：`docs/planning/P0/F1/F1_ClipMind_设计规范.md` v1.7
 **适用阶段**：TRAE AI 创造力大赛初赛（2026-07-15 截止）
 
 ---
@@ -97,7 +97,8 @@ ClipMindTests/
 ├── Privacy/                       # 新增
 │   └── PermissionRequesterTests.swift   # 新增
 ├── UI/                            # 新增
-│   └── PermissionIconSymbolTests.swift   # 新增
+│   ├── PermissionIconSymbolTests.swift   # 新增
+│   └── MainWindowLayoutTests.swift   # 新增（F1.12 回归保护）
 ├── Utils/
 │   └── LoggerTests.swift
 ├── Fixtures/
@@ -188,6 +189,10 @@ ClipMindUITests/
 | TC-23-01 | AC-23 | 菜单栏图标常驻 | App 已启动 | 1. 启动 App<br>2. 观察系统菜单栏 | 菜单栏出现 ClipMind 图标 | XCUITest | ✅ COVERED | PopoverUITests.testStatusBarItemExists 覆盖 |
 | TC-23-02 | AC-23 | 点击菜单栏图标弹出 popover | App 已启动，菜单栏图标可见 | 1. 点击菜单栏 ClipMind 图标<br>2. 观察 popover | popover 弹出<br>显示最近 5-10 条剪贴内容 + 搜索框 + "查看全部"按钮 | XCUITest | ✅ COVERED | PopoverUITests.testPopoverAppearsOnIconClick + testPopoverContainsSearchField + testPopoverContainsViewAllButton |
 | TC-23-03 | AC-23 | popover 手动验证 | App 已启动，已有复制内容 | 1. 点击菜单栏图标<br>2. 观察 popover 内容 | popover 显示最近条目<br>含类型标签 + 内容预览 + 来源 + 时间 | 手动 | ⏸️ DEFERRED | UX 验证，延后至 Phase 4 T4.4 |
+| TC-23-04 | AC-23 | 侧边栏最小宽度为 350（F1.12 回归） | LayoutConstants 可访问 | 1. 读取 LayoutConstants.sidebarMinWidth<br>2. 与 350 比较 | sidebarMinWidth == 350（原值 700 过宽导致窗口缩小时内容溢出） | XCTest | ✅ COVERED | MainWindowLayoutTests.testSidebarMinWidthIs350 覆盖；F1.12 bug 修复回归保护 |
+| TC-23-05 | AC-23 | 侧边栏最小宽度不超过窗口最小宽度一半（F1.12 回归） | LayoutConstants 可访问 | 1. 计算 LayoutConstants.mainWindowMinWidth / 2<br>2. 比较 sidebarMinWidth 与一半窗口宽度 | sidebarMinWidth ≤ mainWindowMinWidth / 2（避免详情面板被挤压） | XCTest | ✅ COVERED | MainWindowLayoutTests.testSidebarMinWidthDoesNotExceedHalfOfWindow 覆盖；F1.12 bug 修复回归保护 |
+| TC-23-06 | AC-23 | 窗口缩到最小时详情面板剩余空间为正（F1.12 回归） | LayoutConstants 可访问 | 1. 计算 mainWindowMinWidth - sidebarMinWidth<br>2. 验证结果 > 0 | 剩余空间 > 0（详情面板可见） | XCTest | ✅ COVERED | MainWindowLayoutTests.testDetailPanelHasPositiveSpaceAtWindowMinimum 覆盖；F1.12 bug 修复回归保护 |
+| TC-23-07 | AC-23 | 主窗口最小尺寸常量稳定（F1.12 回归） | LayoutConstants 可访问 | 1. 读取 LayoutConstants.mainWindowMinWidth<br>2. 读取 LayoutConstants.mainWindowMinHeight<br>3. 分别与 980 和 500 比较 | mainWindowMinWidth == 980<br>mainWindowMinHeight == 500 | XCTest | ✅ COVERED | MainWindowLayoutTests.testMainWindowMinimumDimensions 覆盖；F1.12 bug 修复回归保护 |
 | TC-24-01 | AC-24 | 首次启动引导流程完整（UI 自动化） | UserDefaults 已清空 | 1. 清空 UserDefaults<br>2. 启动 App<br>3. 遍历引导流程<br>4. 断言每个步骤页面出现 | 依次显示：欢迎页 → 权限请求 → API Key 配置引导（可跳过）→ 隐私默认值提示 → 进入主界面 | XCUITest | ✅ COVERED | FirstLaunchUITests.testFirstLaunchOnboardingFlow |
 | TC-24-02 | AC-24 | API Key 配置引导可跳过 | UserDefaults 已清空 | 1. 启动 App 进入引导<br>2. 到达 API Key 配置步骤<br>3. 点击"跳过"<br>4. 观察提示 | 提示"分类/搜索本地可用，处理需配置"<br>进入隐私默认值提示步骤 | XCUITest | ✅ COVERED | FirstLaunchUITests.testAPIKeyGuideCanBeSkipped |
 | TC-24-03 | AC-24 | 首次启动引导手动验证 | App 偏好已删除 | 1. 删除 App 偏好<br>2. 启动 App<br>3. 观察引导流程 | 5 个步骤依次出现<br>权限请求正确展示 | 手动 | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
@@ -1300,6 +1305,63 @@ ClipMindUITests/
 - **覆盖状态**：⏸️ DEFERRED
 - **备注**：UX 验证
 
+**TC-23-04：侧边栏最小宽度为 350（F1.12 回归保护）**
+
+- **前置条件**：
+  - `LayoutConstants` 可访问
+- **测试步骤**：
+  1. 读取 `LayoutConstants.sidebarMinWidth`
+  2. 与 350 比较
+- **预期结果**：
+  - `sidebarMinWidth == 350`（原值 700 过宽，导致窗口缩小时侧边栏无法收缩，搜索框和列表溢出窗口边界）
+- **测试框架**：XCTest
+- **覆盖状态**：✅ COVERED
+- **备注**：F1.12 bug 修复回归保护；MainWindowLayoutTests.testSidebarMinWidthIs350 覆盖
+
+**TC-23-05：侧边栏最小宽度不超过窗口最小宽度一半（F1.12 回归保护）**
+
+- **前置条件**：
+  - `LayoutConstants` 可访问
+- **测试步骤**：
+  1. 计算 `LayoutConstants.mainWindowMinWidth / 2`
+  2. 比较 `sidebarMinWidth` 与一半窗口宽度
+- **预期结果**：
+  - `sidebarMinWidth ≤ mainWindowMinWidth / 2`
+  - 确保详情面板在窗口缩到最小时仍有合理空间
+- **测试框架**：XCTest
+- **覆盖状态**：✅ COVERED
+- **备注**：F1.12 bug 修复回归保护；MainWindowLayoutTests.testSidebarMinWidthDoesNotExceedHalfOfWindow 覆盖
+
+**TC-23-06：窗口缩到最小时详情面板剩余空间为正（F1.12 回归保护）**
+
+- **前置条件**：
+  - `LayoutConstants` 可访问
+- **测试步骤**：
+  1. 计算 `mainWindowMinWidth - sidebarMinWidth`
+  2. 验证结果 > 0
+- **预期结果**：
+  - 剩余空间 > 0
+  - 详情面板在窗口缩到最小时仍可见，不被侧边栏完全挤压
+- **测试框架**：XCTest
+- **覆盖状态**：✅ COVERED
+- **备注**：F1.12 bug 修复回归保护；MainWindowLayoutTests.testDetailPanelHasPositiveSpaceAtWindowMinimum 覆盖
+
+**TC-23-07：主窗口最小尺寸常量稳定（F1.12 回归保护）**
+
+- **前置条件**：
+  - `LayoutConstants` 可访问
+- **测试步骤**：
+  1. 读取 `LayoutConstants.mainWindowMinWidth`
+  2. 读取 `LayoutConstants.mainWindowMinHeight`
+  3. 分别与 980 和 500 比较
+- **预期结果**：
+  - `mainWindowMinWidth == 980`
+  - `mainWindowMinHeight == 500`
+  - 窗口最小尺寸常量保持稳定（回归保护）
+- **测试框架**：XCTest
+- **覆盖状态**：✅ COVERED
+- **备注**：F1.12 bug 修复回归保护；MainWindowLayoutTests.testMainWindowMinimumDimensions 覆盖
+
 ---
 
 #### AC-24：首次启动引导流程完整
@@ -1761,8 +1823,8 @@ ClipMindUITests/
 | 指标 | 数值 |
 |------|------|
 | AC 总数 | 26 |
-| 测试用例总数 | 84 |
-| 平均每 AC 用例数 | 3.23 |
+| 测试用例总数 | 88 |
+| 平均每 AC 用例数 | 3.38 |
 | AC 覆盖率 | 100%（26/26） |
 
 ### 6.2 按 AC 覆盖率
@@ -1793,7 +1855,7 @@ ClipMindUITests/
 | AC-20 | 3 | ❌3 |
 | AC-21 | 4 | ✅2 ❌2 |
 | AC-22 | 3 | ❌3 |
-| AC-23 | 3 | ✅2 ⏸️1 |
+| AC-23 | 7 | ✅6 ⏸️1 |
 | AC-24 | 5 | ✅4 ❌1 |
 | AC-25 | 3 | ⏸️3 |
 | AC-26 | 13 | ✅13 |
@@ -1802,11 +1864,11 @@ ClipMindUITests/
 
 | 测试框架 | 用例数 | 占比 |
 |---------|--------|------|
-| XCTest | 55 | 66.27% |
+| XCTest | 59 | 67.05% |
 | XCUITest | 12 | 14.29% |
 | 手动 | 16 | 19.28% |
 | curl | 1 | 1.21% |
-| **合计** | **84** | **100%** |
+| **合计** | **88** | **100%** |
 
 **说明**：部分用例同时涉及 XCTest（mock）与手动（真实 API），统计时按主框架归类。
 
@@ -1814,13 +1876,13 @@ ClipMindUITests/
 
 | 覆盖状态 | 用例数 | 占比 |
 |---------|--------|------|
-| ✅ COVERED | 45 | 53.57% |
+| ✅ COVERED | 49 | 55.68% |
 | 🟡 PARTIAL | 8 | 9.64% |
 | ❌ MISSING | 18 | 21.69% |
 | ⏸️ DEFERRED | 13 | 15.66% |
-| **合计** | **83** | **100%** |
+| **合计** | **88** | **100%** |
 
-> **当前状态**：Phase 4（Web + Demo 帖）已完成。42 条用例通过 XCTest/XCUITest 自动化覆盖；8 条因数据集缩减或仅 UI 路径覆盖标注为 PARTIAL；13 条真实 API 集成与截图/录屏手动验证用例延后（TC-25-01 curl 验证需合并到 main 后执行）；18 条依赖 Phase 3 任务（SensitiveDetector / BlacklistService / CleanupService / 首启引导）尚未实现，标注为 MISSING。Phase 4 的 TC-25-02/03 已通过 browser_use 子代理验证并更新为 ✅ COVERED。TC-26-01 ~ TC-26-13（全局快捷键唤醒主窗口）已通过 XCTest 自动化覆盖。TC-24-05（辅助功能请求触发 TCC 提示）已通过 XCTest 自动化覆盖。TC-24-06（点击「打开系统设置」不崩溃）已通过 XCUITest 自动化覆盖，回归保护 `kAXTrustedCheckOptionPrompt` 全局常量为 NULL 导致的 EXC_BAD_ACCESS 崩溃。
+> **当前状态**：Phase 4（Web + Demo 帖）已完成。46 条用例通过 XCTest/XCUITest 自动化覆盖；8 条因数据集缩减或仅 UI 路径覆盖标注为 PARTIAL；13 条真实 API 集成与截图/录屏手动验证用例延后（TC-25-01 curl 验证需合并到 main 后执行）；18 条依赖 Phase 3 任务（SensitiveDetector / BlacklistService / CleanupService / 首启引导）尚未实现，标注为 MISSING。Phase 4 的 TC-25-02/03 已通过 browser_use 子代理验证并更新为 ✅ COVERED。TC-26-01 ~ TC-26-13（全局快捷键唤醒主窗口）已通过 XCTest 自动化覆盖。TC-24-05（辅助功能请求触发 TCC 提示）已通过 XCTest 自动化覆盖。TC-24-06（点击「打开系统设置」不崩溃）已通过 XCUITest 自动化覆盖，回归保护 `kAXTrustedCheckOptionPrompt` 全局常量为 NULL 导致的 EXC_BAD_ACCESS 崩溃。TC-23-04 ~ TC-23-07（主窗口布局常量回归保护）已通过 XCTest 自动化覆盖，回归保护 F1.12 bug 修复（导航栏最小宽度从 700 调整为 350，解决窗口缩小时搜索框和列表溢出问题）。
 
 ### 6.5 按模块分布
 
@@ -1832,10 +1894,10 @@ ClipMindUITests/
 | F1.4 一键处理 | 5 | 19 | 11 | 3 | 5 | 0 |
 | F1.5 本地加密存储 | 2 | 5 | 2 | 0 | 3 | 0 |
 | F1.6 隐私保护 | 3 | 10 | 9 | 1 | 0 | 0 |
-| F1.7 主界面与交互 | 4 | 24 | 14 | 5 | 4 | 1 |
-| **合计** | **26** | **84** | **55** | **12** | **16** | **1** |
+| F1.7 主界面与交互 | 4 | 28 | 18 | 5 | 4 | 1 |
+| **合计** | **26** | **88** | **59** | **12** | **16** | **1** |
 
-> **说明**：每条用例按"主测试框架"归类一次，无双重计数。F1.2 中 TC-08-07（复制 Token 弹通知）归类为手动；F1.4 新增 4 条 LLM API 错误路径用例（TC-13-04/14-04/15-04/16-04）归类为 XCTest；F1.6 新增 TC-21-04（恰好 30 天边界）归类为 XCTest；F1.7 新增 13 条全局快捷键用例（TC-26-01 ~ TC-26-13）归类为 XCTest；F1.7 新增 TC-24-05（辅助功能请求触发 TCC 提示，PermissionRequesterTests）归类为 XCTest；F1.7 新增 TC-24-06（点击「打开系统设置」不崩溃，PermissionRequestUITests）归类为 XCUITest。
+> **说明**：每条用例按"主测试框架"归类一次，无双重计数。F1.2 中 TC-08-07（复制 Token 弹通知）归类为手动；F1.4 新增 4 条 LLM API 错误路径用例（TC-13-04/14-04/15-04/16-04）归类为 XCTest；F1.6 新增 TC-21-04（恰好 30 天边界）归类为 XCTest；F1.7 新增 13 条全局快捷键用例（TC-26-01 ~ TC-26-13）归类为 XCTest；F1.7 新增 TC-24-05（辅助功能请求触发 TCC 提示，PermissionRequesterTests）归类为 XCTest；F1.7 新增 TC-24-06（点击「打开系统设置」不崩溃，PermissionRequestUITests）归类为 XCUITest。 F1.7 新增 4 条主窗口布局常量回归保护用例（TC-23-04 ~ TC-23-07，MainWindowLayoutTests）归类为 XCTest，对应 F1.12 bug 修复（导航栏最小宽度 700→350）。
 
 ---
 
@@ -1850,3 +1912,4 @@ ClipMindUITests/
 | v1.4 | 2026-07-14 | 同步快捷键唤醒修复（基于设计规范 v1.6）：新增 AC-26 全局快捷键唤醒主窗口，新增 13 条 XCTest 测试用例（TC-26-01 ~ TC-26-13，覆盖 HotkeyFormatter.parse(stored:) 解析与 GlobalHotkeyService 注册/注销/触发）；1.1 节 F1.7 AC 数量 3→4、合计 25→26；1.4 节测试组织结构树补充 App/GlobalHotkeyServiceTests.swift；6.1 节总数 69→82、AC 覆盖率 26/26；6.3 节 XCTest 41→54；6.4 节 ✅ COVERED 30→43；6.5 节 F1.7 用例数 9→22、XCTest 0→13 |
 | v1.5 | 2026-07-14 | 同步权限图标/TCC/AppIcon 修复（基于设计规范 v1.7）：新增 TC-24-05 辅助功能请求触发 TCC 提示（PermissionRequesterTests.testRequestAccessibilityPassesPromptTrue，验证 `AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt: true])` 调用时 prompt 参数为 true）；6.1 节总数 82→83、平均每 AC 用例数 3.15→3.19；6.2 节 AC-24 用例数 3→4（✅3 ❌1）；6.3 节 XCTest 54→55（占比 65.85%→66.27%）、合计 82→83；6.4 节 ✅ COVERED 43→44（占比 52.44%→53.01%）、合计 82→83；6.5 节 F1.7 用例数 22→23、XCTest 13→14、合计 82→83 |
 | v1.6 | 2026-07-14 | 同步权限请求 EXC_BAD_ACCESS 崩溃修复（基于设计规范 v1.7）：新增 TC-24-06 点击「打开系统设置」不崩溃（PermissionRequestUITests.testOpenAccessibilitySettingsDoesNotCrashApp，XCUITest 验证点击按钮后 app 不崩溃退出，回归保护 `kAXTrustedCheckOptionPrompt` 全局常量为 NULL 导致的 EXC_BAD_ACCESS 崩溃）；6.1 节总数 83→84、平均每 AC 用例数 3.19→3.23；6.2 节 AC-24 用例数 4→5（✅4 ❌1）；6.3 节 XCUITest 11→12（占比 13.25%→14.29%）、合计 83→84；6.4 节 ✅ COVERED 44→45（占比 53.01%→53.57%）、合计 83→84；6.5 节 F1.7 用例数 23→24、XCUITest 4→5、合计 83→84 |
+| v1.7 | 2026-07-14 | 同步 F1.12 导航栏宽度溢出修复（基于设计规范 v1.7）：新增 TC-23-04 ~ TC-23-07 主窗口布局常量回归保护用例 4 条（MainWindowLayoutTests.testSidebarMinWidthIs350 / testSidebarMinWidthDoesNotExceedHalfOfWindow / testDetailPanelHasPositiveSpaceAtWindowMinimum / testMainWindowMinimumDimensions，验证 sidebarMinWidth=350 / mainWindowMinWidth=980 / mainWindowMinHeight=500，回归保护导航栏最小宽度从 700 调整为 350 解决窗口缩小时搜索框和列表溢出问题）；1.4 节测试组织结构树补充 UI/MainWindowLayoutTests.swift；6.1 节总数 84→88、平均每 AC 用例数 3.23→3.38；6.2 节 AC-23 用例数 3→7（✅2 ⏸️1 → ✅6 ⏸️1）；6.3 节 XCTest 55→59（占比 66.27%→67.05%）、合计 84→88；6.4 节 ✅ COVERED 45→49（占比 53.57%→55.68%）、合计 83→88（修正原合计数据错误）；6.5 节 F1.7 用例数 24→28、XCTest 14→18、合计 84→88 |
