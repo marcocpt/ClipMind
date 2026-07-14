@@ -11,12 +11,9 @@ import XCTest
 /// 触发系统级 TCC 提示对话框，自动把当前 app 加入权限列表。
 final class PermissionRequesterTests: XCTestCase {
     private var originalCheck: ((Bool) -> Bool)?
-    private var originalStatusProvider: (@escaping (UNAuthorizationStatus) -> Void) -> Void?
-    private var originalRequester: (
-        UNAuthorizationOptions,
-        @escaping (Bool, Error?) -> Void
-    ) -> Void?
-    private var originalURLHandler: () -> Void?
+    private var originalStatusProvider: NotificationStatusProvider?
+    private var originalRequester: NotificationAuthorizationRequesterType?
+    private var originalURLHandler: (() -> Void)?
 
     override func setUp() {
         super.setUp()
