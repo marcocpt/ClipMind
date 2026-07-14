@@ -103,6 +103,55 @@ final class FirstLaunchUITests: XCTestCase {
         )
     }
 
+    // MARK: - TC-24-05 跳过提示框内容完整呈现
+
+    /// 验证点击「跳过」后提示框内容（标题、消息、按钮）完整出现
+    ///
+    /// 回归测试：修复 onChange 两步绑定导致 alert 呈现时被重渲染打断、
+    /// 图标延迟显示的问题。改用直接 @Binding 后，alert 应一次性完整呈现。
+    func testAPIKeySkipAlertShowsContentImmediately() {
+        let app = launchFreshApp()
+
+        // 快速导航到 API Key 引导页
+        let startButton = findButton(app, identifier: "startButton")
+        XCTAssertTrue(startButton.waitForExistence(timeout: 20))
+        startButton.click()
+        let nextButton = findButton(app, identifier: "nextButton")
+        XCTAssertTrue(nextButton.waitForExistence(timeout: 5))
+        nextButton.click()
+        let skipButton = findButton(app, identifier: "skipButton")
+        XCTAssertTrue(
+            skipButton.waitForExistence(timeout: 5),
+            "API Key 引导页的'跳过'按钮应出现"
+        )
+
+        // 点击跳过
+        skipButton.click()
+
+        // 验证提示框内容完整出现
+        let alertSheet = app.sheets.firstMatch
+        XCTAssertTrue(
+            alertSheet.waitForExistence(timeout: 3),
+            "点击跳过后提示框应出现"
+        )
+        XCTAssertTrue(
+            alertSheet.buttons["确定"].waitForExistence(timeout: 2),
+            "提示框应包含'确定'按钮"
+        )
+        XCTAssertTrue(
+            alertSheet.buttons["取消"].exists,
+            "提示框应包含'取消'按钮"
+        )
+
+        // 点击确定后应进入隐私提示页
+        alertSheet.buttons["确定"].click()
+        let finishButton = findButton(app, identifier: "finishButton")
+        XCTAssertTrue(
+            finishButton.waitForExistence(timeout: 5),
+            "点击确定后应进入隐私提示页"
+        )
+    }
+
     // MARK: - TC-24-04 重置标志位后首启引导应显示
 
     /// 验证 hasCompletedOnboarding 被设为 true 后，通过通用重置参数应恢复首启引导显示

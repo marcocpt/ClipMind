@@ -38,7 +38,7 @@ struct OnboardingView: View {
             PermissionRequestView()
         case .apiKey:
             APIKeyGuideView(
-                triggerSkipAlert: $showSkipAlert,
+                showSkipAlert: $showSkipAlert,
                 onSkipConfirmed: { withAnimation { moveForward() } }
             )
         case .privacy:
