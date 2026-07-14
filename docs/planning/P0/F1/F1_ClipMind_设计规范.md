@@ -1,4 +1,4 @@
-> 最后更新：2026-07-14 | 版本：v1.8
+> 最后更新：2026-07-14 | 版本：v1.9
 
 # ClipMind 初赛 MVP 设计规范
 
@@ -870,13 +870,14 @@ CREATE TABLE blacklist (
 
 | 要求 | 版本 | 理由 |
 |------|------|------|
-| 最低 macOS 版本 | macOS 14.0（Sonoma） | SwiftUI 新特性（NavigationStack/Observable）、SwiftData 可选 |
-| 推荐版本 | macOS 14.5+ | 稳定性 + 性能优化 |
+| 最低 macOS 版本 | macOS 12.4（Monterey） | 兼容更广 macOS 设备；开机启动需 macOS 13+（SMAppService），低版本降级为仅记录日志 |
+| 推荐版本 | macOS 13.0+ | 完整功能（含开机启动）+ 稳定性优化 |
 
-**SwiftUI/SwiftData 可用性确认**：
-- `NavigationStack`：macOS 13+ 可用，本项目目标 14+ 满足
-- `@Observable` 宏：macOS 14+ 可用，本项目采用
-- `SwiftData`：macOS 14+ 可用，但本项目选择 SQLite + 手动加密（控制加密粒度）
+**SwiftUI/SwiftData/系统服务可用性确认**：
+- `NavigationStack`：macOS 13+ 可用，本项目未使用（采用 `NavigationView` 兼容 macOS 12.4）
+- `@Observable` 宏：macOS 14+ 可用，本项目未使用（采用 `ObservableObject` + `@Published`）
+- `SwiftData`：macOS 14+ 可用，本项目选择 SQLite + 手动加密（控制加密粒度，兼容 macOS 12.4）
+- `SMAppService`：macOS 13+ 可用（开机启动），macOS 12.4 降级为仅记录日志（MVP 阶段暂不支持 `SMLoginItemSetEnabled` helper bundle 方案）
 
 #### 6.1.2 架构支持
 
@@ -1660,7 +1661,7 @@ swiftlint lint --strict
 **交付物**：
 | 交付物 | 说明 |
 |--------|------|
-| ClipMind.xcodeproj | Xcode 项目，配置 macOS 14+ deployment target |
+| ClipMind.xcodeproj | Xcode 项目，配置 macOS 12.4 deployment target |
 | PasteboardWatcher.swift | 剪贴板轮询监听 |
 | EncryptedStore.swift | AES-256 加密 SQLite 存储 |
 | AppSettings 模型 | 基础设置结构 |
@@ -1912,3 +1913,4 @@ flowchart LR
 | v1.6 | 2026-07-14 | 同步快捷键唤醒修复（新增 GlobalHotkeyService + CarbonHotkeyRegistrar + HotkeyFormatter.parse(stored:)）；新增 AC-26 全局快捷键唤醒主窗口；5.2 节新增 5.2.5 全局快捷键服务接口描述；3.9 节对齐描述为"唤起主窗口"（移除"聚焦搜索框"）；12.4 节快捷键默认值标记为已决策 |
 | v1.7 | 2026-07-14 | 同步权限图标/TCC/AppIcon 修复：6.1.3 节辅助功能权限描述从 `AXIsProcessTrusted()` 更新为 `AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt: true])`，标注首次启动时弹出系统 TCC 提示并自动把 ClipMind 加入权限列表 |
 | v1.8 | 2026-07-14 | 同步通知权限请求分支修复（F1.11）：6.1.3 节通知权限行补充 `authorizationStatus` 分支处理描述（`.notDetermined` 请求授权、`.denied` 打开系统设置通知页面、已授权不操作） |
+| v1.9 | 2026-07-14 | 同步 macOS 12.4 兼容性修复（F1.13）：6.1.1 节最低 macOS 版本从 14.0 降为 12.4；6.1.1 节可用性确认修正（项目实际未使用 NavigationStack/@Observable/SwiftData，采用 NavigationView/ObservableObject），新增 SMAppService macOS 13+ 降级说明；11.1 节 deployment target 描述从 14+ 改为 12.4 |
