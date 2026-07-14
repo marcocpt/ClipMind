@@ -103,7 +103,7 @@ final class FirstLaunchUITests: XCTestCase {
         )
     }
 
-    // MARK: - TC-24-05 跳过提示框内容完整呈现
+    // MARK: - TC-C-01 跳过提示框内容完整呈现
 
     /// 验证点击「跳过」后提示框内容（标题、消息、按钮）完整出现
     ///
