@@ -1,5 +1,7 @@
+import AppKit
 import ApplicationServices
 import Foundation
+import UserNotifications
 
 /// 权限请求器
 ///
@@ -31,5 +33,69 @@ enum PermissionRequester {
         let granted = axTrustedCheck(true)
         LogCategory.app.info("请求辅助功能权限（TCC 提示），当前授权状态: \(granted)")
         return granted
+    }
+
+    /// 可注入的通知权限状态获取闭包
+    ///
+    /// 默认实现调用 `UNUserNotificationCenter.getNotificationSettings` 并返回 `authorizationStatus`。
+    /// 测试中可替换为 mock 闭包以验证分支逻辑。
+    static var notificationAuthorizationStatusProvider:
+        (@escaping (UNAuthorizationStatus) -> Void) -> Void = { completion in
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            completion(settings.authorizationStatus)
+        }
+    }
+
+    /// 可注入的通知权限请求闭包
+    ///
+    /// 默认实现调用 `UNUserNotificationCenter.requestAuthorization`。
+    /// 测试中可替换为 mock 闭包以验证调用参数。
+    static var notificationAuthorizationRequester: (
+        UNAuthorizationOptions,
+        @escaping (Bool, Error?) -> Void
+    ) -> Void = { options, completion in
+        UNUserNotificationCenter.current().requestAuthorization(
+            options: options,
+            completionHandler: completion
+        )
+    }
+
+    /// 可注入的打开系统设置通知页面闭包
+    ///
+    /// 默认实现通过 `x-apple.systempreferences:` URL scheme 打开系统设置的通知面板。
+    /// 测试中可替换为 mock 闭包以验证是否被调用。
+    static var notificationSettingsURLHandler: () -> Void = {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    /// 请求通知权限
+    ///
+    /// 根据当前 `authorizationStatus` 分支处理：
+    /// - `.notDetermined`：调用 `requestAuthorization` 弹出系统授权对话框
+    /// - `.denied`：打开系统设置通知页面，引导用户手动开启（系统不再弹对话框）
+    /// - `.authorized` / `.provisional` / `.ephemeral`：不执行操作
+    /// - Parameter completion: 完成回调，保证在主线程执行
+    static func requestNotification(completion: @escaping () -> Void) {
+        notificationAuthorizationStatusProvider { status in
+            switch status {
+            case .notDetermined:
+                LogCategory.app.info("通知权限未决定，请求授权（弹出系统对话框）")
+                notificationAuthorizationRequester([.alert, .sound]) { _, _ in
+                    DispatchQueue.main.async { completion() }
+                }
+            case .denied:
+                LogCategory.app.info("通知权限已被拒绝，打开系统设置通知页面引导用户手动开启")
+                notificationSettingsURLHandler()
+                DispatchQueue.main.async { completion() }
+            case .authorized, .provisional, .ephemeral:
+                LogCategory.app.info("通知权限已授权，无需操作")
+                DispatchQueue.main.async { completion() }
+            @unknown default:
+                LogCategory.app.warning("未知的通知授权状态: \(status.rawValue)")
+                DispatchQueue.main.async { completion() }
+            }
+        }
     }
 }
