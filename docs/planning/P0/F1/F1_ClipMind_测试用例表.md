@@ -1,10 +1,10 @@
-> 最后更新：2026-07-14 | 版本：v1.6（基于设计规范 v1.7）
+> 最后更新：2026-07-14 | 版本：v1.7（基于设计规范 v1.7）
 
 # ClipMind 初赛 MVP 测试用例表
 
 **功能编号**：F1.x（Phase 01 · P0 · 初赛必做）
 **文档存放路径**：`docs/planning/P0/F1/F1_ClipMind_测试用例表.md`
-**关联设计规范**：`docs/planning/P0/F1/F1_ClipMind_设计规范.md` v1.6
+**关联设计规范**：`docs/planning/P0/F1/F1_ClipMind_设计规范.md` v1.7
 **适用阶段**：TRAE AI 创造力大赛初赛（2026-07-15 截止）
 
 ---
@@ -192,8 +192,9 @@ ClipMindUITests/
 | TC-24-02 | AC-24 | API Key 配置引导可跳过 | UserDefaults 已清空 | 1. 启动 App 进入引导<br>2. 到达 API Key 配置步骤<br>3. 点击"跳过"<br>4. 观察提示 | 提示"分类/搜索本地可用，处理需配置"<br>进入隐私默认值提示步骤 | XCUITest | ✅ COVERED | FirstLaunchUITests.testAPIKeyGuideCanBeSkipped |
 | TC-24-03 | AC-24 | 首次启动引导手动验证 | App 偏好已删除 | 1. 删除 App 偏好<br>2. 启动 App<br>3. 观察引导流程 | 5 个步骤依次出现<br>权限请求正确展示 | 手动 | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
 | TC-24-04 | AC-24 | 重置标志位后首启引导应显示 | hasCompletedOnboarding=true | 1. 设置 hasCompletedOnboarding=true<br>2. 使用 --reset-onboarding 启动<br>3. 验证 OnboardingView 出现 | 显示首启引导而非主窗口 | XCUITest | ✅ COVERED | FirstLaunchUITests.testOnboardingShowsAfterResetFromCompletedState |
-| TC-24-05 | AC-24 | 辅助功能请求触发 TCC 提示 | PermissionRequester.axTrustedCheck 可注入 mock | 1. 注入 mock 闭包记录 prompt 参数<br>2. 调用 `PermissionRequester.requestAccessibility()`<br>3. 读取 mock 记录的 prompt 值 | mock 闭包被调用<br>prompt 参数为 true（触发系统 TCC 提示对话框） | XCTest | ✅ COVERED | PermissionRequesterTests.testRequestAccessibilityPassesPromptTrue |
+| TC-24-05 | AC-24 | 辅助功能请求触发 TCC 提示 | PermissionRequester.axTrustedCheck 可注入 mock | 1. 注入 mock 闭包记录 prompt 参数<br>2. 调用 `PermissionRequester.requestAccessibility()`<br>3. 读取 mock 记录的 prompt 值 | mock 闭包被调用<br>prompt 参数为 true（触发系统 TCC 提示对话框） | XCTest | ✅ COVERED | PermissionRequesterTests.testRequestAccessibilityPassesPromptTrue；调用顺序见 TC-24-07（先打开系统设置后触发 TCC 提示） |
 | TC-24-06 | AC-24 | 点击「打开系统设置」不崩溃 | 引导流程到达权限请求页 | 1. 启动 App 进入引导<br>2. 点击「开始使用」进入权限请求页<br>3. 点击「打开系统设置」按钮<br>4. 验证 app 仍存活 | app 不崩溃退出（state != .notRunning） | XCUITest | ✅ COVERED | PermissionRequestUITests.testOpenAccessibilitySettingsDoesNotCrashApp |
+| TC-24-07 | AC-24 | 打开系统设置与触发 TCC 提示的调用顺序 | PermissionRequester.openSystemSettings 与 axTrustedCheck 可注入 mock | 1. 注入 mock 闭包记录调用顺序<br>2. 调用 `PermissionRequester.openAccessibilitySettingsAndPrompt()`<br>3. 读取 mock 记录的调用顺序 | 调用顺序为：先 openSystemSettings，后 requestAccessibility（让 TCC 提示对话框显示在系统设置面板之上） | XCTest | ✅ COVERED | PermissionRequesterTests.testOpenAccessibilitySettingsAndPromptOpensSettingsBeforeRequest |
 | TC-25-01 | AC-25 | Web 预览页可访问（curl） | Web 页已部署到 GitHub Pages | 1. 执行 `curl -I https://marcocpt.github.io/ClipMind/`<br>2. 检查 HTTP 状态码 | 返回 HTTP 200 | curl | ⏸️ DEFERRED | 延后至 Phase 4 T4.2 GitHub Pages 部署 |
 | TC-25-02 | AC-25 | Web 预览页 4 个交互流程可点击 | 浏览器已打开 Web 预览页 URL | 1. 浏览器打开 Web URL<br>2. 点击"复制演示内容"按钮<br>3. 点击"自动分类"按钮<br>4. 点击"搜索"按钮<br>5. 点击"一键处理"按钮<br>6. 观察响应 | 4 个核心流程按钮均可点击<br>每个按钮有交互响应 | 手动 | ✅ COVERED | Phase 4 已完成，browser_use 子代理验证 4 个交互流程 PASS，截图存于 docs/planning/P0/F1/screenshots/ |
 | TC-25-03 | AC-25 | Web 预览页内容完整 | 浏览器已打开 Web URL | 1. 浏览器打开 Web URL<br>2. 检查页面内容 | 包含产品介绍 + 交互式模拟<br>4 个核心流程可体验 | 手动 | ✅ COVERED | Phase 4 已完成，Web 页面包含产品介绍 + 4 个交互流程演示 |
@@ -1381,7 +1382,7 @@ ClipMindUITests/
   - prompt 参数为 `true`（触发系统 TCC 提示对话框，自动把 ClipMind 加入辅助功能权限列表）
 - **测试框架**：XCTest
 - **覆盖状态**：✅ COVERED
-- **备注**：覆盖 Bug 2 修复 — 点击「打开系统设置」前先调用 `AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt: true])`，确保系统自动弹出 TCC 提示并把当前 App 加入权限列表
+- **备注**：验证 `requestAccessibility()` 调用时 prompt 参数为 true（触发系统 TCC 提示对话框，自动把 ClipMind 加入辅助功能权限列表）。调用顺序已调整（见 TC-24-07）：先打开系统设置面板，后触发 TCC 提示，让对话框显示在系统设置之上避免被遮挡
 
 **TC-24-06：点击「打开系统设置」不崩溃**
 
@@ -1397,7 +1398,22 @@ ClipMindUITests/
   - 回归保护：早期版本 `PermissionRequester.axTrustedCheck` 默认闭包使用 `kAXTrustedCheckOptionPrompt` 全局 CFString 常量，在 Hardened Runtime + 签名 app 上下文中该常量可能因 dyld 加载时序问题为 NULL，导致 `AXIsProcessTrustedWithOptions` 内部 `CFGetTypeID(nil)` 解引用偏移 0x8 崩溃。修复后改用字符串字面量 `"AXTrustedCheckOptionPrompt"`
 - **测试框架**：XCUITest
 - **覆盖状态**：✅ COVERED
-- **备注**：覆盖 Bug 3 修复 — `kAXTrustedCheckOptionPrompt` 全局常量为 NULL 导致 EXC_BAD_ACCESS 崩溃，改用字符串字面量避免 dyld 加载时序依赖
+- **备注**：覆盖 Bug 3 修复 — `kAXTrustedCheckOptionPrompt` 全局常量为 NULL 导致 EXC_BAD_ACCESS 崩溃，改用字符串字面量避免 dyld 加载时序依赖。调用顺序已调整（见 TC-24-07）
+
+**TC-24-07：打开系统设置与触发 TCC 提示的调用顺序**
+
+- **前置条件**：
+  - `PermissionRequester.openSystemSettings` 与 `axTrustedCheck` 闭包可注入 mock
+- **测试步骤**：
+  1. 注入 mock 闭包记录调用顺序
+  2. 调用 `PermissionRequester.openAccessibilitySettingsAndPrompt()`
+  3. 读取 mock 记录的调用顺序
+- **预期结果**：
+  - 调用顺序为：先 `openSystemSettings`，后 `requestAccessibility`
+  - 让 TCC 提示对话框显示在系统设置面板之上，避免被遮挡
+- **测试框架**：XCTest
+- **覆盖状态**：✅ COVERED
+- **备注**：覆盖 Bug 修复 — 原实现先触发 TCC 提示（异步显示）再立即打开系统设置面板，系统设置抢占焦点后 TCC 提示对话框被遮挡，用户看不到，误以为 app 未加入辅助功能列表。修复后调整调用顺序：先打开系统设置面板，再触发 TCC 提示对话框
 
 ---
 
@@ -1761,8 +1777,8 @@ ClipMindUITests/
 | 指标 | 数值 |
 |------|------|
 | AC 总数 | 26 |
-| 测试用例总数 | 84 |
-| 平均每 AC 用例数 | 3.23 |
+| 测试用例总数 | 85 |
+| 平均每 AC 用例数 | 3.27 |
 | AC 覆盖率 | 100%（26/26） |
 
 ### 6.2 按 AC 覆盖率
@@ -1794,7 +1810,7 @@ ClipMindUITests/
 | AC-21 | 4 | ✅2 ❌2 |
 | AC-22 | 3 | ❌3 |
 | AC-23 | 3 | ✅2 ⏸️1 |
-| AC-24 | 5 | ✅4 ❌1 |
+| AC-24 | 6 | ✅5 ❌1 |
 | AC-25 | 3 | ⏸️3 |
 | AC-26 | 13 | ✅13 |
 
@@ -1802,11 +1818,11 @@ ClipMindUITests/
 
 | 测试框架 | 用例数 | 占比 |
 |---------|--------|------|
-| XCTest | 55 | 66.27% |
+| XCTest | 56 | 65.88% |
 | XCUITest | 12 | 14.29% |
 | 手动 | 16 | 19.28% |
 | curl | 1 | 1.21% |
-| **合计** | **84** | **100%** |
+| **合计** | **85** | **100%** |
 
 **说明**：部分用例同时涉及 XCTest（mock）与手动（真实 API），统计时按主框架归类。
 
@@ -1814,11 +1830,11 @@ ClipMindUITests/
 
 | 覆盖状态 | 用例数 | 占比 |
 |---------|--------|------|
-| ✅ COVERED | 45 | 53.57% |
+| ✅ COVERED | 46 | 54.12% |
 | 🟡 PARTIAL | 8 | 9.64% |
 | ❌ MISSING | 18 | 21.69% |
 | ⏸️ DEFERRED | 13 | 15.66% |
-| **合计** | **83** | **100%** |
+| **合计** | **84** | **100%** |
 
 > **当前状态**：Phase 4（Web + Demo 帖）已完成。42 条用例通过 XCTest/XCUITest 自动化覆盖；8 条因数据集缩减或仅 UI 路径覆盖标注为 PARTIAL；13 条真实 API 集成与截图/录屏手动验证用例延后（TC-25-01 curl 验证需合并到 main 后执行）；18 条依赖 Phase 3 任务（SensitiveDetector / BlacklistService / CleanupService / 首启引导）尚未实现，标注为 MISSING。Phase 4 的 TC-25-02/03 已通过 browser_use 子代理验证并更新为 ✅ COVERED。TC-26-01 ~ TC-26-13（全局快捷键唤醒主窗口）已通过 XCTest 自动化覆盖。TC-24-05（辅助功能请求触发 TCC 提示）已通过 XCTest 自动化覆盖。TC-24-06（点击「打开系统设置」不崩溃）已通过 XCUITest 自动化覆盖，回归保护 `kAXTrustedCheckOptionPrompt` 全局常量为 NULL 导致的 EXC_BAD_ACCESS 崩溃。
 
@@ -1832,8 +1848,8 @@ ClipMindUITests/
 | F1.4 一键处理 | 5 | 19 | 11 | 3 | 5 | 0 |
 | F1.5 本地加密存储 | 2 | 5 | 2 | 0 | 3 | 0 |
 | F1.6 隐私保护 | 3 | 10 | 9 | 1 | 0 | 0 |
-| F1.7 主界面与交互 | 4 | 24 | 14 | 5 | 4 | 1 |
-| **合计** | **26** | **84** | **55** | **12** | **16** | **1** |
+| F1.7 主界面与交互 | 4 | 25 | 15 | 5 | 4 | 1 |
+| **合计** | **26** | **85** | **56** | **12** | **16** | **1** |
 
 > **说明**：每条用例按"主测试框架"归类一次，无双重计数。F1.2 中 TC-08-07（复制 Token 弹通知）归类为手动；F1.4 新增 4 条 LLM API 错误路径用例（TC-13-04/14-04/15-04/16-04）归类为 XCTest；F1.6 新增 TC-21-04（恰好 30 天边界）归类为 XCTest；F1.7 新增 13 条全局快捷键用例（TC-26-01 ~ TC-26-13）归类为 XCTest；F1.7 新增 TC-24-05（辅助功能请求触发 TCC 提示，PermissionRequesterTests）归类为 XCTest；F1.7 新增 TC-24-06（点击「打开系统设置」不崩溃，PermissionRequestUITests）归类为 XCUITest。
 
@@ -1850,3 +1866,4 @@ ClipMindUITests/
 | v1.4 | 2026-07-14 | 同步快捷键唤醒修复（基于设计规范 v1.6）：新增 AC-26 全局快捷键唤醒主窗口，新增 13 条 XCTest 测试用例（TC-26-01 ~ TC-26-13，覆盖 HotkeyFormatter.parse(stored:) 解析与 GlobalHotkeyService 注册/注销/触发）；1.1 节 F1.7 AC 数量 3→4、合计 25→26；1.4 节测试组织结构树补充 App/GlobalHotkeyServiceTests.swift；6.1 节总数 69→82、AC 覆盖率 26/26；6.3 节 XCTest 41→54；6.4 节 ✅ COVERED 30→43；6.5 节 F1.7 用例数 9→22、XCTest 0→13 |
 | v1.5 | 2026-07-14 | 同步权限图标/TCC/AppIcon 修复（基于设计规范 v1.7）：新增 TC-24-05 辅助功能请求触发 TCC 提示（PermissionRequesterTests.testRequestAccessibilityPassesPromptTrue，验证 `AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt: true])` 调用时 prompt 参数为 true）；6.1 节总数 82→83、平均每 AC 用例数 3.15→3.19；6.2 节 AC-24 用例数 3→4（✅3 ❌1）；6.3 节 XCTest 54→55（占比 65.85%→66.27%）、合计 82→83；6.4 节 ✅ COVERED 43→44（占比 52.44%→53.01%）、合计 82→83；6.5 节 F1.7 用例数 22→23、XCTest 13→14、合计 82→83 |
 | v1.6 | 2026-07-14 | 同步权限请求 EXC_BAD_ACCESS 崩溃修复（基于设计规范 v1.7）：新增 TC-24-06 点击「打开系统设置」不崩溃（PermissionRequestUITests.testOpenAccessibilitySettingsDoesNotCrashApp，XCUITest 验证点击按钮后 app 不崩溃退出，回归保护 `kAXTrustedCheckOptionPrompt` 全局常量为 NULL 导致的 EXC_BAD_ACCESS 崩溃）；6.1 节总数 83→84、平均每 AC 用例数 3.19→3.23；6.2 节 AC-24 用例数 4→5（✅4 ❌1）；6.3 节 XCUITest 11→12（占比 13.25%→14.29%）、合计 83→84；6.4 节 ✅ COVERED 44→45（占比 53.01%→53.57%）、合计 83→84；6.5 节 F1.7 用例数 23→24、XCUITest 4→5、合计 83→84 |
+| v1.7 | 2026-07-14 | 同步 TCC 自动添加 app 失效修复（基于设计规范 v1.7）：新增 TC-24-07 打开系统设置与触发 TCC 提示的调用顺序（PermissionRequesterTests.testOpenAccessibilitySettingsAndPromptOpensSettingsBeforeRequest，XCTest 验证调用顺序为先 openSystemSettings 后 requestAccessibility，让 TCC 提示对话框显示在系统设置面板之上避免被遮挡）；更新 TC-24-05/TC-24-06 备注反映新调用顺序；6.1 节总数 84→85、平均每 AC 用例数 3.23→3.27；6.2 节 AC-24 用例数 5→6（✅5 ❌1）；6.3 节 XCTest 55→56（占比 66.27%→65.88%）、合计 84→85；6.4 节 ✅ COVERED 45→46（占比 53.57%→54.12%）、合计 84→85；6.5 节 F1.7 用例数 24→25、XCTest 14→15、合计 84→85 |

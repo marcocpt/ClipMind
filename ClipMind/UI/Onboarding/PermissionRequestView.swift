@@ -58,18 +58,13 @@ struct PermissionRequestView: View {
         }
     }
 
-    /// 请求辅助功能权限并打开系统设置面板
+    /// 打开系统设置辅助功能面板并触发 TCC 提示
     ///
-    /// 先调用 `AXIsProcessTrustedWithOptions` 传入 prompt=true，触发系统级 TCC 提示对话框，
-    /// 自动把当前 app 加入辅助功能权限列表（用户只需点击开关）。
-    /// 同时打开系统设置的辅助功能面板，方便用户查看和管理权限。
+    /// 委托给 `PermissionRequester.openAccessibilitySettingsAndPrompt()`，
+    /// 调用顺序：先打开系统设置面板，再触发 TCC 提示对话框。
+    /// 这样 TCC 提示对话框会显示在系统设置面板之上，用户能清晰看到并完成授权。
     private func openAccessibilitySettings() {
-        PermissionRequester.requestAccessibility()
-        let url = URL(
-            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-        )!
-        NSWorkspace.shared.open(url)
-        LogCategory.app.info("已请求辅助功能权限并打开系统设置面板")
+        PermissionRequester.openAccessibilitySettingsAndPrompt()
     }
 
     /// 请求通知权限

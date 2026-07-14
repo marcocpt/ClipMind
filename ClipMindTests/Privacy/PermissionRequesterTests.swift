@@ -10,17 +10,23 @@ import XCTest
 /// 触发系统级 TCC 提示对话框，自动把当前 app 加入权限列表。
 final class PermissionRequesterTests: XCTestCase {
     private var originalCheck: ((Bool) -> Bool)?
+    private var originalOpenSettings: (() -> Void)?
 
     override func setUp() {
         super.setUp()
         originalCheck = PermissionRequester.axTrustedCheck
+        originalOpenSettings = PermissionRequester.openSystemSettings
     }
 
     override func tearDown() {
         if let original = originalCheck {
             PermissionRequester.axTrustedCheck = original
         }
+        if let original = originalOpenSettings {
+            PermissionRequester.openSystemSettings = original
+        }
         originalCheck = nil
+        originalOpenSettings = nil
         super.tearDown()
     }
 
@@ -63,5 +69,31 @@ final class PermissionRequesterTests: XCTestCase {
         let result = PermissionRequester.axTrustedCheck(false)
         // Assert：到达此断言即证明默认闭包稳定可调用而未崩溃
         XCTAssertTrue(result || !result, "默认 axTrustedCheck 闭包应稳定调用而不崩溃")
+    }
+
+    /// 点击「打开系统设置」时，应先打开系统设置面板，再触发 TCC 提示
+    ///
+    /// 根因：原实现先调用 `AXIsProcessTrustedWithOptions(prompt=true)`（异步触发 TCC 提示对话框），
+    /// 再立即调用 `NSWorkspace.shared.open(url)` 打开系统设置面板。系统设置抢占焦点后，
+    /// TCC 提示对话框被覆盖或显示在后面，用户看不到，误以为 app 未加入列表。
+    ///
+    /// 修复后：先打开系统设置面板，再触发 TCC 提示对话框，让对话框显示在系统设置之上。
+    func testOpenAccessibilitySettingsAndPromptOpensSettingsBeforeRequest() {
+        var callOrder: [String] = []
+        PermissionRequester.axTrustedCheck = { _ in
+            callOrder.append("requestAccessibility")
+            return false
+        }
+        PermissionRequester.openSystemSettings = {
+            callOrder.append("openSystemSettings")
+        }
+
+        PermissionRequester.openAccessibilitySettingsAndPrompt()
+
+        XCTAssertEqual(
+            callOrder,
+            ["openSystemSettings", "requestAccessibility"],
+            "应先打开系统设置面板，再触发 TCC 提示，让对话框显示在系统设置之上"
+        )
     }
 }
