@@ -100,12 +100,18 @@ struct GeneralSettingsView: View {
     private func updateLaunchAtLogin(_ enabled: Bool) {
         guard !CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW") else { return }
 
-        if enabled {
-            try? SMAppService.mainApp.register()
-            LogCategory.app.info("开机启动已开启")
+        if #available(macOS 13.0, *) {
+            if enabled {
+                try? SMAppService.mainApp.register()
+                LogCategory.app.info("开机启动已开启")
+            } else {
+                try? SMAppService.mainApp.unregister()
+                LogCategory.app.info("开机启动已关闭")
+            }
         } else {
-            try? SMAppService.mainApp.unregister()
-            LogCategory.app.info("开机启动已关闭")
+            // macOS 12 及以下：SMAppService 不可用，SMLoginItemSetEnabled 需要 helper bundle，
+            // MVP 阶段暂不支持开机启动，仅记录日志。
+            LogCategory.app.info("开机启动需 macOS 13+，当前系统版本不支持")
         }
     }
 }
