@@ -1,3 +1,4 @@
+import CryptoKit
 import Darwin
 import Foundation
 
@@ -18,16 +19,7 @@ public struct FileWriter
         // D13：目录不存在时创建
         if !fileManager.fileExists(atPath: directory.path)
         {
-            do {
-                try fileManager.createDirectory(
-                    at: directory,
-                    withIntermediateDirectories: true,
-                    attributes: [.posixPermissions: 0o755]
-                )
-            } catch {
-                logger.error("Directory creation failed: errorCode=\(error._code, privacy: .public)")
-                throw AutoSaveError.directoryCreationFailed(path: directory.path)
-            }
+            try createDirectoryIfNeeded(directory: directory, fileManager: fileManager)
         }
 
         // D10：O_EXCL 原子创建 + D14：0600 权限（POSIX open 一步到位）
@@ -38,19 +30,7 @@ public struct FileWriter
 
         if fileDescriptor == -1
         {
-            let errnoValue = errno
-            switch errnoValue
-            {
-            case EEXIST:
-                logger.error("File exists: fileName=\(url.lastPathComponent, privacy: .public)")
-                throw AutoSaveError.fileWriteFailed(fileName: url.lastPathComponent)
-            case EACCES, EPERM:
-                logger.error("Permission denied: errno=\(errnoValue, privacy: .public)")
-                throw AutoSaveError.permissionDenied(path: url.path)
-            default:
-                logger.error("Open failed: errno=\(errnoValue, privacy: .public)")
-                throw AutoSaveError.fileWriteFailed(fileName: url.lastPathComponent)
-            }
+            try handleOpenFailure(errnoValue: errno, url: url)
         }
 
         defer {
@@ -62,11 +42,61 @@ public struct FileWriter
             try Self.writeAll(fileDescriptor: fileDescriptor, data: data)
         } catch {
             try? fileManager.removeItem(at: url)
-            logger.error("Write failed, cleaned up: fileName=\(url.lastPathComponent, privacy: .public)")
-            throw AutoSaveError.fileWriteFailed(fileName: url.lastPathComponent)
+            logger.error("Write failed, cleaned up: pathHash=\(Self.pathHash(url.path), privacy: .public)")
+            throw AutoSaveError.fileWriteFailed
         }
 
-        logger.info("File written: fileName=\(url.lastPathComponent, privacy: .public)")
+        logger.info("File written: pathHash=\(Self.pathHash(url.path), privacy: .public)")
+    }
+
+    private func createDirectoryIfNeeded(directory: URL, fileManager: FileManager) throws
+    {
+        do {
+            try fileManager.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true,
+                attributes: [.posixPermissions: 0o755]
+            )
+        } catch {
+            logger.error("""
+            Directory creation failed: errorCode=\(error._code, privacy: .public) \
+            pathHash=\(Self.pathHash(directory.path), privacy: .public)
+            """)
+            throw AutoSaveError.directoryCreationFailed
+        }
+    }
+
+    /// 处理 open 失败：按 errno 分级抛出对应错误（D13）。
+    private func handleOpenFailure(errnoValue: Int32, url: URL) throws
+    {
+        let pathHash = Self.pathHash(url.path)
+        switch errnoValue
+        {
+        case EEXIST:
+            logger.error("""
+            File exists: errno=\(errnoValue, privacy: .public) \
+            pathHash=\(pathHash, privacy: .public)
+            """)
+            throw AutoSaveError.fileAlreadyExists
+        case EACCES, EPERM:
+            logger.error("""
+            Permission denied: errno=\(errnoValue, privacy: .public) \
+            pathHash=\(pathHash, privacy: .public)
+            """)
+            throw AutoSaveError.permissionDenied
+        case ENOSPC:
+            logger.error("""
+            Disk full: errno=\(errnoValue, privacy: .public) \
+            pathHash=\(pathHash, privacy: .public)
+            """)
+            throw AutoSaveError.diskFull
+        default:
+            logger.error("""
+            Open failed: errno=\(errnoValue, privacy: .public) \
+            pathHash=\(pathHash, privacy: .public)
+            """)
+            throw AutoSaveError.fileWriteFailed
+        }
     }
 
     /// 循环写入直到全部数据落盘；写入中途失败抛错。
@@ -81,11 +111,18 @@ public struct FileWriter
                 let written = Darwin.write(fileDescriptor, base, remaining)
                 if written == -1
                 {
-                    throw AutoSaveError.fileWriteFailed(fileName: "")
+                    throw AutoSaveError.fileWriteFailed
                 }
                 remaining -= written
                 offset += written
             }
         }
+    }
+
+    /// 计算路径哈希（SHA-256 前 8 位），用于日志标识文件而不泄露用户名/内容前缀（NFR-007/D15）。
+    static func pathHash(_ path: String) -> String
+    {
+        let digest = SHA256.hash(data: Data(path.utf8))
+        return digest.prefix(4).map { String(format: "%02x", $0) }.joined()
     }
 }

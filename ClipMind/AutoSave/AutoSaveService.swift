@@ -20,6 +20,9 @@ public final class AutoSaveService
     /// D12：内容上限 100KB。
     private static let maxContentLength = 100 * 1024
 
+    /// D10：EEXIST 重试次数上限，与 ConflictResolver.maxAttempts 一致。
+    private static let maxEexistRetries = 999
+
     public init(
         settingsStore: AutoSaveSettingsStore,
         pasteboard: NSPasteboard,
@@ -64,7 +67,19 @@ public final class AutoSaveService
         }
         guard text.utf8.count <= Self.maxContentLength else
         {
-            logger.info("Skip: content too large (D12), length=\(text.count, privacy: .public)")
+            logger.info("""
+            Skip: content too large (D12), length=\(text.count, privacy: .public) \
+            eventId=\(event.id, privacy: .public)
+            """)
+            return
+        }
+        // D12：纯空白内容（只含空格/换行/Tab）跳过，避免写入无意义文件
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else
+        {
+            logger.info("""
+            Skip: blank-only content (D12), length=\(text.count, privacy: .public) \
+            eventId=\(event.id, privacy: .public)
+            """)
             return
         }
         guard text.count >= config.lengthThreshold else
@@ -74,7 +89,7 @@ public final class AutoSaveService
         }
         if config.sensitiveFilterEnabled && event.sensitiveResult.isSensitive
         {
-            logger.info("Skip: sensitive content detected")
+            logger.info("Skip: sensitive content detected, eventId=\(event.id, privacy: .public)")
             return
         }
         queue.async { [weak self] in
@@ -86,9 +101,35 @@ public final class AutoSaveService
     {
         guard pasteboard.changeCount == event.changeCount else
         {
-            logger.info("Skip: changeCount expired (D24), eventId=\(event.id, privacy: .public)")
+            logger.info("""
+            Skip: changeCount expired (D24), eventId=\(event.id, privacy: .public) \
+            expected=\(event.changeCount, privacy: .public) \
+            current=\(self.pasteboard.changeCount, privacy: .public)
+            """)
             return
         }
+        let baseFileURL = makeBaseFileURL(event: event, text: text, config: config)
+
+        // D10：EEXIST 重试——O_EXCL 检测到并发竞态时，递增序号重试
+        guard let savedURL = writeWithEexistRetry(event: event, text: text, baseFileURL: baseFileURL) else
+        {
+            return
+        }
+
+        let formattedPath = pathFormatter.format(url: savedURL, format: config.pathFormat)
+        let replaced = clipboardReplacer.replace(with: formattedPath, expectedChangeCount: event.changeCount)
+        if !replaced
+        {
+            logger.info("""
+            Clipboard replace skipped (D5), eventId=\(event.id, privacy: .public) \
+            expected=\(event.changeCount, privacy: .public) \
+            current=\(self.pasteboard.changeCount, privacy: .public)
+            """)
+        }
+    }
+
+    private func makeBaseFileURL(event: CaptureEvent, text: String, config: F2xConfigSnapshot) -> URL
+    {
         let fileName = fileNameGenerator.generate(
             content: text,
             appName: event.appName,
@@ -97,24 +138,53 @@ public final class AutoSaveService
             timestamp: event.timestamp
         )
         let directory = URL(fileURLWithPath: (config.saveDirectory as NSString).expandingTildeInPath)
-        var fileURL = directory.appendingPathComponent(fileName)
-        do {
-            fileURL = try conflictResolver.resolve(fileURL)
-        } catch {
-            logger.error("Conflict: eventId=\(event.id, privacy: .public) code=\(error._code, privacy: .public)")
-            return
-        }
-        do {
-            try fileWriter.write(content: text, to: fileURL)
-        } catch {
-            logger.error("Write failed: eventId=\(event.id, privacy: .public) code=\(error._code, privacy: .public)")
-            return
-        }
-        let formattedPath = pathFormatter.format(url: fileURL, format: config.pathFormat)
-        let replaced = clipboardReplacer.replace(with: formattedPath, expectedChangeCount: event.changeCount)
-        if !replaced
+        return directory.appendingPathComponent(fileName)
+    }
+
+    /// D10：EEXIST 重试循环——每次都从 baseFileURL 开始 resolve，避免后缀叠加（如 hello-1-1.md）。
+    /// 成功时返回写入的 URL；失败时记录日志并返回 nil（D24 不重试其他错误）。
+    private func writeWithEexistRetry(
+        event: CaptureEvent,
+        text: String,
+        baseFileURL: URL
+    ) -> URL?
+    {
+        var attempt = 0
+        while true
         {
-            logger.info("Clipboard replace skipped (D5), eventId=\(event.id, privacy: .public)")
+            let candidateURL: URL
+            do {
+                candidateURL = try conflictResolver.resolve(baseFileURL)
+            } catch {
+                logger.error("Conflict: eventId=\(event.id, privacy: .public) code=\(error._code, privacy: .public)")
+                return nil
+            }
+            do {
+                try fileWriter.write(content: text, to: candidateURL)
+                return candidateURL
+            } catch AutoSaveError.fileAlreadyExists {
+                // 并发竞态：resolve 检测与 write 之间文件被创建，递增序号重试（D10）
+                attempt += 1
+                if attempt >= Self.maxEexistRetries
+                {
+                    logger.error("""
+                    EEXIST retries exhausted (D10), eventId=\(event.id, privacy: .public) \
+                    attempts=\(attempt, privacy: .public)
+                    """)
+                    return nil
+                }
+                logger.info("""
+                Retry on EEXIST (D10), eventId=\(event.id, privacy: .public) \
+                attempt=\(attempt, privacy: .public)
+                """)
+                continue
+            } catch {
+                logger.error("""
+                Write failed: eventId=\(event.id, privacy: .public) \
+                code=\(error._code, privacy: .public)
+                """)
+                return nil
+            }
         }
     }
 }

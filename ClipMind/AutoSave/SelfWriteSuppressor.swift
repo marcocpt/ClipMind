@@ -27,7 +27,7 @@ public final class SelfWriteSuppressor
 
         markedChangeCount = changeCount
         markedAt = Date()
-        LogCategory.capture.debug("Self-write marked: changeCount=\(changeCount)")
+        LogCategory.capture.logger.debug("Self-write marked: changeCount=\(changeCount, privacy: .public)")
     }
 
     public func checkAndReset(changeCount: Int) -> Bool
@@ -46,7 +46,7 @@ public final class SelfWriteSuppressor
         let elapsed = Date().timeIntervalSince(markedTime)
         if elapsed > timeoutInterval
         {
-            LogCategory.capture.debug("Self-write mark expired: elapsed=\(elapsed)")
+            LogCategory.capture.logger.debug("Self-write mark expired: elapsed=\(elapsed, privacy: .public)")
             return false
         }
 

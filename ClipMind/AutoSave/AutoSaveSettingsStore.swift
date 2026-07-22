@@ -67,7 +67,7 @@ public final class AutoSaveSettingsStore
         defaults.set(settings.pathFormat.rawValue, forKey: Keys.pathFormat)
 
         // D15：日志仅输出 isEnabled 字段，不输出敏感信息或用户输入内容。
-        LogCategory.storage.info("Config saved: isEnabled=\(settings.isEnabled)")
+        LogCategory.storage.logger.info("Config saved: isEnabled=\(settings.isEnabled, privacy: .public)")
 
         NotificationCenter.default.post(name: Self.didChangeNotification, object: self)
     }

@@ -21,7 +21,11 @@ public final class ClipboardReplacer
         // D5：changeCount 前置条件
         guard pasteboard.changeCount == expectedChangeCount else
         {
-            logger.info("ChangeCount mismatch, skip replace: expected=\(expectedChangeCount, privacy: .public)")
+            logger.info("""
+            ChangeCount mismatch, skip replace: \
+            expected=\(expectedChangeCount, privacy: .public) \
+            current=\(self.pasteboard.changeCount, privacy: .public)
+            """)
             return false
         }
 

@@ -52,9 +52,9 @@ final class FileWriterTests: XCTestCase
         try Data("existing".utf8).write(to: url)
 
         XCTAssertThrowsError(try writer.write(content: "new", to: url)) { error in
-            guard case AutoSaveError.fileWriteFailed = error else
+            guard case AutoSaveError.fileAlreadyExists = error else
             {
-                XCTFail("应抛出 fileWriteFailed 错误")
+                XCTFail("应抛出 fileAlreadyExists 错误")
                 return
             }
         }
@@ -91,11 +91,20 @@ final class FileWriterTests: XCTestCase
         XCTAssertThrowsError(try writer.write(content: "test", to: url)) { error in
             // 允许 permissionDenied 或 fileWriteFailed（取决于 OS 权限映射）
             guard case AutoSaveError.permissionDenied = error
-                ?? (error as? AutoSaveError) ?? .fileWriteFailed(fileName: "") else
+                ?? (error as? AutoSaveError) ?? .fileWriteFailed else
             {
                 return
             }
         }
+    }
+
+    // MARK: - TC-UT-44b：pathHash 输出 8 位十六进制（NFR-007/D15）
+
+    func testPathHashReturnsEightHexChars() throws
+    {
+        let hash = FileWriter.pathHash("/tmp/test.md")
+        XCTAssertEqual(hash.count, 8, "pathHash 应为 8 位十六进制字符")
+        XCTAssertTrue(hash.allSatisfy { $0.isHexDigit }, "pathHash 应仅含十六进制字符")
     }
 
     // MARK: - TC-UT-45：半成品清理（D10）
