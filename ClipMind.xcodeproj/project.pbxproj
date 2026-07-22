@@ -14,6 +14,7 @@
 		05B1E5EEBAE930366AC343DC /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = B8017DD8BFC190D59A3A5AA6 /* SQLite */; };
 		0762D0A8012746CD01146EFA /* EncryptedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C670D2189867D5E2F4A9671 /* EncryptedStore.swift */; };
 		07A5A105DA645C7D0A303CB4 /* LLMFixtureLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5687180F797A472000EBC56 /* LLMFixtureLoader.swift */; };
+		0D55538AF23C931B59612B39 /* AutoSaveSettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B176355F678A8067619BEFA /* AutoSaveSettingsStoreTests.swift */; };
 		12AE81885A942B8DC3D47234 /* PrivacyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97FB7A2ADAD846362DD54BD /* PrivacyUITests.swift */; };
 		14CFF8FDAD32D42527732C7D /* APIKeyConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0158AFEC98DEF7010FF07BA5 /* APIKeyConfigView.swift */; };
 		151112363ADBD35215B76E0B /* PermissionRequesterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94448F4E68536706ADBAFA80 /* PermissionRequesterTests.swift */; };
@@ -90,6 +91,7 @@
 		AFB9E71D5DB26DD1C1ECD2D7 /* PermissionRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EAA6D6E20E61EE8E12B6CA4 /* PermissionRequester.swift */; };
 		AFF6A2BD7AABFD3FC9DCCA1A /* llm_mock_responses.json in Resources */ = {isa = PBXBuildFile; fileRef = 476EDCC5B06E8BFF193C7245 /* llm_mock_responses.json */; };
 		B0EF50AFB4D773CA27277F30 /* PasteboardWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68549B8C3D2B23F12A5BED75 /* PasteboardWatcher.swift */; };
+		B1691C8F0FEABE7D136AB780 /* AutoSaveSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E61E8B108ADF7F9B2F82AF32 /* AutoSaveSettingsStore.swift */; };
 		B2B8CBA09173A237203ECB80 /* AutoSaveSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E04B3BCEDE19176C18F1885F /* AutoSaveSettings.swift */; };
 		B4A8B7DD3E48D04312E91293 /* LayoutConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5872E9B5D6F6F8ACAF6BC5D8 /* LayoutConstants.swift */; };
 		B98BFF2606B3BD5E0C2CD533 /* DefaultBlacklistTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2EB6BA90539D3F2B3E68D1 /* DefaultBlacklistTests.swift */; };
@@ -221,6 +223,7 @@
 		85D7BA4202854BE0C73D609C /* CleanupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanupServiceTests.swift; sourceTree = "<group>"; };
 		8746040340A99D2E81DD6057 /* SampleDataSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataSearchTests.swift; sourceTree = "<group>"; };
 		8962BAEA39300C713197F8E7 /* PollingHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollingHelper.swift; sourceTree = "<group>"; };
+		8B176355F678A8067619BEFA /* AutoSaveSettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettingsStoreTests.swift; sourceTree = "<group>"; };
 		8CEB124A50A01EAEBD4B1F56 /* SensitiveMatchResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveMatchResultTests.swift; sourceTree = "<group>"; };
 		8EB3FAD2DCAE5F4E00347288 /* ClipMind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipMind.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F23B0900C3E3C4C6C129E60 /* LLMError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMError.swift; sourceTree = "<group>"; };
@@ -271,6 +274,7 @@
 		E345833B2DF4D17967D1EDBC /* MultiProviderLLMServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderLLMServiceTests.swift; sourceTree = "<group>"; };
 		E38EF7AD4964558E111CCA9C /* SearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBar.swift; sourceTree = "<group>"; };
 		E59153AE33F9659029A0BEA1 /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
+		E61E8B108ADF7F9B2F82AF32 /* AutoSaveSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettingsStore.swift; sourceTree = "<group>"; };
 		EA1BDBFA5937B3405FB3D17F /* sensitive_samples.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sensitive_samples.json; sourceTree = "<group>"; };
 		F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMindTests.swift; sourceTree = "<group>"; };
 		F45065D85CAD45C8E604E06A /* AppIconAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconAssetTests.swift; sourceTree = "<group>"; };
@@ -630,6 +634,7 @@
 			isa = PBXGroup;
 			children = (
 				E04B3BCEDE19176C18F1885F /* AutoSaveSettings.swift */,
+				E61E8B108ADF7F9B2F82AF32 /* AutoSaveSettingsStore.swift */,
 				DB9E5118F6024264B60F1D9E /* Models */,
 			);
 			path = AutoSave;
@@ -699,6 +704,7 @@
 		F6D4E93C2E80605BA73F88D2 /* AutoSave */ = {
 			isa = PBXGroup;
 			children = (
+				8B176355F678A8067619BEFA /* AutoSaveSettingsStoreTests.swift */,
 				455772ECB5F7E6BA673F9A84 /* AutoSaveSettingsTests.swift */,
 				4F3CC55A29093B72323428E4 /* F2xConfigSnapshotTests.swift */,
 				8CEB124A50A01EAEBD4B1F56 /* SensitiveMatchResultTests.swift */,
@@ -876,6 +882,7 @@
 				CA4946890322645538C05FB7 /* AppDetector.swift in Sources */,
 				4763D810F9669F789367F9FE /* AppSettings.swift in Sources */,
 				B2B8CBA09173A237203ECB80 /* AutoSaveSettings.swift in Sources */,
+				B1691C8F0FEABE7D136AB780 /* AutoSaveSettingsStore.swift in Sources */,
 				EA97705B79A3BFD07E645084 /* BlacklistEntry.swift in Sources */,
 				DB5971D08DA6334C80621EFC /* BlacklistManagementView.swift in Sources */,
 				688F6EE2D610010D12C9CDD7 /* BlacklistService.swift in Sources */,
@@ -943,6 +950,7 @@
 				28D09568B9C56DD57139F4B9 /* APIKeyManagerTests.swift in Sources */,
 				A4445C1F8221F67936F39B97 /* AppDetectorTests.swift in Sources */,
 				591D538D533DF346AA647A1A /* AppIconAssetTests.swift in Sources */,
+				0D55538AF23C931B59612B39 /* AutoSaveSettingsStoreTests.swift in Sources */,
 				FD7ED8760842D9E46B1CA799 /* AutoSaveSettingsTests.swift in Sources */,
 				1CCB8A859D6CB2078D5356FE /* BlacklistServiceTests.swift in Sources */,
 				EC935B02E51584F47DC9017C /* ClassificationAccuracyTests.swift in Sources */,
