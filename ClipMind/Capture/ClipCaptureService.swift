@@ -33,8 +33,8 @@ final class ClipCaptureService {
         self.store = store
         self.classifier = classifier
         self.appDetector = appDetector
-        watcher.onPasteboardChange = { [weak self] content in
-            self?.handleClipContent(content)
+        watcher.onPasteboardChange = { [weak self] event in
+            self?.handleClipContent(event.content)
         }
     }
 

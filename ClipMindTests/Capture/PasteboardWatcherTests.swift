@@ -69,8 +69,8 @@ final class PasteboardWatcherTests: XCTestCase {
         let expectation = XCTestExpectation(description: "回调应传入正确的内容")
         var receivedContent: ClipContent?
 
-        watcher.onPasteboardChange = { content in
-            receivedContent = content
+        watcher.onPasteboardChange = { event in
+            receivedContent = event.content
             expectation.fulfill()
         }
 
