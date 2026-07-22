@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F2.1 自动保存到文件 - 视觉原型</title>
+    <style>
+        /* macOS 原生设置面板风格 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #ececec;
+            color: #1d1d1f;
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .header {
+            background: #ffffff;
+            border-radius: 8px 8px 0 0;
+            padding: 16px 20px;
+            border-bottom: 1px solid #d1d1d1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .header .meta {
+            font-size: 11px;
+            color: #6e6e70;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 0 0 8px 8px;
+            display: flex;
+            min-height: 600px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 左侧侧边栏 */
+        .sidebar {
+            width: 200px;
+            background: #f6f6f6;
+            border-right: 1px solid #d1d1d1;
+            padding: 12px 0;
+            border-radius: 0 0 0 8px;
+        }
+
+        .sidebar-item {
+            padding: 8px 16px;
+            font-size: 13px;
+            color: #1d1d1f;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: #e8e8e8;
+        }
+
+        .sidebar-item.active {
+            background: #d4d4d4;
+            border-left-color: #0a84ff;
+            font-weight: 500;
+        }
+
+        .sidebar-item.existing {
+            color: #6e6e70;
+        }
+
+        .sidebar-item.new {
+            color: #0a84ff;
+            font-weight: 500;
+        }
+
+        .sidebar-item.new::after {
+            content: " 新";
+            font-size: 10px;
+            background: #0a84ff;
+            color: #ffffff;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        /* 右侧内容区 */
+        .content {
+            flex: 1;
+            padding: 24px 32px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1d1d1f;
+        }
+
+        .section-desc {
+            font-size: 12px;
+            color: #6e6e70;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .form-group:last-child {
+            border-bottom: none;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .form-label {
+            width: 140px;
+            font-size: 13px;
+            color: #1d1d1f;
+            padding-right: 12px;
+        }
+
+        .form-value {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* macOS 风格开关 */
+        .switch {
+            position: relative;
+            width: 38px;
+            height: 22px;
+            background: #d1d1d1;
+            border-radius: 11px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .switch.on {
+            background: #34c759;
+        }
+
+        .switch::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: #ffffff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .switch.on::after {
+            transform: translateX(16px);
+        }
+
+        /* 输入框 */
+        .input-text {
+            flex: 1;
+            height: 22px;
+            padding: 4px 8px;
+            border: 1px solid #c7c7c7;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #ffffff;
+            min-width: 0;
+        }
+
+        .input-text:focus {
+            outline: none;
+            border-color: #0a84ff;
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+        }
+
+        /* 数字输入框 */
+        .input-number {
+            width: 80px;
+            height: 22px;
+            padding: 4px 8px;
+            border: 1px solid #c7c7c7;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #ffffff;
+        }
+
+        /* 下拉选择 */
+        .select {
+            height: 22px;
+            padding: 4px 8px;
+            border: 1px solid #c7c7c7;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #ffffff;
+            min-width: 180px;
+        }
+
+        /* 按钮 */
+        .btn {
+            height: 24px;
+            padding: 0 12px;
+            border: 1px solid #c7c7c7;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #ffffff;
+            cursor: pointer;
+            color: #1d1d1f;
+        }
+
+        .btn:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-primary {
+            background: #0a84ff;
+            color: #ffffff;
+            border-color: #0a84ff;
+        }
+
+        .btn-primary:hover {
+            background: #0064d4;
+        }
+
+        .btn-danger {
+            color: #d70015;
+        }
+
+        /* 单选按钮组 */
+        .radio-group {
+            display: flex;
+            gap: 16px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .radio {
+            width: 14px;
+            height: 14px;
+            border: 1px solid #c7c7c7;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .radio.checked {
+            border-color: #0a84ff;
+        }
+
+        .radio.checked::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 8px;
+            height: 8px;
+            background: #0a84ff;
+            border-radius: 50%;
+        }
+
+        /* 白名单 App 列表 */
+        .whitelist-list {
+            border: 1px solid #d1d1d1;
+            border-radius: 4px;
+            background: #ffffff;
+            min-height: 120px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .whitelist-item {
+            padding: 6px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 12px;
+        }
+
+        .whitelist-item:last-child {
+            border-bottom: none;
+        }
+
+        .whitelist-item .app-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .whitelist-item .app-icon {
+            width: 16px;
+            height: 16px;
+            background: #d1d1d1;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .whitelist-item .bundle-id {
+            color: #6e6e70;
+            font-size: 11px;
+            margin-left: 4px;
+        }
+
+        .whitelist-item .remove-btn {
+            color: #d70015;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        /* 提示信息 */
+        .notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 10px 14px;
+            margin: 12px 0;
+            font-size: 12px;
+            color: #856404;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .notice-icon {
+            font-weight: bold;
+            color: #ffc107;
+        }
+
+        .notice.warning {
+            background: #fef3f3;
+            border-color: #d70015;
+            color: #d70015;
+        }
+
+        .notice.warning .notice-icon {
+            color: #d70015;
+        }
+
+        /* 二次确认弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            width: 420px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .modal-body {
+            font-size: 12px;
+            color: #1d1d1f;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* 配置项说明 */
+        .field-hint {
+            font-size: 11px;
+            color: #6e6e70;
+            margin-top: 4px;
+            margin-left: 152px;
+        }
+
+        /* 状态指示 */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-indicator.active {
+            background: #34c759;
+        }
+
+        .status-indicator.inactive {
+            background: #d1d1d1;
+        }
+
+        /* 路径格式预览 */
+        .path-preview {
+            background: #f6f6f6;
+            border: 1px solid #d1d1d1;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-family: "SF Mono", Menlo, monospace;
+            font-size: 11px;
+            color: #1d1d1f;
+            word-break: break-all;
+            margin-top: 6px;
+        }
+
+        /* 错误提示 */
+        .error-message {
+            color: #d70015;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ClipMind 设置</h1>
+        <div class="meta">最后更新：2026-07-22 | 版本：v1.1（基于需求文档 v1.1 + 设计文档 v1.1）</div>
+    </div>
+
+    <div class="container">
+        <!-- 左侧侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-item existing">API Key 配置</div>
+            <div class="sidebar-item existing">隐私设置</div>
+            <div class="sidebar-item existing">通用设置</div>
+            <div class="sidebar-item new active">自动保存</div>
+        </div>
+
+        <!-- 右侧内容区 -->
+        <div class="content">
+            <div class="section-title">自动保存</div>
+            <div class="section-desc">
+                <span class="status-indicator inactive"></span>未启用 · 在白名单 App 中复制长内容时自动保存为文件并替换剪贴板为路径
+            </div>
+
+            <!-- 总开关 -->
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="form-label">启用自动保存</div>
+                    <div class="form-value">
+                        <div class="switch" onclick="this.classList.toggle('on')"></div>
+                        <span style="font-size: 12px; color: #6e6e70;">关闭后行为与 F1.x 完全一致</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 保存目录 -->
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="form-label">保存目录</div>
+                    <div class="form-value">
+                        <input type="text" class="input-text" value="~/Documents/ClipMind/Clips/" readonly>
+                        <button class="btn">选择...</button>
+                    </div>
+                </div>
+                <div class="field-hint">自动保存的文件以明文形式存放在此目录，不上传云端，不进入加密数据库</div>
+            </div>
+
+            <!-- 文件格式 -->
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="form-label">文件格式</div>
+                    <div class="form-value">
+                        <div class="radio-group">
+                            <div class="radio-item">
+                                <div class="radio checked"></div>
+                                <span>Markdown (.md)</span>
+                            </div>
+                            <div class="radio-item">
+                                <div class="radio"></div>
+                                <span>纯文本 (.txt)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 长度阈值 -->
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="form-label">长度阈值（字）</div>
+                    <div class="form-value">
+                        <input type="number" class="input-number" value="50" min="1" max="10000">
+                        <span style="font-size: 11px; color: #6e6e70;">范围 1-10000，超出范围使用默认值 50</span>
+                    </div>
+                </div>
+                <div class="field-hint">内容字符数大于等于阈值时触发自动保存</div>
+            </div>
+
+            <!-- 文件名长度 -->
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="form-label">文件名前缀长度（字）</div>
+                    <div class="form-value">
+                        <input type="number" class="input-number" value="20" min="1" max="50">
+                        <span style="font-size: 11px; color: #6e6e70;">范围 1-50，超出范围使用默认值 20</span>
+                    </div>
+                </div>
+                <div class="field-hint">取内容前 N 字作为文件名前缀，过滤换行符、路径分隔符与文件系统特殊字符，保留中文</div>
+            </div>
+
+            <!-- 路径格式 -->
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="form-label">路径格式</div>
+                    <div class="form-value">
+                        <select class="select">
+                            <option>纯路径字符串</option>
+                            <option>file:// URI</option>
+                            <option>Markdown 链接</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field-hint">文件保存成功后剪贴板替换为该格式的路径</div>
+                <div class="form-row">
+                    <div class="form-label" style="font-size: 11px; color: #6e6e70;">预览</div>
+                    <div class="form-value">
+                        <div class="path-preview">/Users/username/Documents/ClipMind/Clips/这是测试内容前缀.md</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 敏感过滤 -->
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="form-label">敏感内容过滤</div>
+                    <div class="form-value">
+                        <div class="switch on" onclick="toggleSensitive(this)"></div>
+                        <span style="font-size: 12px; color: #6e6e70;">默认开启，复用 F1.6 既有敏感识别能力</span>
+                    </div>
+                </div>
+                <div class="field-hint">开启后敏感内容（密码模式、Token 格式、验证码、银行卡号、身份证号、敏感关键词）不保存到文件</div>
+            </div>
+
+            <!-- 白名单 App 管理 -->
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="form-label">白名单 App</div>
+                    <div class="form-value">
+                        <span style="font-size: 12px; color: #6e6e70;">仅白名单内 App 的复制行为触发自动保存</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-label"></div>
+                    <div class="form-value" style="flex-direction: column; align-items: stretch;">
+                        <div class="whitelist-list">
+                            <div class="whitelist-item">
+                                <div class="app-info">
+                                    <span class="app-icon"></span>
+                                    <span>Safari</span>
+                                    <span class="bundle-id">com.apple.Safari</span>
+                                </div>
+                                <span class="remove-btn">移除</span>
+                            </div>
+                            <div class="whitelist-item">
+                                <div class="app-info">
+                                    <span class="app-icon"></span>
+                                    <span>Google Chrome</span>
+                                    <span class="bundle-id">com.google.Chrome</span>
+                                </div>
+                                <span class="remove-btn">移除</span>
+                            </div>
+                            <div class="whitelist-item">
+                                <div class="app-info">
+                                    <span class="app-icon"></span>
+                                    <span>Trae IDE</span>
+                                    <span class="bundle-id">com.trae.ide</span>
+                                </div>
+                                <span class="remove-btn">移除</span>
+                            </div>
+                            <div class="whitelist-item">
+                                <div class="app-info">
+                                    <span class="app-icon"></span>
+                                    <span>VSCode</span>
+                                    <span class="bundle-id">com.microsoft.VSCode</span>
+                                </div>
+                                <span class="remove-btn">移除</span>
+                            </div>
+                            <div class="whitelist-item">
+                                <div class="app-info">
+                                    <span class="app-icon"></span>
+                                    <span>Xcode</span>
+                                    <span class="bundle-id">com.apple.dt.Xcode</span>
+                                </div>
+                                <span class="remove-btn">移除</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 8px; display: flex; gap: 8px;">
+                            <button class="btn">+ 添加 App...</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-hint">白名单以应用 Bundle ID 为唯一标识，不可重复</div>
+            </div>
+
+            <!-- 明文文件管理责任提示 -->
+            <div class="form-group">
+                <div class="notice">
+                    <span class="notice-icon">!</span>
+                    <div>
+                        <strong>明文文件管理责任提示</strong><br>
+                        自动保存的文件以明文形式存放在用户配置目录，不上传云端，不进入加密数据库。请自行承担明文文件的管理责任。建议定期清理保存目录中的旧文件，避免敏感内容长期保留。
+                    </div>
+                </div>
+            </div>
+
+            <!-- 配置生效说明 -->
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="form-label"></div>
+                    <div class="form-value">
+                        <span style="font-size: 11px; color: #6e6e70;">所有配置项修改后立即生效，无需重启 App。配置在 App 重启后保留。</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 二次确认弹窗（关闭敏感过滤时显示） -->
+    <div class="modal-overlay" id="confirmModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-title">关闭敏感内容过滤</div>
+            <div class="modal-body">
+                关闭敏感内容过滤后，<strong>包含密码、Token、验证码、银行卡号、身份证号等敏感信息的内容将被保存到明文文件</strong>，存在泄露风险。<br><br>
+                建议仅在确实需要保存敏感内容到文件的场景下关闭此选项，并自行承担明文文件的管理责任。<br><br>
+                确认要关闭敏感内容过滤吗？
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="cancelSensitive()">取消</button>
+                <button class="btn btn-primary" onclick="confirmSensitive()">确认关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSensitive(elem) {
+            if (elem.classList.contains('on')) {
+                // 当前开启，将要关闭 → 显示二次确认
+                document.getElementById('confirmModal').style.display = 'flex';
+            } else {
+                // 当前关闭，将要开启 → 直接切换
+                elem.classList.add('on');
+            }
+        }
+
+        function cancelSensitive() {
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+
+        function confirmSensitive() {
+            document.getElementById('confirmModal').style.display = 'none';
+            // 找到敏感过滤开关并关闭
+            const switches = document.querySelectorAll('.switch');
+            switches[1].classList.remove('on');
+        }
+
+        // 单选按钮切换
+        document.querySelectorAll('.radio-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const parent = this.parentElement;
+                parent.querySelectorAll('.radio').forEach(r => r.classList.remove('checked'));
+                this.querySelector('.radio').classList.add('checked');
+            });
+        });
+
+        // 路径格式预览更新
+        document.querySelector('.select').addEventListener('change', function() {
+            const preview = document.querySelector('.path-preview');
+            const path = '/Users/username/Documents/ClipMind/Clips/这是测试内容前缀.md';
+            if (this.value === 'file:// URI') {
+                preview.textContent = 'file://' + path;
+            } else if (this.value === 'Markdown 链接') {
+                preview.textContent = '[这是测试内容前缀.md](file://' + path + ')';
+            } else {
+                preview.textContent = path;
+            }
+        });
+
+        // 侧边栏切换
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+
+    <!--
+    版本记录：
+    | 版本 | 日期 | 变更 |
+    |------|------|------|
+    | v1.0 | 2026-07-21 | 初始版本，基于需求文档 v1.0 + 设计文档 v1.0 |
+    | v1.1 | 2026-07-22 | 总开关默认状态改为关闭（对齐 FR-001），状态指示器改为 inactive，状态文本改为"未启用"，文档基准更新为需求文档 v1.1 + 设计文档 v1.1 |
+    -->
+</body>
+</html>

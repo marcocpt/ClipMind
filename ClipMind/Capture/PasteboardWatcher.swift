@@ -4,9 +4,16 @@ import Foundation
 /// 剪贴板轮询监听器。
 ///
 /// 使用 Timer 轮询 NSPasteboard.changeCount，当变化时通过 ContentReader
-/// 读取内容，并经 Deduplicator 过滤重复，最后通过 onPasteboardChange 回调通知。
-/// 处理流程：黑名单检查 → 敏感内容检测 → 去重 → 回调通知。
-final class PasteboardWatcher: NSObject {
+/// 读取内容，并经 Deduplicator 过滤重复，然后经 CaptureEventBuilder
+/// 构造不可变 CaptureEvent，最终通过 onPasteboardChange 回调通知。
+///
+/// F-11 例外（D6）：onPasteboardChange 回调参数从 ClipContent 扩展为
+/// CaptureEvent，使 F1.x 与 F2.1 分支共享同一事件快照。
+///
+/// 处理流程：changeCount 检测 → 读取内容 → 去重 → B0 构造事件 → 回调通知。
+/// 黑名单与敏感检查已迁移到 CaptureEventBuilder（D2 只跑一次）。
+final class PasteboardWatcher: NSObject
+{
     /// 当前轮询定时器（仅供测试观察，外部不应修改）
     private(set) var timer: Timer?
 
@@ -22,44 +29,36 @@ final class PasteboardWatcher: NSObject {
     /// 去重器
     private let deduplicator: Deduplicator
 
-    /// 黑名单服务
-    private let blacklistService: BlacklistService
-
-    /// 敏感内容检测器
-    private let sensitiveDetector: SensitiveDetector
-
-    /// 前台应用检测器
-    private let appDetector: AppDetector
+    /// 捕获事件构造器（B0，D6/D23）
+    /// 为 nil 时回退为最小事件（仅含 content 与 changeCount），保证 F1.x 既有测试兼容
+    private let eventBuilder: CaptureEventBuilder?
 
     /// 当检测到剪贴板变化（且非重复内容）时调用
-    var onPasteboardChange: ((ClipContent) -> Void)?
+    /// F-11 例外：回调参数从 ClipContent 扩展为 CaptureEvent
+    var onPasteboardChange: ((CaptureEvent) -> Void)?
 
     /// - Parameters:
     ///   - pasteboard: 被监听的 pasteboard，默认为 .general
     ///   - contentReader: 内容读取器，默认为 ContentReader()
     ///   - deduplicator: 去重器，默认为 Deduplicator()
-    ///   - blacklistService: 黑名单服务，默认为 BlacklistService()
-    ///   - sensitiveDetector: 敏感内容检测器，默认为 SensitiveDetector()
-    ///   - appDetector: 前台应用检测器，默认为 AppDetector()
+    ///   - eventBuilder: 捕获事件构造器（B0），为 nil 时回退最小事件
     init(pasteboard: NSPasteboard = .general,
          contentReader: ContentReader = ContentReader(),
          deduplicator: Deduplicator = Deduplicator(),
-         blacklistService: BlacklistService = BlacklistService(),
-         sensitiveDetector: SensitiveDetector = SensitiveDetector(),
-         appDetector: AppDetector = AppDetector()) {
+         eventBuilder: CaptureEventBuilder? = nil)
+    {
         self.pasteboard = pasteboard
         self.contentReader = contentReader
         self.deduplicator = deduplicator
-        self.blacklistService = blacklistService
-        self.sensitiveDetector = sensitiveDetector
-        self.appDetector = appDetector
+        self.eventBuilder = eventBuilder
         self.lastChangeCount = pasteboard.changeCount
         super.init()
     }
 
     /// 启动轮询监听
     /// - Parameter interval: 轮询间隔，默认 0.5s
-    func startWatching(interval: TimeInterval = 0.5) {
+    func startWatching(interval: TimeInterval = 0.5)
+    {
         stopWatching()
         let timer = Timer(
             timeInterval: interval,
@@ -73,42 +72,62 @@ final class PasteboardWatcher: NSObject {
     }
 
     /// 停止轮询监听
-    func stopWatching() {
+    func stopWatching()
+    {
         timer?.invalidate()
         timer = nil
     }
 
-    /// 轮询回调：检测 changeCount 变化，读取并去重内容
-    /// 处理顺序：黑名单检查 → 敏感内容检测 → 去重 → 回调
-    @objc func handlePasteboardChange() {
+    /// 轮询回调：检测 changeCount 变化，读取并去重内容，构造 CaptureEvent
+    @objc func handlePasteboardChange()
+    {
         let current = pasteboard.changeCount
-        guard current != lastChangeCount else {
+        guard current != lastChangeCount else
+        {
             return
         }
         lastChangeCount = current
 
-        // 黑名单检查：来源应用在黑名单中则静默忽略
-        if let appInfo = appDetector.currentFrontmostApp(),
-           blacklistService.contains(bundleId: appInfo.bundleId) {
-            LogCategory.privacy.info("黑名单应用 \(appInfo.bundleId)，静默忽略")
+        guard let content = contentReader.readContent(from: pasteboard) else
+        {
             return
         }
 
-        guard let content = contentReader.readContent(from: pasteboard) else {
-            return
-        }
-
-        // 敏感内容检测：检测到则不入库，并发送通知
-        if case .text(let text) = content, sensitiveDetector.detect(text) {
-            LogCategory.privacy.info("检测到敏感内容，已忽略")
-            NotificationManager.sendSensitiveContentIgnoredNotification()
-            return
-        }
-
-        guard !deduplicator.isDuplicate(content) else {
+        guard !deduplicator.isDuplicate(content) else
+        {
             return
         }
         deduplicator.updateLastContent(content)
-        onPasteboardChange?(content)
+
+        let event: CaptureEvent
+        if let builder = eventBuilder
+        {
+            event = builder.build(content: content, changeCount: current)
+        } else {
+            // F1.x 兼容回退：构造最小事件
+            event = CaptureEvent(
+                id: UUID().uuidString,
+                changeCount: current,
+                content: content,
+                bundleId: "unknown",
+                appName: "Unknown",
+                blacklisted: false,
+                sensitiveResult: .none,
+                f1xConfigSnapshot: F1xConfigSnapshot(blacklistBundleIds: []),
+                f2xConfigSnapshot: F2xConfigSnapshot(
+                    isEnabled: false,
+                    saveDirectory: "",
+                    whitelistBundleIds: [],
+                    fileFormat: .markdown,
+                    lengthThreshold: 50,
+                    fileNameLength: 20,
+                    sensitiveFilterEnabled: true,
+                    pathFormat: .plainPath
+                ),
+                timestamp: Date()
+            )
+        }
+
+        onPasteboardChange?(event)
     }
 }
