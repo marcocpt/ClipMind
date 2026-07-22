@@ -68,6 +68,7 @@ struct AutoSaveSettingsView: View
         Section("自动保存")
         {
             Toggle("启用自动保存", isOn: $settings.isEnabled)
+                .toggleStyle(.checkbox)
                 .accessibilityIdentifier("autoSaveEnabledToggle")
                 .onChange(of: settings.isEnabled) { _ in saveSettings() }
 
@@ -206,6 +207,7 @@ struct AutoSaveSettingsView: View
         Section("敏感过滤")
         {
             Toggle("启用敏感内容过滤", isOn: $settings.sensitiveFilterEnabled)
+                .toggleStyle(.checkbox)
                 .accessibilityIdentifier("sensitiveFilterToggle")
                 .onChange(of: settings.sensitiveFilterEnabled) { newValue in
                     if newValue == false

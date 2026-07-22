@@ -291,7 +291,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             alert.messageText = "自动保存失败"
             alert.informativeText = "保存目录异常，文件未能保存。剪贴板内容保持原文。"
             alert.addButton(withTitle: "确定")
-            alert.setValue("autoSaveErrorAlert", forKey: "accessibilityLabel")
             alert.runModal()
         }
     }
