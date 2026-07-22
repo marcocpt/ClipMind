@@ -152,6 +152,7 @@
 		EC935B02E51584F47DC9017C /* ClassificationAccuracyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F5D83740818B17A0B2AB53 /* ClassificationAccuracyTests.swift */; };
 		EDFF80AF3F770B1509B29C0A /* ProcessingButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60416E2EE845CBDACE16E14 /* ProcessingButtons.swift */; };
 		EE34A9219E8C14256D693A4F /* RewriteMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5158584C25CC46619ABEC6 /* RewriteMode.swift */; };
+		EEE10AB1BFCD40511A6A053B /* AppDelegateAutoSaveAssemblyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 646831FF2C8CC5FD895C9DE1 /* AppDelegateAutoSaveAssemblyTests.swift */; };
 		EF07AE02A1EB27D7FDD9FADB /* CaptureEventFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45E2993745F698F83EA4474D /* CaptureEventFixtures.swift */; };
 		F20494C358A2F50BDB4C311C /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01878445936BEBB51FA6E3A7 /* PopoverView.swift */; };
 		F7BA652A80058AD2704733A7 /* MainWindowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */; };
@@ -240,6 +241,7 @@
 		5EAA6D6E20E61EE8E12B6CA4 /* PermissionRequester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequester.swift; sourceTree = "<group>"; };
 		62D655CA286AD3A68F3B858E /* PasteboardWatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardWatcherTests.swift; sourceTree = "<group>"; };
 		63DEB7531FB7A28A9CCC7372 /* EncryptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptionTests.swift; sourceTree = "<group>"; };
+		646831FF2C8CC5FD895C9DE1 /* AppDelegateAutoSaveAssemblyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegateAutoSaveAssemblyTests.swift; sourceTree = "<group>"; };
 		6576BED0E0B2C6AB913ADB44 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		657EB5BE4550908F8970D0D6 /* GlobalHotkeyServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyServiceTests.swift; sourceTree = "<group>"; };
 		66FAEA1A8F6257627635F860 /* HotkeyRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorder.swift; sourceTree = "<group>"; };
@@ -609,6 +611,7 @@
 		BA9A5AC3AA734D173D19BED0 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				646831FF2C8CC5FD895C9DE1 /* AppDelegateAutoSaveAssemblyTests.swift */,
 				F45065D85CAD45C8E604E06A /* AppIconAssetTests.swift */,
 				657EB5BE4550908F8970D0D6 /* GlobalHotkeyServiceTests.swift */,
 			);
@@ -1046,6 +1049,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				28D09568B9C56DD57139F4B9 /* APIKeyManagerTests.swift in Sources */,
+				EEE10AB1BFCD40511A6A053B /* AppDelegateAutoSaveAssemblyTests.swift in Sources */,
 				A4445C1F8221F67936F39B97 /* AppDetectorTests.swift in Sources */,
 				591D538D533DF346AA647A1A /* AppIconAssetTests.swift in Sources */,
 				F879653F3E2E2E690DB84624 /* AutoSaveAC22LogSanitizationTests.swift in Sources */,
