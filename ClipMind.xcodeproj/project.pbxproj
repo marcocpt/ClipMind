@@ -48,6 +48,7 @@
 		3E195FEF5BB76354863D6950 /* PopoverUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD8B58DD998E7E2E295A608E /* PopoverUITests.swift */; };
 		3EB3B71D472C4EE3EF2C2EE5 /* CaptureEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7938736139B32CDD1249E5 /* CaptureEventTests.swift */; };
 		41525007C932F813E0599F61 /* TranslateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1676FD1002DFCF2481517E /* TranslateTests.swift */; };
+		42A37B6A3E3EB4F8117F387D /* CaptureEventBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA9C0B5A8C9FFB7F2764DB7 /* CaptureEventBuilder.swift */; };
 		42C5F2287314A73BADECF195 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE52801F87AEE97862AFFCB5 /* NotificationManager.swift */; };
 		4339A7ACA7978229140AE1FF /* LLMError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F23B0900C3E3C4C6C129E60 /* LLMError.swift */; };
 		46D8162AB3FEAF385E4891C0 /* ClipCaptureServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB064000B7D667AB412B5E4A /* ClipCaptureServiceTests.swift */; };
@@ -55,6 +56,7 @@
 		4E611CC8F2B47C6C674EF77E /* Deduplicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56780EF1945B756B4C7124B2 /* Deduplicator.swift */; };
 		53A7C14D78583095E3B72FDA /* PrivacySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10F7E9079BA9F0B75D03993 /* PrivacySettingsView.swift */; };
 		591D538D533DF346AA647A1A /* AppIconAssetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F45065D85CAD45C8E604E06A /* AppIconAssetTests.swift */; };
+		5AD99B75D6C26A3279E75DEB /* CaptureEventBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C604633C675BAF669C6866AA /* CaptureEventBuilderTests.swift */; };
 		5C97478A4125CE3ED845274B /* ClipboardReplacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F96B6D359544AA6478264C /* ClipboardReplacer.swift */; };
 		5CDA631468260A314BCF2BD1 /* AutoSaveError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260A0141E4A31D823771994B /* AutoSaveError.swift */; };
 		5E90A6C26235DA3DB2038029 /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69622D426196E6F573F69442 /* HistoryListView.swift */; };
@@ -282,6 +284,7 @@
 		B739B9DE44919A153E4EDF94 /* ClipMindUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClipMindUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B7BC0B5F528F6B536ACAD0CE /* BlacklistEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlacklistEntry.swift; sourceTree = "<group>"; };
 		B85D37DF02E685E1AFF616C5 /* MultiProviderLLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderLLMService.swift; sourceTree = "<group>"; };
+		BAA9C0B5A8C9FFB7F2764DB7 /* CaptureEventBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureEventBuilder.swift; sourceTree = "<group>"; };
 		BB064000B7D667AB412B5E4A /* ClipCaptureServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipCaptureServiceTests.swift; sourceTree = "<group>"; };
 		BB68744D06E880ED6488AC67 /* ClipRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipRowView.swift; sourceTree = "<group>"; };
 		BC4334AE16707C376FD2E930 /* ClipItemModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipItemModelTests.swift; sourceTree = "<group>"; };
@@ -293,6 +296,7 @@
 		C31BD76147E6EF90E457FE10 /* ConflictResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictResolverTests.swift; sourceTree = "<group>"; };
 		C5453684DC1564FCFC943C9C /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		C582EEDD350412F14933BD06 /* TypeEmbeddings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeEmbeddings.swift; sourceTree = "<group>"; };
+		C604633C675BAF669C6866AA /* CaptureEventBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureEventBuilderTests.swift; sourceTree = "<group>"; };
 		C6D9D9CEF7E981DC88E02B43 /* EncryptedStoreMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedStoreMigrationTests.swift; sourceTree = "<group>"; };
 		C928A4DF6FF221CC9BB23013 /* ContentTypeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentTypeTests.swift; sourceTree = "<group>"; };
 		CEAD6A3DC6A94528FD16BF3C /* ClipMindApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMindApp.swift; sourceTree = "<group>"; };
@@ -572,6 +576,7 @@
 			isa = PBXGroup;
 			children = (
 				823A498B061B251B3B6CA366 /* AppDetector.swift */,
+				BAA9C0B5A8C9FFB7F2764DB7 /* CaptureEventBuilder.swift */,
 				FCB86EC6CB6F5358D6C09F8B /* ClipCaptureService.swift */,
 				DA110A6DA08E481F86987326 /* ContentReader.swift */,
 				56780EF1945B756B4C7124B2 /* Deduplicator.swift */,
@@ -633,6 +638,7 @@
 			isa = PBXGroup;
 			children = (
 				71D402E808160065FE9E7575 /* AppDetectorTests.swift */,
+				C604633C675BAF669C6866AA /* CaptureEventBuilderTests.swift */,
 				BB064000B7D667AB412B5E4A /* ClipCaptureServiceTests.swift */,
 				3AFB70953AAE16C89101A34B /* ContentReaderTests.swift */,
 				78922B73B4C72316CE935F12 /* DeduplicationTests.swift */,
@@ -955,6 +961,7 @@
 				DB5971D08DA6334C80621EFC /* BlacklistManagementView.swift in Sources */,
 				688F6EE2D610010D12C9CDD7 /* BlacklistService.swift in Sources */,
 				FC6D9D3B40CE2BF40110299A /* CaptureEvent.swift in Sources */,
+				42A37B6A3E3EB4F8117F387D /* CaptureEventBuilder.swift in Sources */,
 				825CE4A3F3EF7D3843801123 /* ClassificationService.swift in Sources */,
 				8DBA615E8C0D9D63A2F8C5DB /* CleanupService.swift in Sources */,
 				2C3F6DE7C583F6ED41751E6C /* ClipCaptureService.swift in Sources */,
@@ -1033,6 +1040,7 @@
 				0D55538AF23C931B59612B39 /* AutoSaveSettingsStoreTests.swift in Sources */,
 				FD7ED8760842D9E46B1CA799 /* AutoSaveSettingsTests.swift in Sources */,
 				1CCB8A859D6CB2078D5356FE /* BlacklistServiceTests.swift in Sources */,
+				5AD99B75D6C26A3279E75DEB /* CaptureEventBuilderTests.swift in Sources */,
 				EF07AE02A1EB27D7FDD9FADB /* CaptureEventFixtures.swift in Sources */,
 				3EB3B71D472C4EE3EF2C2EE5 /* CaptureEventTests.swift in Sources */,
 				EC935B02E51584F47DC9017C /* ClassificationAccuracyTests.swift in Sources */,
