@@ -1,0 +1,176 @@
+import XCTest
+
+final class AutoSaveSettingsUITests: XCTestCase
+{
+    override func setUp()
+    {
+        super.setUp()
+        continueAfterFailure = false
+    }
+
+    // MARK: - AC-07：配置面板可修改全部配置项
+
+    /// 验证自动保存配置面板所有控件存在且可交互。
+    func testAC07AllConfigControlsExist()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_RESET_AUTOSAVE_SETTINGS",
+            "--UITEST_INITIAL_TAB=autosave"
+        ]
+        app.launch()
+        app.activate()
+
+        // 打开设置面板
+        let settingsButton = app.buttons["settingsButton"].firstMatch
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
+        settingsButton.click()
+
+        // 验证总开关存在
+        let enabledToggle = app.checkBoxes["autoSaveEnabledToggle"]
+        XCTAssertTrue(enabledToggle.waitForExistence(timeout: 5), "总开关应存在")
+
+        // 验证保存目录输入框存在
+        let directoryField = app.textFields["saveDirectoryField"]
+        XCTAssertTrue(directoryField.waitForExistence(timeout: 3), "保存目录输入框应存在")
+
+        // 验证文件格式选择器存在
+        let formatPicker = app.popUpButtons["fileFormatPicker"]
+        XCTAssertTrue(formatPicker.waitForExistence(timeout: 3), "文件格式选择器应存在")
+
+        // 验证路径格式选择器存在
+        let pathPicker = app.popUpButtons["pathFormatPicker"]
+        XCTAssertTrue(pathPicker.waitForExistence(timeout: 3), "路径格式选择器应存在")
+
+        // 验证敏感过滤开关存在
+        let sensitiveToggle = app.checkBoxes["sensitiveFilterToggle"]
+        XCTAssertTrue(sensitiveToggle.waitForExistence(timeout: 3), "敏感过滤开关应存在")
+
+        // 验证路径预览存在
+        let pathPreview = app.staticTexts["pathPreviewText"]
+        XCTAssertTrue(pathPreview.waitForExistence(timeout: 3), "路径预览应存在")
+
+        // 验证明文责任提示存在
+        let warning = app.staticTexts["responsibilityWarning"]
+        XCTAssertTrue(warning.waitForExistence(timeout: 3), "明文责任提示应存在")
+    }
+
+    // MARK: - AC-15：白名单 App 管理可添加与删除
+
+    /// 验证白名单添加与删除 UI 交互。
+    func testAC15WhitelistAddAndDelete()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_RESET_AUTOSAVE_SETTINGS",
+            "--UITEST_INITIAL_TAB=autosave"
+        ]
+        app.launch()
+        app.activate()
+
+        let settingsButton = app.buttons["settingsButton"].firstMatch
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
+        settingsButton.click()
+
+        // 添加白名单条目
+        let addField = app.textFields["whitelistAddField"]
+        XCTAssertTrue(addField.waitForExistence(timeout: 5))
+        addField.click()
+        addField.typeText("com.test.whitelist")
+
+        let addButton = app.buttons["whitelistAddButton"]
+        XCTAssertTrue(addButton.exists)
+        addButton.click()
+
+        // 验证新条目出现
+        let deleteButton = app.buttons["whitelistDelete_com.test.whitelist"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 3), "新增白名单条目应出现")
+
+        // 删除条目
+        deleteButton.click()
+        XCTAssertFalse(deleteButton.waitForExistence(timeout: 2), "删除后条目应消失")
+    }
+
+    // MARK: - AC-16：配置修改持久化
+
+    /// 验证总开关切换后重启 App 仍保留。
+    func testAC16ConfigPersistsAcrossRestart()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_RESET_AUTOSAVE_SETTINGS",
+            "--UITEST_INITIAL_TAB=autosave"
+        ]
+        app.launch()
+        app.activate()
+
+        let settingsButton = app.buttons["settingsButton"].firstMatch
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
+        settingsButton.click()
+
+        // 开启总开关
+        let enabledToggle = app.checkBoxes["autoSaveEnabledToggle"]
+        XCTAssertTrue(enabledToggle.waitForExistence(timeout: 5))
+        if enabledToggle.value as? String == "0"
+        {
+            enabledToggle.click()
+        }
+        XCTAssertEqual(enabledToggle.value as? String, "1", "总开关应已开启")
+
+        // 重启 App
+        app.terminate()
+
+        let app2 = XCUIApplication()
+        app2.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_INITIAL_TAB=autosave"
+        ]
+        app2.launch()
+        app2.activate()
+
+        let settingsButton2 = app2.buttons["settingsButton"].firstMatch
+        XCTAssertTrue(settingsButton2.waitForExistence(timeout: 5))
+        settingsButton2.click()
+
+        let enabledToggle2 = app2.checkBoxes["autoSaveEnabledToggle"]
+        XCTAssertTrue(enabledToggle2.waitForExistence(timeout: 5))
+        XCTAssertEqual(enabledToggle2.value as? String, "1", "总开关状态应持久化保留")
+    }
+
+    // MARK: - AC-14：关闭敏感过滤二次确认 UI
+
+    /// 验证关闭敏感过滤时弹出二次确认弹窗。
+    func testAC14DisableSensitiveShowsConfirmDialog()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_RESET_AUTOSAVE_SETTINGS",
+            "--UITEST_INITIAL_TAB=autosave"
+        ]
+        app.launch()
+        app.activate()
+
+        let settingsButton = app.buttons["settingsButton"].firstMatch
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
+        settingsButton.click()
+
+        // 敏感过滤默认开启，点击关闭
+        let sensitiveToggle = app.checkBoxes["sensitiveFilterToggle"]
+        XCTAssertTrue(sensitiveToggle.waitForExistence(timeout: 5))
+        XCTAssertEqual(sensitiveToggle.value as? String, "1", "敏感过滤应默认开启")
+        sensitiveToggle.click()
+
+        // 验证二次确认弹窗出现
+        let cancelButton = app.buttons["取消"]
+        XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "二次确认弹窗应出现")
+
+        // 点击取消，开关应恢复为开启
+        cancelButton.click()
+        let sensitiveToggleAfter = app.checkBoxes["sensitiveFilterToggle"]
+        XCTAssertEqual(sensitiveToggleAfter.value as? String, "1", "取消后敏感过滤应恢复开启")
+    }
+}

@@ -164,6 +164,7 @@
 		FC6D9D3B40CE2BF40110299A /* CaptureEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2FC0B31144E8B9FAE834B0 /* CaptureEvent.swift */; };
 		FD7ED8760842D9E46B1CA799 /* AutoSaveSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 455772ECB5F7E6BA673F9A84 /* AutoSaveSettingsTests.swift */; };
 		FD9932F1F76CA30BEDCEBB3F /* FileWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1384EDE999B95458DBDA5FF /* FileWriterTests.swift */; };
+		FDD655EC5BF93601BC695A28 /* AutoSaveSettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F0EA2C5EDFF6181390B24 /* AutoSaveSettingsUITests.swift */; };
 		FDFD1191DD1C38DB7463F418 /* ClipMindTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -314,6 +315,7 @@
 		CEAD6A3DC6A94528FD16BF3C /* ClipMindApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMindApp.swift; sourceTree = "<group>"; };
 		D1384EDE999B95458DBDA5FF /* FileWriterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWriterTests.swift; sourceTree = "<group>"; };
 		D160212934EC31D6CA4830EE /* AutoSavePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSavePerformanceTests.swift; sourceTree = "<group>"; };
+		D35F0EA2C5EDFF6181390B24 /* AutoSaveSettingsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettingsUITests.swift; sourceTree = "<group>"; };
 		D3C112D9C6C100B46BDA490C /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		D40868B2FF66FA43652D5D30 /* AutoSaveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveService.swift; sourceTree = "<group>"; };
 		D52C20924A7C188A9570C4DB /* FileNameGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileNameGeneratorTests.swift; sourceTree = "<group>"; };
@@ -677,6 +679,7 @@
 		CF0F878E167271BC52B32350 /* ClipMindUITests */ = {
 			isa = PBXGroup;
 			children = (
+				D35F0EA2C5EDFF6181390B24 /* AutoSaveSettingsUITests.swift */,
 				37023D2FCB531B633F999B04 /* ClipMindUITests.swift */,
 				FBE3CEC209DA4A78E7178025 /* FirstLaunchUITests.swift */,
 				94564086A489A3C69338F2E8 /* MainWindowUITests.swift */,
@@ -1125,6 +1128,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FDD655EC5BF93601BC695A28 /* AutoSaveSettingsUITests.swift in Sources */,
 				BA7754C5642A7356E27B8C13 /* ClipMindUITests.swift in Sources */,
 				9C86550BCEB7477EBDFF03AA /* FirstLaunchUITests.swift in Sources */,
 				717234DECC4165CDA1062FBC /* MainWindowUITests.swift in Sources */,
