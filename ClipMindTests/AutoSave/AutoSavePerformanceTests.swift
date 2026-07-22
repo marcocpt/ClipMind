@@ -9,6 +9,7 @@ final class AutoSavePerformanceTests: XCTestCase
     private var pasteboard: NSPasteboard!
     private var settingsStore: AutoSaveSettingsStore!
     private var defaults: UserDefaults!
+    private var suiteName: String!
     private var suppressor: SelfWriteSuppressor!
     private var service: AutoSaveService!
     private var tempDir: URL!
@@ -17,7 +18,8 @@ final class AutoSavePerformanceTests: XCTestCase
     {
         pasteboard = NSPasteboard(name: .init("test-\(UUID().uuidString)"))
         pasteboard.clearContents()
-        defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
+        suiteName = "test-\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suiteName)!
         settingsStore = AutoSaveSettingsStore(defaults: defaults)
         suppressor = SelfWriteSuppressor()
 
@@ -41,7 +43,7 @@ final class AutoSavePerformanceTests: XCTestCase
     override func tearDownWithError() throws
     {
         try? FileManager.default.removeItem(at: tempDir)
-        defaults.removePersistentDomain(forName: defaults.dictionaryRepresentation().keys.first ?? "")
+        defaults.removePersistentDomain(forName: suiteName)
     }
 
     // MARK: - D21：性能测试记录实际耗时并断言 P95

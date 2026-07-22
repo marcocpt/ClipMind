@@ -8,6 +8,7 @@ final class AutoSaveServiceTests: XCTestCase
     private var pasteboard: NSPasteboard!
     private var settingsStore: AutoSaveSettingsStore!
     private var defaults: UserDefaults!
+    private var suiteName: String!
     private var suppressor: SelfWriteSuppressor!
     private var service: AutoSaveService!
     private var tempDir: URL!
@@ -16,7 +17,8 @@ final class AutoSaveServiceTests: XCTestCase
     {
         pasteboard = NSPasteboard(name: .init("test-\(UUID().uuidString)"))
         pasteboard.clearContents()
-        defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
+        suiteName = "test-\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suiteName)!
         settingsStore = AutoSaveSettingsStore(defaults: defaults)
         suppressor = SelfWriteSuppressor()
 
@@ -40,7 +42,7 @@ final class AutoSaveServiceTests: XCTestCase
     override func tearDownWithError() throws
     {
         try? FileManager.default.removeItem(at: tempDir)
-        defaults.removePersistentDomain(forName: defaults.dictionaryRepresentation().keys.first ?? "")
+        defaults.removePersistentDomain(forName: suiteName)
     }
 
     // MARK: - TC-UT-53：F2.1 禁用时不触发保存（D11）
@@ -214,6 +216,29 @@ final class AutoSaveServiceTests: XCTestCase
 
         let files = try FileManager.default.contentsOfDirectory(at: tempDir, includingPropertiesForKeys: nil)
         XCTAssertTrue(files.isEmpty, "图片内容不应触发 F2.1（D12）")
+    }
+
+    // MARK: - TC-UT-60b：纯空白内容不触发保存（D12 纯空白检查）
+
+    func testBlankOnlyContentDoesNotSave() throws
+    {
+        let blankText = String(repeating: " ", count: 100) + "\n\t\r"
+        let event = CaptureEvent(
+            changeCount: 201,
+            content: .text(blankText),
+            bundleId: "com.apple.Safari",
+            appName: "Safari",
+            blacklisted: false,
+            sensitiveResult: .none,
+            f1xConfigSnapshot: F1xConfigSnapshot(blacklistBundleIds: []),
+            f2xConfigSnapshot: F2xConfigSnapshot(from: settingsStore.load())
+        )
+
+        service.handle(event: event)
+        waitForQueue()
+
+        let files = try FileManager.default.contentsOfDirectory(at: tempDir, includingPropertiesForKeys: nil)
+        XCTAssertTrue(files.isEmpty, "纯空白内容不应触发 F2.1（D12）")
     }
 
     private func waitForQueue()

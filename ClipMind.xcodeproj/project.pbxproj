@@ -148,6 +148,7 @@
 		EF07AE02A1EB27D7FDD9FADB /* CaptureEventFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45E2993745F698F83EA4474D /* CaptureEventFixtures.swift */; };
 		F20494C358A2F50BDB4C311C /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01878445936BEBB51FA6E3A7 /* PopoverView.swift */; };
 		F7BA652A80058AD2704733A7 /* MainWindowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */; };
+		F879653F3E2E2E690DB84624 /* AutoSaveAC22LogSanitizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA844BA5BDB21182A07F710 /* AutoSaveAC22LogSanitizationTests.swift */; };
 		F890459CC5D9DCC2C5851603 /* APIKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CAABFDA44691DAFE1ECF36 /* APIKeyManager.swift */; };
 		FB2470945BE2FA49F0D13FFA /* FilePathFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1EBBEC1A09C7A148590FE5 /* FilePathFormatter.swift */; };
 		FBD1A50D6B0DFCDBD92CDAFA /* LocalEmbeddingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D638C38476AE5D6F481CE3F1 /* LocalEmbeddingServiceTests.swift */; };
@@ -326,6 +327,7 @@
 		FB619D93AF164C83D25E3C53 /* SummarizeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummarizeTests.swift; sourceTree = "<group>"; };
 		FBE3CEC209DA4A78E7178025 /* FirstLaunchUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchUITests.swift; sourceTree = "<group>"; };
 		FCB86EC6CB6F5358D6C09F8B /* ClipCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipCaptureService.swift; sourceTree = "<group>"; };
+		FFA844BA5BDB21182A07F710 /* AutoSaveAC22LogSanitizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveAC22LogSanitizationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -756,6 +758,7 @@
 		F6D4E93C2E80605BA73F88D2 /* AutoSave */ = {
 			isa = PBXGroup;
 			children = (
+				FFA844BA5BDB21182A07F710 /* AutoSaveAC22LogSanitizationTests.swift */,
 				8FE161981845D4D086873D3B /* AutoSaveConcurrencyTests.swift */,
 				3A28285DF25AD18762E16D26 /* AutoSaveIntegrationTests.swift */,
 				D160212934EC31D6CA4830EE /* AutoSavePerformanceTests.swift */,
@@ -1022,6 +1025,7 @@
 				28D09568B9C56DD57139F4B9 /* APIKeyManagerTests.swift in Sources */,
 				A4445C1F8221F67936F39B97 /* AppDetectorTests.swift in Sources */,
 				591D538D533DF346AA647A1A /* AppIconAssetTests.swift in Sources */,
+				F879653F3E2E2E690DB84624 /* AutoSaveAC22LogSanitizationTests.swift in Sources */,
 				B05C00B282972754DD8B9AF0 /* AutoSaveConcurrencyTests.swift in Sources */,
 				8F0E67485CB804EDB0ED1283 /* AutoSaveIntegrationTests.swift in Sources */,
 				1A0F6C8A81050570D6F43C92 /* AutoSavePerformanceTests.swift in Sources */,

@@ -9,6 +9,7 @@ final class AutoSaveConcurrencyTests: XCTestCase
     private var pasteboard: NSPasteboard!
     private var settingsStore: AutoSaveSettingsStore!
     private var defaults: UserDefaults!
+    private var suiteName: String!
     private var suppressor: SelfWriteSuppressor!
     private var service: AutoSaveService!
     private var tempDir: URL!
@@ -17,7 +18,8 @@ final class AutoSaveConcurrencyTests: XCTestCase
     {
         pasteboard = NSPasteboard(name: .init("test-\(UUID().uuidString)"))
         pasteboard.clearContents()
-        defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
+        suiteName = "test-\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suiteName)!
         settingsStore = AutoSaveSettingsStore(defaults: defaults)
         suppressor = SelfWriteSuppressor()
 
@@ -41,7 +43,7 @@ final class AutoSaveConcurrencyTests: XCTestCase
     override func tearDownWithError() throws
     {
         try? FileManager.default.removeItem(at: tempDir)
-        defaults.removePersistentDomain(forName: defaults.dictionaryRepresentation().keys.first ?? "")
+        defaults.removePersistentDomain(forName: suiteName)
     }
 
     // MARK: - TC-CC-01：连续快速触发多次保存
@@ -72,7 +74,7 @@ final class AutoSaveConcurrencyTests: XCTestCase
         XCTAssertGreaterThanOrEqual(files.count, 1, "TC-CC-01：应至少创建 1 个文件")
     }
 
-    // MARK: - TC-CC-02：自我写入抑制器并发访问
+    // MARK: - TC-CC-02：自我写入抑制器并发访问（验证标记一次性 + 并发安全）
 
     func testTC_CC_02ConcurrentSuppressorAccess() throws
     {
@@ -80,19 +82,38 @@ final class AutoSaveConcurrencyTests: XCTestCase
         expectation.expectedFulfillmentCount = 10
 
         let queue = DispatchQueue(label: "test.concurrent", attributes: .concurrent)
+        let lock = NSLock()
+        var markedChangeCounts: [Int] = []
 
+        // 10 个线程并发 markSelfWrite 不同 changeCount（0..<10）
         for index in 0..<10
         {
             queue.async
             {
                 self.suppressor.markSelfWrite(changeCount: index)
-                _ = self.suppressor.checkAndReset(changeCount: index)
+                lock.lock()
+                markedChangeCounts.append(index)
+                lock.unlock()
                 expectation.fulfill()
             }
         }
 
         wait(for: [expectation], timeout: 2.0)
-        XCTAssertTrue(true, "TC-CC-02：并发访问不崩溃即通过")
+
+        // 验证：10 次 markSelfWrite 都已执行
+        XCTAssertEqual(markedChangeCounts.count, 10, "TC-CC-02：10 次 markSelfWrite 都应执行")
+
+        // 验证：标记一次性——对 0..<10 依次 checkAndReset，true 次数应 <= 1
+        var trueCount = 0
+        for changeCount in 0..<10
+            where suppressor.checkAndReset(changeCount: changeCount)
+        {
+            trueCount += 1
+        }
+        XCTAssertLessThanOrEqual(trueCount, 1, "TC-CC-02：标记一次性，true 次数应 <= 1，实际：\(trueCount)")
+
+        // 验证：标记清除后再次 checkAndReset 返回 false
+        XCTAssertFalse(suppressor.checkAndReset(changeCount: 5), "TC-CC-02：标记清除后应返回 false")
     }
 
     // MARK: - TC-CC-03：配置变更期间处理事件（D6 快照隔离）
