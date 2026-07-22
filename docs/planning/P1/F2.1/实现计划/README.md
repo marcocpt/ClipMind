@@ -1,4 +1,4 @@
-> 最后更新：2026-07-22 | 版本：v2.0
+> 最后更新：2026-07-22 | 版本：v2.1
 
 # F2.1 自动保存到文件 实现计划
 
@@ -211,30 +211,30 @@ xcodebuild test \
 
 ### 8.1 Phase 0 验收（核心保存逻辑）
 
-- [ ] 14 个任务全部 commit 完成，commit history 可查
-- [ ] `swiftlint lint --strict` 通过
-- [ ] `xcodebuild build` 通过
-- [ ] 49 条单元测试（TC-UT-01~49）全部通过（本地 `-only-testing` 逐文件验证）
-- [ ] 14 条并发场景测试（TC-CC-01~14）全部通过
-- [ ] 性能测试（D21）记录实际耗时并断言 P95
-- [ ] AC-04、AC-06、AC-10、AC-11、AC-12、AC-13、AC-14、AC-17~22 的 XCTest 部分通过
+- [x] 14 个任务全部 commit 完成，commit history 可查（2026-07-22 验证：36 个 F2.1 commit）
+- [x] `swiftlint lint --strict` 通过（2026-07-22 验证：0 violations, 155 files）
+- [x] `xcodebuild build` 通过（2026-07-22 验证：BUILD SUCCEEDED）
+- [x] 49 条单元测试（TC-UT-01~49）全部通过（本地 `-only-testing` 逐文件验证：2026-07-22 验证 81 tests, 0 failures）
+- [x] 14 条并发场景测试（TC-CC-01~14）全部通过（2026-07-22 验证：AutoSaveConcurrencyTests 通过）
+- [x] 性能测试（D21）记录实际耗时并断言 P95（2026-07-22 验证：AutoSavePerformanceTests 通过）
+- [x] AC-04、AC-06、AC-10、AC-11、AC-12、AC-13、AC-14、AC-17~22 的 XCTest 部分通过（2026-07-22 验证）
 
 ### 8.2 Phase 1 验收（集成与 UI）
 
-- [ ] 10 个任务全部 commit 完成
-- [ ] `swiftlint lint --strict` 通过
-- [ ] `xcodebuild build` 通过
-- [ ] F1.x 既有单元测试全部回归通过（本地 `-only-testing` 验证关键类）
-- [ ] XCUITest（AC-07/09/15/16）由 CI 验证通过（本地不执行）
-- [ ] 手动验收脚本（AC-01/02/03/05/17~22）由开发者本机执行并记录结果
+- [x] 10 个任务全部 commit 完成（2026-07-22 验证）
+- [x] `swiftlint lint --strict` 通过（2026-07-22 验证：0 violations, 155 files）
+- [x] `xcodebuild build` 通过（2026-07-22 验证：BUILD SUCCEEDED）
+- [x] F1.x 既有单元测试全部回归通过（2026-07-22 验证：PasteboardWatcher/ClipCaptureService/SensitiveDetector/EncryptedStore 共 32 tests, 0 failures）
+- [ ] XCUITest（AC-07/09/15/16）由 CI 验证通过（本地不执行，待 CI 兜底）
+- [ ] 手动验收脚本（AC-01/02/03/05/17~22）由开发者本机执行并记录结果（待手动执行）
 
 ### 8.3 整体验收（F2.1 功能完整交付）
 
-- [ ] 22 条 AC（AC-01~22）全部覆盖：XCTest 覆盖业务逻辑部分，XCUITest 覆盖 UI 交互部分，手动测试覆盖 OS 边界部分
-- [ ] 11 条 NFR（NFR-01~11）全部满足：性能（NFR-01~05）、可靠性（NFR-06~08）、安全（NFR-09~10）、兼容性（NFR-11）
-- [ ] 14 条约束（C-01~14）全部遵守
-- [ ] F-11 例外条款是唯一对 F1.x 既有公共接口的修改
-- [ ] 24 条决策（D1~D24）全部落地，可在代码中追溯
+- [ ] 22 条 AC（AC-01~22）全部覆盖：XCTest 覆盖业务逻辑部分，XCUITest 覆盖 UI 交互部分，手动测试覆盖 OS 边界部分（待 XCUITest + 手动测试完成后勾选）
+- [ ] 11 条 NFR（NFR-01~11）全部满足：性能（NFR-01~05）、可靠性（NFR-06~08）、安全（NFR-09~10）、兼容性（NFR-11）（待手动测试完成后勾选）
+- [x] 14 条约束（C-01~14）全部遵守（2026-07-22 Phase 1 代码评审确认）
+- [x] F-11 例外条款是唯一对 F1.x 既有公共接口的修改（2026-07-22 Phase 1 代码评审确认：仅 PasteboardWatcher.onPasteboardChange 回调参数扩展）
+- [x] 24 条决策（D1~D24）全部落地，可在代码中追溯（2026-07-22 Phase 1 代码评审确认：质量等级 A-）
 
 ---
 
@@ -242,6 +242,7 @@ xcodebuild test \
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
+| v2.1 | 2026-07-22 | 同步 §8.1/§8.2/§8.3 验收清单勾选状态：本地已验证项勾选（commit history/swiftlint/build/单元测试/并发测试/性能测试/F1.x 回归），§8.3 代码评审确认项勾选（约束/F-11/24 决策），XCUITest 与手动 OS 边界测试项保留 [ ] 待 CI 与开发者执行 |
 | v2.0 | 2026-07-22 | 基于 v1.1 设计文档套件完全重写：落地 24 条决策（D1~D24），新增 CaptureEvent/SensitiveMatchResult/F2xConfigSnapshot/SelfWriteSuppressor/FileWriter/ClipboardReplacer/PollingHelper 7 个模块，Phase 0 从 9 任务扩展为 14 任务，Phase 1 从 7 任务扩展为 10 任务，引入三层测试策略（D8）与日志白名单（D15） |
 | v1.2 | 2026-07-21 | 基于 v1.0 设计的旧版计划（已被 v2.0 替换） |
 | v1.1 | 2026-07-20 | 旧版初稿 |
