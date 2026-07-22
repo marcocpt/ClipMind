@@ -72,6 +72,7 @@
 		875C04EEA8B97377577DF8CC /* ContentTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C928A4DF6FF221CC9BB23013 /* ContentTypeTests.swift */; };
 		8B646F09C1AA6994965271F9 /* DetailPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C626C2E4480671EA68F3A65 /* DetailPanel.swift */; };
 		8DBA615E8C0D9D63A2F8C5DB /* CleanupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B535E9A1383D11BF04E00E /* CleanupService.swift */; };
+		9172F099C3B6A5DEB5067C0C /* PollingHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8962BAEA39300C713197F8E7 /* PollingHelper.swift */; };
 		9275B3A8D350E84173E3E723 /* TypeEmbeddings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C582EEDD350412F14933BD06 /* TypeEmbeddings.swift */; };
 		995230116C9F1B2C0397E1A9 /* LLMServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1F57D65AA987167C9BC502 /* LLMServiceTests.swift */; };
 		9C86550BCEB7477EBDFF03AA /* FirstLaunchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBE3CEC209DA4A78E7178025 /* FirstLaunchUITests.swift */; };
@@ -94,6 +95,7 @@
 		BA7754C5642A7356E27B8C13 /* ClipMindUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37023D2FCB531B633F999B04 /* ClipMindUITests.swift */; };
 		BBCAA50968C7E78CD4004187 /* SourceFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD2B156E617C2E858E5D370 /* SourceFilter.swift */; };
 		BD5D1B4DBB4F613CEF118C00 /* LoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B43AF8EF3AD28DDE8EDEEC7 /* LoggerTests.swift */; };
+		C115216B030D33D2B6BD84FC /* PollingHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D92C7E46B4693500FF63CB /* PollingHelperTests.swift */; };
 		C21B88E311DD8E9DD139EAFE /* HotkeyRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FAEA1A8F6257627635F860 /* HotkeyRecorder.swift */; };
 		C4B895B2B488B0C870E2B9F8 /* MultiProviderLLMServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E345833B2DF4D17967D1EDBC /* MultiProviderLLMServiceTests.swift */; };
 		C542F568C195941D3D4B4D1B /* CleanupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85D7BA4202854BE0C73D609C /* CleanupServiceTests.swift */; };
@@ -214,6 +216,7 @@
 		82DB586EA79EA26685C80BF6 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		85D7BA4202854BE0C73D609C /* CleanupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanupServiceTests.swift; sourceTree = "<group>"; };
 		8746040340A99D2E81DD6057 /* SampleDataSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataSearchTests.swift; sourceTree = "<group>"; };
+		8962BAEA39300C713197F8E7 /* PollingHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollingHelper.swift; sourceTree = "<group>"; };
 		8CEB124A50A01EAEBD4B1F56 /* SensitiveMatchResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveMatchResultTests.swift; sourceTree = "<group>"; };
 		8EB3FAD2DCAE5F4E00347288 /* ClipMind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipMind.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F23B0900C3E3C4C6C129E60 /* LLMError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMError.swift; sourceTree = "<group>"; };
@@ -226,6 +229,7 @@
 		9B1B8368514454F691F2FB00 /* LogCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogCategory.swift; sourceTree = "<group>"; };
 		9B2B5CD59B45AE4B3332F739 /* BlacklistServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlacklistServiceTests.swift; sourceTree = "<group>"; };
 		9F130B71026DB662743A2D84 /* SensitiveDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveDetectorTests.swift; sourceTree = "<group>"; };
+		A3D92C7E46B4693500FF63CB /* PollingHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollingHelperTests.swift; sourceTree = "<group>"; };
 		A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowLayoutTests.swift; sourceTree = "<group>"; };
 		A6E4A4AD7537A6295717721E /* ClipMindTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClipMindTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB1676FD1002DFCF2481517E /* TranslateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateTests.swift; sourceTree = "<group>"; };
@@ -506,6 +510,7 @@
 			isa = PBXGroup;
 			children = (
 				3B43AF8EF3AD28DDE8EDEEC7 /* LoggerTests.swift */,
+				A3D92C7E46B4693500FF63CB /* PollingHelperTests.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -633,6 +638,7 @@
 				9B1B8368514454F691F2FB00 /* LogCategory.swift */,
 				D3C112D9C6C100B46BDA490C /* Logger.swift */,
 				AE52801F87AEE97862AFFCB5 /* NotificationManager.swift */,
+				8962BAEA39300C713197F8E7 /* PollingHelper.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -899,6 +905,7 @@
 				B0EF50AFB4D773CA27277F30 /* PasteboardWatcher.swift in Sources */,
 				63195241AFFB9A4A05E84B11 /* PermissionRequestView.swift in Sources */,
 				AFB9E71D5DB26DD1C1ECD2D7 /* PermissionRequester.swift in Sources */,
+				9172F099C3B6A5DEB5067C0C /* PollingHelper.swift in Sources */,
 				F20494C358A2F50BDB4C311C /* PopoverView.swift in Sources */,
 				169D77E1F9EB50DF3455A131 /* PrivacyNoticeView.swift in Sources */,
 				53A7C14D78583095E3B72FDA /* PrivacySettingsView.swift in Sources */,
@@ -959,6 +966,7 @@
 				1E5D28AA74E8DF3052E821B1 /* PasteboardWatcherTests.swift in Sources */,
 				E197C9B2996392E601BAF0E7 /* PermissionIconSymbolTests.swift in Sources */,
 				151112363ADBD35215B76E0B /* PermissionRequesterTests.swift in Sources */,
+				C115216B030D33D2B6BD84FC /* PollingHelperTests.swift in Sources */,
 				1C228AA6E1ED8398C525B248 /* PromptTemplateTests.swift in Sources */,
 				D612D914F3A01917634F4D3D /* RewriteTests.swift in Sources */,
 				7A29E8963712B241B0A28E22 /* SampleDataSearchTests.swift in Sources */,
