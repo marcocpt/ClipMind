@@ -126,7 +126,7 @@ public final class AutoSaveService
 
         let contentLength = text.count
         logger.info("""
-        Saved: fileName=\(savedURL.lastPathComponent, privacy: .public), \
+        Saved: result=success, \
         contentLength=\(contentLength, privacy: .public), \
         eventId=\(event.id, privacy: .public), \
         changeCount=\(event.changeCount, privacy: .public)

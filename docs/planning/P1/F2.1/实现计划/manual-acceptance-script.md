@@ -178,7 +178,7 @@
 **预期：**
 - 日志中不出现 `password=secret123` 原文
 - 日志中不出现完整文件路径（含用户名）
-- 日志仅包含白名单字段：module/operation/phase/result/errorCode/retryCount/changeCount/contentLength/fileName
+- 日志仅包含白名单字段：module/operation/phase/result/errorCode/retryCount/changeCount/contentLength（fileName 派生自用户内容，属于敏感字段，不输出）
 - 敏感内容命中记录为 `isSensitive=true`，不输出具体内容
 
 **实际结果：** _______
