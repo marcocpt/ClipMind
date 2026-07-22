@@ -23,7 +23,8 @@ enum CaptureEventFixtures
                 lengthThreshold: 50,
                 fileNameLength: 20,
                 sensitiveFilterEnabled: true,
-                pathFormat: .plainPath
+                pathFormat: .plainPath,
+                showFilePathInHistory: true
             )
         )
     }
@@ -46,7 +47,8 @@ enum CaptureEventFixtures
                 lengthThreshold: 50,
                 fileNameLength: 20,
                 sensitiveFilterEnabled: true,
-                pathFormat: .plainPath
+                pathFormat: .plainPath,
+                showFilePathInHistory: true
             )
         )
     }
@@ -69,7 +71,8 @@ enum CaptureEventFixtures
                 lengthThreshold: 50,
                 fileNameLength: 20,
                 sensitiveFilterEnabled: true,
-                pathFormat: .plainPath
+                pathFormat: .plainPath,
+                showFilePathInHistory: true
             )
         )
     }
@@ -93,7 +96,8 @@ enum CaptureEventFixtures
                 lengthThreshold: threshold,
                 fileNameLength: 20,
                 sensitiveFilterEnabled: true,
-                pathFormat: .plainPath
+                pathFormat: .plainPath,
+                showFilePathInHistory: true
             )
         )
     }

@@ -453,7 +453,7 @@
 <body>
     <div class="header">
         <h1>ClipMind 设置</h1>
-        <div class="meta">最后更新：2026-07-22 | 版本：v1.1（基于需求文档 v1.1 + 设计文档 v1.1）</div>
+        <div class="meta">最后更新：2026-07-22 | 版本：v1.2（基于需求文档 v1.2 + 设计文档 v1.1）</div>
     </div>
 
     <div class="container">
@@ -520,7 +520,7 @@
                     <div class="form-label">长度阈值（字）</div>
                     <div class="form-value">
                         <input type="number" class="input-number" value="50" min="1" max="10000">
-                        <span style="font-size: 11px; color: #6e6e70;">范围 1-10000，超出范围使用默认值 50</span>
+                        <span style="font-size: 11px; color: #6e6e70;">范围 1-10000，超出范围自动夹紧到边界</span>
                     </div>
                 </div>
                 <div class="field-hint">内容字符数大于等于阈值时触发自动保存</div>
@@ -532,7 +532,7 @@
                     <div class="form-label">文件名前缀长度（字）</div>
                     <div class="form-value">
                         <input type="number" class="input-number" value="20" min="1" max="50">
-                        <span style="font-size: 11px; color: #6e6e70;">范围 1-50，超出范围使用默认值 20</span>
+                        <span style="font-size: 11px; color: #6e6e70;">范围 1-50，超出范围自动夹紧到边界</span>
                     </div>
                 </div>
                 <div class="field-hint">取内容前 N 字作为文件名前缀，过滤换行符、路径分隔符与文件系统特殊字符，保留中文</div>
@@ -730,6 +730,7 @@
     |------|------|------|
     | v1.0 | 2026-07-21 | 初始版本，基于需求文档 v1.0 + 设计文档 v1.0 |
     | v1.1 | 2026-07-22 | 总开关默认状态改为关闭（对齐 FR-001），状态指示器改为 inactive，状态文本改为"未启用"，文档基准更新为需求文档 v1.1 + 设计文档 v1.1 |
+    | v1.2 | 2026-07-22 | 长度阈值/文件名长度提示文本从"超出范围使用默认值"改为"超出范围自动夹紧到边界"，对齐需求文档 v1.2 C-04/C-05 与决策 C2 |
     -->
 </body>
 </html>

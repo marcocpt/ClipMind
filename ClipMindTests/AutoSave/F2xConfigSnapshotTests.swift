@@ -16,7 +16,8 @@ final class F2xConfigSnapshotTests: XCTestCase
             lengthThreshold: 100,
             fileNameLength: 20,
             sensitiveFilterEnabled: true,
-            pathFormat: .fileURI
+            pathFormat: .fileURI,
+            showFilePathInHistory: true
         )
 
         XCTAssertTrue(snapshot.isEnabled)
@@ -27,6 +28,7 @@ final class F2xConfigSnapshotTests: XCTestCase
         XCTAssertEqual(snapshot.fileNameLength, 20)
         XCTAssertTrue(snapshot.sensitiveFilterEnabled)
         XCTAssertEqual(snapshot.pathFormat, .fileURI)
+        XCTAssertTrue(snapshot.showFilePathInHistory)
     }
 
     // MARK: - TC-UT-12：白名单包含判断
@@ -41,7 +43,8 @@ final class F2xConfigSnapshotTests: XCTestCase
             lengthThreshold: 50,
             fileNameLength: 20,
             sensitiveFilterEnabled: true,
-            pathFormat: .plainPath
+            pathFormat: .plainPath,
+            showFilePathInHistory: true
         )
 
         XCTAssertTrue(snapshot.isWhitelisted(bundleId: "com.apple.Safari"))
@@ -60,7 +63,8 @@ final class F2xConfigSnapshotTests: XCTestCase
             lengthThreshold: 200,
             fileNameLength: 30,
             sensitiveFilterEnabled: false,
-            pathFormat: .markdownLink
+            pathFormat: .markdownLink,
+            showFilePathInHistory: false
         )
 
         let snapshot = F2xConfigSnapshot(from: settings)
@@ -73,5 +77,6 @@ final class F2xConfigSnapshotTests: XCTestCase
         XCTAssertEqual(snapshot.fileNameLength, settings.fileNameLength)
         XCTAssertEqual(snapshot.sensitiveFilterEnabled, settings.sensitiveFilterEnabled)
         XCTAssertEqual(snapshot.pathFormat, settings.pathFormat)
+        XCTAssertEqual(snapshot.showFilePathInHistory, settings.showFilePathInHistory)
     }
 }

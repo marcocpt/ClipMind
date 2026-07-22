@@ -51,7 +51,10 @@ struct SettingsView: View
                 }
                 .tag(SettingsTab.autoSave)
         }
-        .frame(width: 520, height: 550)
+        // 高度按内容调整：F2.1 AutoSaveSettingsView 有 7 个 section（含 TextField 改造后
+        // 新增 hint caption2），总高度超过原 550pt，导致顶部内容被裁剪。
+        // 调整为 700pt 容纳所有 tab 内容；TabView 默认顶部对齐，其他 tab 不会居中。
+        .frame(width: 520, height: 700)
     }
 
     /// 解析 `--UITEST_INITIAL_TAB=<tab>` 启动参数为 SettingsTab。

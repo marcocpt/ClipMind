@@ -14,6 +14,7 @@ public struct F2xConfigSnapshot: Sendable, Equatable
     public let fileNameLength: Int
     public let sensitiveFilterEnabled: Bool
     public let pathFormat: PathFormat
+    public let showFilePathInHistory: Bool
 
     public init(
         isEnabled: Bool,
@@ -23,7 +24,8 @@ public struct F2xConfigSnapshot: Sendable, Equatable
         lengthThreshold: Int,
         fileNameLength: Int,
         sensitiveFilterEnabled: Bool,
-        pathFormat: PathFormat
+        pathFormat: PathFormat,
+        showFilePathInHistory: Bool
     )
     {
         self.isEnabled = isEnabled
@@ -34,6 +36,7 @@ public struct F2xConfigSnapshot: Sendable, Equatable
         self.fileNameLength = fileNameLength
         self.sensitiveFilterEnabled = sensitiveFilterEnabled
         self.pathFormat = pathFormat
+        self.showFilePathInHistory = showFilePathInHistory
     }
 
     /// 从 `AutoSaveSettings` 构造快照（D23 事件构造阶段读取）。
@@ -47,6 +50,7 @@ public struct F2xConfigSnapshot: Sendable, Equatable
         self.fileNameLength = settings.fileNameLength
         self.sensitiveFilterEnabled = settings.sensitiveFilterEnabled
         self.pathFormat = settings.pathFormat
+        self.showFilePathInHistory = settings.showFilePathInHistory
     }
 
     /// 判断 bundleId 是否在白名单中。

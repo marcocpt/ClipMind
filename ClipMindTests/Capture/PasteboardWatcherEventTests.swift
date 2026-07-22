@@ -142,4 +142,94 @@ final class PasteboardWatcherEventTests: XCTestCase
         let event = try XCTUnwrap(receivedEvent)
         XCTAssertEqual(event.sensitiveResult.isSensitive, true, "敏感结果应打包进事件")
     }
+
+    // MARK: - TC-UT-72：自我写入事件被抑制（FR-015/D4）
+
+    /// 验证 ClipboardReplacer 写入路径后标记的 changeCount，PasteboardWatcher
+    /// 下次轮询时应通过 checkAndReset 命中并跳过完整捕获流程。
+    /// 这是 F2.1 自我写入死循环 bug（文件路径被当作新复制内容再次保存）的核心防线。
+    func testSelfWriteEventSuppressed() throws
+    {
+        let suppressor = SelfWriteSuppressor()
+        let watcherWithSuppressor = PasteboardWatcher(
+            pasteboard: pasteboard,
+            eventBuilder: eventBuilder,
+            suppressor: suppressor
+        )
+
+        var callCount = 0
+        watcherWithSuppressor.onPasteboardChange = { _ in
+            callCount += 1
+        }
+
+        // 首次：正常复制长内容
+        pasteboard.clearContents()
+        pasteboard.setString("original long content that exceeds threshold", forType: .string)
+        watcherWithSuppressor.handlePasteboardChange()
+        XCTAssertEqual(callCount, 1, "首次复制应触发回调")
+
+        // 模拟 F2.1 自我写入：替换剪贴板为文件路径并标记
+        pasteboard.clearContents()
+        pasteboard.setString("/Users/test/Clips/original-long-content.md", forType: .string)
+        let newChangeCount = pasteboard.changeCount
+        suppressor.markSelfWrite(changeCount: newChangeCount)
+
+        // 第二次：自我写入事件应被抑制，不触发回调
+        watcherWithSuppressor.handlePasteboardChange()
+        XCTAssertEqual(callCount, 1, "自我写入事件应被抑制，不触发回调")
+    }
+
+    // MARK: - TC-UT-73：未标记自我写入时正常事件不被抑制
+
+    func testNonSelfWriteEventNotSuppressed() throws
+    {
+        let suppressor = SelfWriteSuppressor()
+        let watcherWithSuppressor = PasteboardWatcher(
+            pasteboard: pasteboard,
+            eventBuilder: eventBuilder,
+            suppressor: suppressor
+        )
+
+        var callCount = 0
+        watcherWithSuppressor.onPasteboardChange = { _ in
+            callCount += 1
+        }
+
+        // 首次复制
+        pasteboard.clearContents()
+        pasteboard.setString("first content", forType: .string)
+        watcherWithSuppressor.handlePasteboardChange()
+        XCTAssertEqual(callCount, 1, "首次复制应触发回调")
+
+        // 第二次：不同内容，未标记自我写入，应正常触发
+        pasteboard.clearContents()
+        pasteboard.setString("second content", forType: .string)
+        watcherWithSuppressor.handlePasteboardChange()
+        XCTAssertEqual(callCount, 2, "未标记自我写入时正常事件应触发回调")
+    }
+
+    // MARK: - TC-UT-74：suppressor 为 nil 时不抑制（F1.x 兼容）
+
+    func testSuppressorNilNoSuppression() throws
+    {
+        let watcherWithoutSuppressor = PasteboardWatcher(
+            pasteboard: pasteboard,
+            eventBuilder: eventBuilder
+        )
+
+        var callCount = 0
+        watcherWithoutSuppressor.onPasteboardChange = { _ in
+            callCount += 1
+        }
+
+        pasteboard.clearContents()
+        pasteboard.setString("content one", forType: .string)
+        watcherWithoutSuppressor.handlePasteboardChange()
+        XCTAssertEqual(callCount, 1)
+
+        pasteboard.clearContents()
+        pasteboard.setString("content two", forType: .string)
+        watcherWithoutSuppressor.handlePasteboardChange()
+        XCTAssertEqual(callCount, 2, "suppressor 为 nil 时不应抑制")
+    }
 }

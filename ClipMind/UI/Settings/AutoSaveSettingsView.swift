@@ -24,10 +24,25 @@ struct AutoSaveSettingsView: View
     /// 新增白名单输入文本
     @State private var newBundleIdText = ""
 
+    /// 长度阈值 TextField 本地字符串（决策 C1：Stepper → TextField）
+    @State private var lengthThresholdText = ""
+
+    /// 文件名长度 TextField 本地字符串（决策 C1：Stepper → TextField）
+    @State private var fileNameLengthText = ""
+
+    /// 长度阈值输入框焦点状态（决策 C4：失焦自动应用）
+    @FocusState private var lengthThresholdFocused: Bool
+
+    /// 文件名长度输入框焦点状态（决策 C4：失焦自动应用）
+    @FocusState private var fileNameLengthFocused: Bool
+
     init(store: AutoSaveSettingsStore = AutoSaveSettingsStore())
     {
         self.store = store
-        self._settings = State(initialValue: store.load())
+        let loaded = store.load()
+        self._settings = State(initialValue: loaded)
+        self._lengthThresholdText = State(initialValue: "\(loaded.lengthThreshold)")
+        self._fileNameLengthText = State(initialValue: "\(loaded.fileNameLength)")
     }
 
     var body: some View
@@ -40,6 +55,7 @@ struct AutoSaveSettingsView: View
             formatSection
             pathFormatSection
             sensitiveSection
+            filePathHistorySection
             responsibilitySection
         }
         .padding()
@@ -146,17 +162,38 @@ struct AutoSaveSettingsView: View
             .accessibilityIdentifier("fileFormatPicker")
             .onChange(of: settings.fileFormat) { _ in saveSettings() }
 
-            Stepper("长度阈值：\(settings.lengthThreshold) 字",
-                    value: $settings.lengthThreshold,
-                    in: AutoSaveSettings.lengthThresholdRange)
-                .accessibilityIdentifier("lengthThresholdStepper")
-                .onChange(of: settings.lengthThreshold) { _ in saveSettings() }
+            // 决策 C1：Stepper → TextField；决策 C4：回车+失焦双保险
+            VStack(alignment: .leading, spacing: 2)
+            {
+                Text("长度阈值（字）")
+                    .font(.caption)
+                TextField("1-10000", text: $lengthThresholdText)
+                    .accessibilityIdentifier("lengthThresholdField")
+                    .focused($lengthThresholdFocused)
+                    .onSubmit { applyLengthThreshold() }
+                    .onChange(of: lengthThresholdFocused) { focused in
+                        if !focused { applyLengthThreshold() }
+                    }
+                Text(lengthThresholdHint)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
 
-            Stepper("文件名长度：\(settings.fileNameLength) 字",
-                    value: $settings.fileNameLength,
-                    in: AutoSaveSettings.fileNameLengthRange)
-                .accessibilityIdentifier("fileNameLengthStepper")
-                .onChange(of: settings.fileNameLength) { _ in saveSettings() }
+            VStack(alignment: .leading, spacing: 2)
+            {
+                Text("文件名长度（字）")
+                    .font(.caption)
+                TextField("1-50", text: $fileNameLengthText)
+                    .accessibilityIdentifier("fileNameLengthField")
+                    .focused($fileNameLengthFocused)
+                    .onSubmit { applyFileNameLength() }
+                    .onChange(of: fileNameLengthFocused) { focused in
+                        if !focused { applyFileNameLength() }
+                    }
+                Text(fileNameLengthHint)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
         }
     }
 
@@ -222,6 +259,22 @@ struct AutoSaveSettingsView: View
         }
     }
 
+    // MARK: - 文件路径进历史
+
+    private var filePathHistorySection: some View
+    {
+        Section("历史显示")
+        {
+            Toggle("文件路径进历史", isOn: $settings.showFilePathInHistory)
+                .accessibilityIdentifier("showFilePathInHistoryToggle")
+                .onChange(of: settings.showFilePathInHistory) { _ in saveSettings() }
+
+            Text("开启后，自动保存的文件路径以可拖拽格式进入历史列表")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+
     // MARK: - 明文责任提示
 
     private var responsibilitySection: some View
@@ -243,5 +296,47 @@ struct AutoSaveSettingsView: View
         LogCategory.ui.logger.debug(
             "AutoSaveSettings updated: isEnabled=\(settings.isEnabled, privacy: .public)"
         )
+    }
+
+    // MARK: - TextField 失焦/回车应用（决策 C2 夹紧 + C3 回退 + C4 双保险）
+
+    /// 长度阈值范围提示文本（决策 C6）
+    private var lengthThresholdHint: String
+    {
+        let range = AutoSaveSettings.lengthThresholdRange
+        return "范围 \(range.lowerBound)-\(range.upperBound) 字，超出范围自动夹紧到边界"
+    }
+
+    /// 文件名长度范围提示文本（决策 C6）
+    private var fileNameLengthHint: String
+    {
+        let range = AutoSaveSettings.fileNameLengthRange
+        return "范围 \(range.lowerBound)-\(range.upperBound) 字，超出范围自动夹紧到边界"
+    }
+
+    /// 应用长度阈值：解析 → 夹紧 → 写回 settings → 持久化 → 同步本地字符串
+    private func applyLengthThreshold()
+    {
+        let clamped = AutoSaveSettings.clampedInt(
+            lengthThresholdText,
+            range: AutoSaveSettings.lengthThresholdRange,
+            fallback: settings.lengthThreshold
+        )
+        settings.lengthThreshold = clamped
+        lengthThresholdText = "\(clamped)"
+        saveSettings()
+    }
+
+    /// 应用文件名长度：解析 → 夹紧 → 写回 settings → 持久化 → 同步本地字符串
+    private func applyFileNameLength()
+    {
+        let clamped = AutoSaveSettings.clampedInt(
+            fileNameLengthText,
+            range: AutoSaveSettings.fileNameLengthRange,
+            fallback: settings.fileNameLength
+        )
+        settings.fileNameLength = clamped
+        fileNameLengthText = "\(clamped)"
+        saveSettings()
     }
 }
