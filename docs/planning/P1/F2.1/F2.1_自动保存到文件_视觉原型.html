@@ -453,7 +453,7 @@
 <body>
     <div class="header">
         <h1>ClipMind 设置</h1>
-        <div class="meta">最后更新：2026-07-21 | 版本：v1.0（基于需求文档 v1.0 + 设计文档 v1.0）</div>
+        <div class="meta">最后更新：2026-07-22 | 版本：v1.1（基于需求文档 v1.1 + 设计文档 v1.1）</div>
     </div>
 
     <div class="container">
@@ -469,7 +469,7 @@
         <div class="content">
             <div class="section-title">自动保存</div>
             <div class="section-desc">
-                <span class="status-indicator active"></span>已启用 · 在白名单 App 中复制长内容时自动保存为文件并替换剪贴板为路径
+                <span class="status-indicator inactive"></span>未启用 · 在白名单 App 中复制长内容时自动保存为文件并替换剪贴板为路径
             </div>
 
             <!-- 总开关 -->
@@ -477,7 +477,7 @@
                 <div class="form-row">
                     <div class="form-label">启用自动保存</div>
                     <div class="form-value">
-                        <div class="switch on" onclick="this.classList.toggle('on')"></div>
+                        <div class="switch" onclick="this.classList.toggle('on')"></div>
                         <span style="font-size: 12px; color: #6e6e70;">关闭后行为与 F1.x 完全一致</span>
                     </div>
                 </div>
@@ -723,5 +723,13 @@
             });
         });
     </script>
+
+    <!--
+    版本记录：
+    | 版本 | 日期 | 变更 |
+    |------|------|------|
+    | v1.0 | 2026-07-21 | 初始版本，基于需求文档 v1.0 + 设计文档 v1.0 |
+    | v1.1 | 2026-07-22 | 总开关默认状态改为关闭（对齐 FR-001），状态指示器改为 inactive，状态文本改为"未启用"，文档基准更新为需求文档 v1.1 + 设计文档 v1.1 |
+    -->
 </body>
 </html>

@@ -1,103 +1,143 @@
-> 最后更新：2026-07-21 | 版本：v1.2
+> 最后更新：2026-07-22 | 版本：v2.0
 
 # F2.1 自动保存到文件 实现计划
 
-> **面向 AI 代理的工作者：** 必需子技能：使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 逐任务实现此计划。步骤使用复选框（`- [ ]`）语法来跟踪进度。
+> **面向 AI 代理的工作者：** 必需子技能：使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 逐任务实现此计划。步骤使用复选框（`- [ ]`）语法来跟踪进度。本计划基于 v1.1 设计文档套件重写，落地 24 条决策（D1~D24）。每个任务都必须严格按 TDD 四步执行（编写失败测试 → 验证失败 → 最小实现 → 验证通过 → commit）。
 
-**目标：** 在白名单 App 中复制长内容时，3 秒内自动保存为文件到指定目录并把剪贴板替换为文件路径，原始内容仍入库 ClipMind 历史。
+**目标：** 在白名单 App（Safari/Chrome/Trae/VSCode/Xcode）中复制长内容（≥长度阈值）时，自动保存为文件（Markdown/纯文本）并把剪贴板替换为文件路径（plainPath/fileURI/markdownLink），同时 F1.x 原内容仍正常入库。F2.1 与 F1.x 入库流程并行执行，互不阻塞（FR-014）。
 
-**架构：** 在 F1.x 既有 `ClipCaptureService.handleClipContent` 入库流程中插入可选闭包钩子（不修改 `init` 签名），触发新增的 `AutoSaveService`。该服务协调白名单检查、长度检查、敏感检查（复用 F1.x `SensitiveDetector`）、文件名生成、冲突处理、文件写入、路径格式化、剪贴板替换，与 F1.x 入库流程互不阻塞。配置通过独立的 `AutoSaveSettingsStore`（UserDefaults 持久化）承载，配置变更立即生效。
+**架构：** 在 PasteboardWatcher 中构造不可变 `CaptureEvent` 快照（含 id/changeCount/content/bundleId/appName/blacklisted/sensitiveResult/f1xConfigSnapshot/f2xConfigSnapshot/timestamp），敏感识别只执行一次（D2）并打包进事件。F1.x 入库同步执行，F2.1 自动保存异步派发到专用串行队列 `DispatchQueue(label:, qos: .utility)`（D7）。自我写入抑制器（`SelfWriteSuppressor`）通过 `markSelfWrite(changeCount:)` + `checkAndReset(changeCount:)` 配合 5 秒超时避免回环（D4）。changeCount 前置条件（D5）保证替换剪贴板后不重复触发。F1.x 黑名单优先于 F2.1（D3，AND 关系：黑名单命中则跳过 F2.1）。
 
-**技术栈：** Swift 5.7+ / macOS 12.4+ / SwiftUI + AppKit / XCTest（单元）/ XCUITest（UI）/ SwiftLint strict / xcodegen / GitHub Actions CI（macOS 15 runner）
-
----
-
-## 1. 必读资料（开始前必读）
-
-| 资料 | 路径 | 用途 |
-|------|------|------|
-| 共享代理规则 | `AGENTS.md` | 项目工作流、Git 提交、禁止事项 |
-| Claude 补充约定 | `CLAUDE.md` | Claude Code 入口规则 |
-| 编码规范 | `docs/CODING_STANDARDS.md` | Allman 大括号、4 空格、日志、并发、测试 |
-| 文档规则 | `.trae/rules/docs.md` | 文档同步规则 |
-| 提交规范 | `.trae/rules/git-commit-message.md` | Conventional Commits |
-| 需求文档 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_需求文档.md` | 14 FR + 10 NFR + 16 AC + 12 约束 |
-| 设计文档 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_设计文档.md` | 12 新增模块 + 7 既有模块 + 10 关键决策 |
-| 视觉原型 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_视觉原型.html` | macOS 设置面板风格 + 8 配置项 + 二次确认弹窗 |
-| 测试用例表 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_测试用例表.md` | 16 AC + 33 单元测试 + 10 UI 可观测性 |
-| 需求审查结果 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_需求文档_审查结果.md` | 3 子代理审查通过 |
-| 设计审查结果 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_设计文档_审查结果.md` | 3 子代理审查通过 |
-| 视觉原型审查 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_视觉原型_审查结果.md` | 3 子代理审查通过 |
-| 测试用例表审查 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_测试用例表_审查结果.md` | 3 子代理审查通过 |
+**技术栈：** Swift 5.7+ / macOS 12.4+ / SwiftUI + AppKit（NSStatusItem、NSPopover、NSPasteboard）/ Foundation（FileManager O_EXCL、POSIX 0600）/ XCTest + XCUITest / SwiftLint strict / xcodegen / Conventional Commits
 
 ---
 
-## 2. Phase 列表
+## 1. 必读资料
 
-| Phase | 目标 | 子计划文件 | 依赖 |
-|-------|------|-----------|------|
-| Phase 0 | 核心保存逻辑：配置模型 + 持久化 + 文件名生成 + 冲突处理 + 路径格式化 + 主服务（含白名单/长度/敏感/写入/替换）+ 全部单元测试 | `phase-0-core-save-logic.md` | 无 |
-| Phase 1 | 集成与 UI：在 `ClipCaptureService` 插入钩子 + 配置面板 UI + AppDelegate 装配 + XCUITest 验证 | `phase-1-integration-ui.md` | Phase 0 完成 |
+执行任何任务前必须完整阅读以下文档（按顺序）：
 
-Phase 0 完成后可独立交付一个"无 UI、无集成"的可测试核心包；Phase 1 把核心包接入 F1.x 捕获流程并暴露配置面板。
-
----
-
-## 3. 文件结构（任务拆分基础）
-
-### 3.1 新增文件
-
-| 文件路径 | 职责 | Phase |
-|---------|------|-------|
-| `ClipMind/AutoSave/AutoSaveSettings.swift` | 配置模型（含 `FileFormat`/`PathFormat` 枚举、默认值常量、`defaultWhitelist`） | 0 |
-| `ClipMind/AutoSave/AutoSaveSettingsStore.swift` | 配置持久化（UserDefaults 包装、范围校验、去重、变更通知） | 0 |
-| `ClipMind/AutoSave/FileNameGenerator.swift` | 文件名生成器（过滤、截断、扩展名）+ 冲突处理器（追加序号） | 0 |
-| `ClipMind/AutoSave/FilePathFormatter.swift` | 路径格式化器（纯路径 / file:// URI / Markdown 链接） | 0 |
-| `ClipMind/AutoSave/AutoSaveService.swift` | 主服务（final class + 串行队列；白名单/长度/敏感/写入/替换；钩子入口） | 0 |
-| `ClipMind/UI/Settings/AutoSaveSettingsView.swift` | 配置面板 UI（8 配置项 + 二次确认弹窗 + 明文责任提示） | 1 |
-| `ClipMindTests/AutoSave/AutoSaveSettingsTests.swift` | 配置模型单元测试 | 0 |
-| `ClipMindTests/AutoSave/AutoSaveSettingsStoreTests.swift` | 配置持久化单元测试（TC-UT-20~23） | 0 |
-| `ClipMindTests/AutoSave/FileNameGeneratorTests.swift` | 文件名生成器单元测试（TC-UT-08~10、TC-AC10） | 0 |
-| `ClipMindTests/AutoSave/FileNameConflictResolverTests.swift` | 冲突处理器单元测试（TC-UT-11~13、TC-AC04） | 0 |
-| `ClipMindTests/AutoSave/FilePathFormatterTests.swift` | 路径格式化器单元测试（TC-UT-14~16、TC-AC11） | 0 |
-| `ClipMindTests/AutoSave/AutoSaveServiceTests.swift` | 主服务单元测试（TC-UT-17~19、TC-UT-24~33、TC-AC06/12/13/14） | 0 |
-| `ClipMindUITests/AutoSaveSettingsUITests.swift` | 配置面板 XCUITest（TC-AC07、TC-AC15、TC-AC16、AC-14 二次确认） | 1 |
-| `ClipMindUITests/AutoSaveBehaviorUITests.swift` | 端到端 XCUITest（TC-AC08 总开关禁用） | 1 |
-| `docs/planning/P1/F2.1/实现计划/manual-acceptance-script.md` | AC-01/02/03/05 手动验收脚本 | 1 |
-
-### 3.2 修改文件
-
-| 文件路径 | 修改内容 | Phase |
-|---------|---------|-------|
-| `ClipMind/Capture/ClipCaptureService.swift` | 新增可选属性 `autoSaveTrigger: ((ClipContent, _ bundleId: String, _ appName: String) -> Void)?`；在 `handleClipContent` 入库前调用（不改 `init` 签名） | 1 |
-| `ClipMind/UI/Settings/SettingsView.swift` | 在 `SettingsTab` 枚举新增 `.autoSave` case；在 `TabView` 新增 `AutoSaveSettingsView()` tab | 1 |
-| `ClipMind/App/ClipMindApp.swift` | `AppDelegate.setupCaptureService` 中初始化 `AutoSaveSettingsStore` + `AutoSaveService`，注入 `autoSaveTrigger` 闭包；`applyUITestOverrides` 中处理 `--UITEST_RESET_AUTOSAVE_SETTINGS` | 1 |
-
-### 3.3 不修改的文件（F-01 约束）
-
-- `ClipMind/Capture/PasteboardWatcher.swift`（既有公共回调不变）
-- `ClipMind/Capture/AppDetector.swift`（应用识别逻辑不变）
-- `ClipMind/Privacy/SensitiveDetector.swift`（敏感识别规则不变）
-- `ClipMind/Privacy/BlacklistService.swift`（黑名单逻辑不变）
-- `ClipMind/Storage/EncryptedStore.swift`（加密数据库 Schema 不变）
-- `ClipMind/Models/AppSettings.swift`（既有配置模型公共字段不变）
-- `ClipMind/Models/ClipItem.swift` / `ClipContent.swift` / `ContentType.swift`（数据模型不变）
-- `ClipMind/Utils/LogCategory.swift`（既有日志分类不变，F2.1 复用 `storage` 与 `privacy`）
+| 序号 | 文档 | 版本 | 路径（相对仓库根） | 用途 |
+|------|------|------|--------------------|------|
+| 1 | 设计文档 | v1.1 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_设计文档.md` | 架构契约，24 条决策（D1~D24）落地依据 |
+| 2 | 需求文档 | v1.1 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_需求文档.md` | 单一需求来源（18 FR + 11 NFR + 22 AC + 14 约束 + F-11 例外） |
+| 3 | 测试用例表 | v1.2 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_测试用例表.md` | 测试契约（49 单元测试 + 14 并发场景 + 22 AC 覆盖矩阵 + 11 NFR 矩阵） |
+| 4 | 视觉原型 | v1.0 | `docs/planning/P1/F2.1/F2.1_自动保存到文件_视觉原型.html` | 配置面板 UI 契约（8 配置项 + 路径预览 + 二次确认） |
+| 5 | 架构修订摘要 | v1.0 | `docs/planning/P1/F2.1/historys/2026-07-22-架构修订摘要.md` | v1.0 → v1.1 修订原因与 24 条决策概览 |
+| 6 | 编码规范 | v1.0 | `docs/CODING_STANDARDS.md` | Allman 大括号 + 4 空格 + LogCategory + 并发规则 |
+| 7 | 项目规则 | v1.0 | `AGENTS.md` + `.trae/rules/docs.md` + `.trae/rules/git-commit-message.md` | 工作流 + 文档同步 + 提交规范 |
+| 8 | F1.x 设计规范 | v1.0 | `docs/planning/P0/F1/F1_ClipMind_设计规范.md` | F1.x 既有模块协作关系（不可修改公共接口） |
 
 ---
 
-## 4. 全局验证命令
+## 2. 24 条决策（D1~D24）落地位置索引
 
-### 4.1 本地允许（不执行 test）
+| 决策 | 摘要 | 落地 Phase | 落地任务 |
+|------|------|-----------|----------|
+| D1 | 事件驱动模型 CaptureEvent 快照 | Phase 0 | 任务 1（CaptureEvent）、任务 12（AutoSaveService 注入） |
+| D2 | 敏感识别只执行一次，结果打包进事件 | Phase 1 | 任务 2（捕获事件构造器） |
+| D3 | F1.x 黑名单优先于 F2.1（AND 关系） | Phase 1 | 任务 2（捕获事件构造器）、任务 3（ClipCaptureService 适配） |
+| D4 | 自我写入抑制器（markSelfWrite + checkAndReset，5s 超时） | Phase 0 | 任务 6（SelfWriteSuppressor） |
+| D5 | changeCount 前置条件（pasteboard.changeCount == event.changeCount） | Phase 0 | 任务 11（ClipboardReplacer）、任务 12（AutoSaveService） |
+| D6 | 配置快照不可变（事件构造阶段读取，异步执行不读实时配置） | Phase 0 | 任务 3（F2xConfigSnapshot）、任务 12（AutoSaveService） |
+| D7 | 轻量检查同步 + 文件 I/O 异步串行队列（100ms 内返回） | Phase 0 | 任务 12（AutoSaveService）、任务 13（PollingHelper） |
+| D8 | 三层测试策略（XCTest 集成 + XCUITest UI + 手动 OS 边界） | 全局 | README §6 + Phase 0 任务 14 + Phase 1 任务 7~9 |
+| D9 | 文件名生成 8 步单一确定顺序 | Phase 0 | 任务 7（FileNameGenerator） |
+| D10 | O_EXCL 原子创建 + 半成品清理 | Phase 0 | 任务 9（FileWriter） |
+| D11 | 总开关默认关闭（D11 修正需求文档 v1.0 的默认开） | Phase 0 | 任务 4（AutoSaveSettings 默认 isEnabled=false） |
+| D12 | 文本输入边界（图片/文件路径列表不触发，100KB 上限） | Phase 0 | 任务 12（AutoSaveService 边界检查） |
+| D13 | 目录异常分级处理（创建失败/写入失败/权限失败） | Phase 0 | 任务 9（FileWriter）、任务 12（AutoSaveService） |
+| D14 | POSIX 0600 文件权限 | Phase 0 | 任务 9（FileWriter） |
+| D15 | 日志白名单 9 字段 + 5 项禁输出 | 全局 | README §7 全局约束 6 + 所有任务日志语句 |
+| D16 | URI 标准编码（file:// URI + Markdown 链接目标 URL 编码） | Phase 0 | 任务 10（FilePathFormatter） |
+| D17 | PollingHelper.waitUntil 轮询（10ms 间隔，3s 超时，禁止 sleep 3） | Phase 0 | 任务 13（PollingHelper） |
+| D18 | XCTest 集成测试覆盖业务逻辑 AC（AC-01~06、08、10~14、17~22） | Phase 0 | 任务 14（XCTest 集成测试） |
+| D19 | XCUITest 只验证 UI 交互（AC-07、09、15、16） | Phase 1 | 任务 7（AutoSaveSettingsUITests）、任务 8（AutoSaveBehaviorUITests） |
+| D20 | 手动测试只验证 OS 边界（Finder 打开/权限弹窗/真实 Safari） | Phase 1 | 任务 9（手动验收脚本） |
+| D21 | 性能测试记录实际耗时并断言 P95 | Phase 0 | 任务 14（性能测试） |
+| D22 | 不修改 F1.x 既有公共接口（F-11 例外：扩展 PasteboardWatcher.onPasteboardChange 回调参数） | Phase 1 | 任务 1（PasteboardWatcher 扩展） |
+| D23 | 配置快照机制（事件构造阶段读取，异步执行期间不读实时配置） | Phase 0 | 任务 3（F2xConfigSnapshot）、任务 12（AutoSaveService） |
+| D24 | 错误恢复不重试旧事件（changeCount 已过期即放弃） | Phase 0 | 任务 12（AutoSaveService） |
+
+---
+
+## 3. Phase 列表
+
+| Phase | 目标 | 子计划文件 | 依赖 | 任务数 |
+|-------|------|-----------|------|--------|
+| Phase 0 | 核心保存逻辑：CaptureEvent、SensitiveMatchResult、F2xConfigSnapshot、AutoSaveSettings、AutoSaveSettingsStore、SelfWriteSuppressor、FileNameGenerator、ConflictResolver、FileWriter、FilePathFormatter、ClipboardReplacer、AutoSaveService、PollingHelper、XCTest 集成测试 | `phase-0-core-save-logic.md` | 无 | 14 |
+| Phase 1 | 集成与 UI：PasteboardWatcher 扩展、捕获事件构造器、ClipCaptureService 适配、AutoSaveSettingsView UI、SettingsView tab、AppDelegate 装配、XCUITest×2、手动验收脚本、集成测试 | `phase-1-integration-ui.md` | Phase 0 完成 | 10 |
+
+**总任务数：** 24 个任务（Phase 0：14，Phase 1：10）
+
+---
+
+## 4. 文件结构
+
+### 4.1 Phase 0 新增文件（14 个）
+
+| 文件路径 | 职责 | 对应任务 |
+|----------|------|----------|
+| `ClipMind/AutoSave/Models/CaptureEvent.swift` | 不可变事件快照 struct（D1/D6） | 任务 1 |
+| `ClipMind/AutoSave/Models/SensitiveMatchResult.swift` | 敏感识别结果 struct（D2） | 任务 2 |
+| `ClipMind/AutoSave/Models/F2xConfigSnapshot.swift` | F2.1 配置快照 struct（D6/D23） | 任务 3 |
+| `ClipMind/AutoSave/AutoSaveSettings.swift` | 配置模型 + FileFormat/PathFormat 枚举 + 默认值（D11 总开关默认关闭） | 任务 4 |
+| `ClipMind/AutoSave/AutoSaveSettingsStore.swift` | 配置持久化（UserDefaults）+ 范围校验 + 白名单去重 | 任务 5 |
+| `ClipMind/AutoSave/SelfWriteSuppressor.swift` | 自我写入抑制器（D4 markSelfWrite + checkAndReset，5s 超时） | 任务 6 |
+| `ClipMind/AutoSave/FileNameGenerator.swift` | 文件名生成 8 步（D9） | 任务 7 |
+| `ClipMind/AutoSave/ConflictResolver.swift` | 冲突处理器（数字后缀递增） | 任务 8 |
+| `ClipMind/AutoSave/FileWriter.swift` | 文件写入器（D10 O_EXCL + D14 0600 + D13 异常分级） | 任务 9 |
+| `ClipMind/AutoSave/FilePathFormatter.swift` | 路径格式化器（D16 URI 编码） | 任务 10 |
+| `ClipMind/AutoSave/ClipboardReplacer.swift` | 剪贴板替换器（D5 changeCount 前置条件） | 任务 11 |
+| `ClipMind/AutoSave/AutoSaveService.swift` | 主服务（D7 串行队列 + D12 边界 + D24 不重试） | 任务 12 |
+| `ClipMind/Utils/PollingHelper.swift` | 轮询工具（D17 10ms 间隔，3s 超时） | 任务 13 |
+| `ClipMindTests/AutoSave/*.swift` | 单元测试 + 集成测试 + 性能测试（D8/D18/D21） | 任务 14 |
+| `ClipMindTests/Fixtures/CaptureEventFixtures.swift` | 测试 Fixtures（D18 测试夹具） | 任务 14 |
+
+### 4.2 Phase 1 新增文件（5 个）
+
+| 文件路径 | 职责 | 对应任务 |
+|----------|------|----------|
+| `ClipMind/Capture/CaptureEventBuilder.swift` | 捕获事件构造器（B0，构造 CaptureEvent 含敏感识别与配置快照） | 任务 2 |
+| `ClipMind/UI/Settings/AutoSaveSettingsView.swift` | 配置面板 SwiftUI 视图（8 配置项 + 路径预览 + 二次确认） | 任务 4 |
+| `ClipMindUITests/AutoSaveSettingsUITests.swift` | AC-07/15/16 UI 测试（D19） | 任务 7 |
+| `ClipMindUITests/AutoSaveBehaviorUITests.swift` | AC-09 UI 测试（D19） | 任务 8 |
+| `docs/planning/P1/F2.1/实现计划/manual-acceptance-script.md` | 手动验收脚本（D20 OS 边界） | 任务 9 |
+
+### 4.3 Phase 1 修改文件（4 个，F-11 例外仅 1 处）
+
+| 文件路径 | 修改内容 | 对应任务 | F-11 例外 |
+|----------|----------|----------|-----------|
+| `ClipMind/Capture/PasteboardWatcher.swift` | 扩展 `onPasteboardChange` 回调参数为 `CaptureEvent`（F-11 例外条款） | 任务 1 | ✅ 是 |
+| `ClipMind/Capture/ClipCaptureService.swift` | 适配 CaptureEvent，调用 AutoSaveService.handle(event:)，F1.x 入库流程不变 | 任务 3 | 否（仅内部调用） |
+| `ClipMind/UI/Settings/SettingsView.swift` | TabView 新增"自动保存"tab | 任务 5 | 否（新增 case） |
+| `ClipMind/App/ClipMindApp.swift` | AppDelegate 装配 AutoSaveService 与 SelfWriteSuppressor | 任务 6 | 否（仅装配） |
+
+### 4.4 不修改文件（F1.x 既有公共接口锁定）
+
+- `ClipMind/Models/ClipItem.swift`、`ClipMind/Models/ClipContent.swift`
+- `ClipMind/Storage/EncryptedStore.swift`
+- `ClipMind/Capture/SensitiveDetector.swift`（仅读取其结果，不修改接口）
+- `ClipMind/Capture/AppDetector.swift`
+- `ClipMind/ML/LocalEmbeddingService.swift`、`ClipMind/Classify/ClassificationService.swift`
+- F1.x 既有设置面板分区（`APIKeyConfigView.swift`、`PrivacySettingsView.swift`、`GeneralSettingsView.swift`）
+
+---
+
+## 5. 全局验证命令
+
+### 5.1 本地允许执行的验证
 
 ```bash
-# 生成 Xcode 工程（修改 project.yml 后需要；F2.1 新增目录与文件不需要修改 project.yml，因为 sources 指向 ClipMind 目录）
+# 工作目录
+cd /Users/dengdeng/Working/Competition/ClipMind-worktrees/feature/F2.1-auto-save-to-file
+
+# 生成 Xcode 工程（修改 project.yml 后必跑）
 xcodegen generate
 
-# SwiftLint strict（每次 commit 含 Swift 代码前必跑）
+# SwiftLint strict（任何 Swift 改动 commit 前必跑，未通过不得提交）
 swiftlint lint --strict
 
-# 编译检查（不跑测试，本地允许）
+# 快速编译检查（验证类型一致性与编译错误）
 xcodebuild build \
   -project ClipMind.xcodeproj \
   -scheme ClipMind \
@@ -107,96 +147,102 @@ xcodebuild build \
   CODE_SIGNING_REQUIRED=NO \
   CODE_SIGNING_ALLOWED=NO
 
-# 单个 XCTest 文件快速验证（仅用于 Phase 0 单元测试快速反馈，不替代 CI）
-# 注意：必须用 -only-testing-option 限定到具体测试类，避免触发其他测试
+# 单文件单元测试（Phase 0 任务验证，-only-testing 限定单个测试类）
 xcodebuild test \
   -project ClipMind.xcodeproj \
   -scheme ClipMind \
   -destination 'platform=macOS' \
   -configuration Debug \
-  ARCHS=arm64 \
-  ONLY_ACTIVE_ARCH=YES \
-  CODE_SIGN_IDENTITY="-" \
-  CODE_SIGNING_REQUIRED=NO \
-  CODE_SIGNING_ALLOWED=NO \
+  ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
+  CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
   -only-testing:'ClipMindTests/AutoSaveSettingsTests'
 ```
 
-### 4.2 CI 必跑（push 后自动）
+### 5.2 CI 必跑（本地不执行）
 
-GitHub Actions（`.github/workflows/ci.yml`）在 macOS 15 runner 上执行：
+```bash
+# 全量测试（CI 兜底，本地禁止执行以避免 XCUITest 与全量回归开销）
+xcodebuild test \
+  -project ClipMind.xcodeproj \
+  -scheme ClipMind \
+  -destination 'platform=macOS' \
+  -configuration Debug \
+  ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
+  CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+```
 
-1. `xcodegen generate`
-2. `swiftlint lint --strict --reporter github-actions-logging`
-3. `xcodebuild build`（编译）
-4. `xcodebuild test`（全量回归 + XCUITest）
+### 5.3 失败处理
 
-**禁止本地执行全量 `xcodebuild test`**，所有全量回归与 XCUITest 必须延迟到 push 后走 CI。本地仅允许 `xcodebuild build` 与单文件 `-only-testing` 单元测试快速反馈。
-
-**XCUITest 附件上传**：所有 XCUITest 类（`AutoSaveSettingsViewComponentsTests`、`AutoSaveSettingsUITests`、`AutoSaveBehaviorUITests`）的 `tearDown()` 会通过 `XCTAttachment` 保存测试结束时的截图作为失败诊断证据。GitHub Actions test-results artifact 自动收集所有附件，便于在 CI 失败时定位问题。
-
-### 4.3 失败处理
-
-- SwiftLint strict 失败：不得 commit
-- 编译失败：不得 commit，修复后重跑
-- 单元测试失败：不得 commit，修复后重跑
-- CI 失败：阻塞合并，根据 CI 上传的 test-results artifact 定位失败
-
----
-
-## 5. 最终验收方式
-
-### 5.1 Phase 0 验收
-
-- 5 个新增 Swift 文件存在
-- 6 个单元测试文件存在
-- 本地 `swiftlint lint --strict` 通过
-- 本地 `xcodebuild build` 通过
-- 本地单文件 `-only-testing` 单元测试通过（覆盖 TC-UT-01~33、TC-AC04、TC-AC06、TC-AC10、TC-AC11、TC-AC12、TC-AC13、TC-AC14）
-- CI 全量回归通过
-
-### 5.2 Phase 1 验收
-
-- 3 个修改文件改动完成（`ClipCaptureService.swift`、`SettingsView.swift`、`ClipMindApp.swift`）
-- 2 个新增 UI 文件存在（`AutoSaveSettingsView.swift`、`ClipMindUITests/AutoSave*.swift`）
-- 本地 `swiftlint lint --strict` 通过
-- 本地 `xcodebuild build` 通过
-- CI XCUITest 通过（覆盖 AC-01、AC-05 烟雾、AC-07、AC-08、AC-09、TC-AC15、TC-AC16、AC-14 二次确认）
-- 手动验收（仅 CI 无法覆盖的场景）：
-  - 在真实 Safari 中复制 100 字内容，3 秒内保存目录出现 Markdown 文件，剪贴板替换为路径
-  - 在真实"备忘录"中复制 100 字内容，保存目录不出现新文件
-  - 在真实 Safari 中复制 <50 字内容，保存目录不出现新文件
-  - 截图存放到 `docs/planning/P1/F2.1/screenshots/`，录屏存放到 `docs/planning/P1/F2.1/recordings/`
-
-### 5.3 整体验收
-
-- 16 条 AC（AC-01~AC-16）全部覆盖
-- 33 条单元测试（TC-UT-01~33）全部覆盖
-- 10 项 UI 可观测性矩阵全部覆盖
-- 文档同步：实现完成后更新 `F2.1_自动保存到文件_测试用例表.md` 的覆盖状态（将 ❌ MISSING 改为 ✅ COVERED）
-- 在 `docs/planning/P1/F2.1/historys/` 追加 `YYYY-MM-DD-实现计划完成.md` 日志
+- **SwiftLint strict 失败**：必须修复后才能 commit，禁止用 `// swiftlint:disable` 绕过（除非有明确架构理由并在 commit message 说明）。
+- **xcodebuild build 失败**：修复类型一致性错误（D 决策落地位置索引中的类型签名必须前后一致）。
+- **xcodebuild test -only-testing 失败**：按 TDD 循环修复，不得跳过测试或降低断言强度。
+- **XCUITest 失败（仅 CI）**：由 CI 报告，本地不执行；修复后由 CI 重新验证。
 
 ---
 
-## 6. 全局约束（每步必检）
+## 6. 三层测试策略（D8）
 
-1. **TDD 优先**：每个任务先写失败测试，再写实现，再验证通过
-2. **每步即提交**：每个任务完成后 `git add` + `git commit`，遵循 Conventional Commits（如 `feat(F2.1): 实现 FileNameGenerator`）
-3. **SwiftLint strict**：每次 commit 含 Swift 代码前必跑 `swiftlint lint --strict`
-4. **Allman 大括号 + 4 空格**：所有 Swift 代码遵守
-5. **LogCategory 日志**：禁止 `print()`，使用 `LogCategory.storage` 或 `LogCategory.privacy`
-6. **不修改 F1.x 既有公共接口**：`PasteboardWatcher`、`AppDetector`、`SensitiveDetector`、`BlacklistService`、`EncryptedStore`、`AppSettings`、`ClipItem`、`ClipContent`、`ContentType` 不变；`ClipCaptureService.init` 签名不变（只新增可选属性）
-7. **macOS 12.4 兼容性**：不使用 `NavigationStack`、`@Observable` 宏、`SwiftData` 等 macOS 13+ 独占 API
-8. **不引入新的外部依赖**：仅使用 Foundation / AppKit / SwiftUI / OSLog / SQLite.swift（既有）
-9. **类型一致性**：后续任务使用的类型、方法签名、属性名必须与前面任务定义的一致
-10. **禁止占位符**：每个步骤必须包含实际代码或命令，不得出现"待定"/"TODO"/"后续实现"/"类似任务 N"/"添加适当的错误处理"等模糊描述
+| 层级 | 工具 | 覆盖 AC | 执行位置 | 负责任务 |
+|------|------|---------|----------|----------|
+| 第 1 层：XCTest 集成测试 | XCTest | AC-01~06、08、10~14、17~22（业务逻辑部分） | 本地 `-only-testing` + CI 全量 | Phase 0 任务 14、Phase 1 任务 10 |
+| 第 2 层：XCUITest UI 测试 | XCUITest | AC-07（配置面板修改）、AC-09（保存目录异常弹窗）、AC-15（白名单增删）、AC-16（配置持久化） | 仅 CI（本地禁止执行） | Phase 1 任务 7、8 |
+| 第 3 层：手动 OS 边界测试 | 人工 | AC-01（真实 Safari 复制）、AC-02（真实 Notes 复制）、AC-03（Finder 打开文件）、AC-05（历史条目可见）、AC-17~22（NFR 性能与兼容性） | 开发者本机手动 | Phase 1 任务 9 |
+
+**原则（D8）：** XCTest 覆盖所有业务逻辑可验证的 AC；XCUITest 只验证 UI 交互（不重复 XCTest 已覆盖的逻辑）；手动测试只验证 OS 边界（真实 App 行为、权限弹窗、Finder 集成），不验证可自动化的逻辑。
 
 ---
 
-## 版本记录
+## 7. 全局约束（每步必检，共 10 条）
 
-| 版本 | 日期 | 变更说明 |
-|------|------|---------|
-| v1.0 | 2026-07-21 | 初始版本，writing-plans skill 产出，含总计划 + Phase 0/Phase 1 子计划，覆盖 14 FR + 16 AC + 33 单元测试 + 10 UI 可观测性 |
-| v1.1 | 2026-07-21 | 修复 check-plan 发现的 9 项必须修复问题：修正 Phase 0 文件数量为 5；CI XCUITest 覆盖范围补充 AC-01/05/07/09；4.2 节追加 XCUITest 附件上传说明 |
-| v1.2 | 2026-07-21 | 修复第二轮 check-plan 发现的 4 项必须修复问题：3.1 节新增文件表追加 `docs/planning/P1/F2.1/实现计划/manual-acceptance-script.md`（AC-01/02/03/05 手动验收脚本，Phase 1），与 phase-1 1.1 节"创建 1 个手动验收脚本"声明一致。 |
+1. **禁止占位符**：任何步骤不得出现"待定"/"TODO"/"后续实现"/"类似任务 N"/"添加适当的错误处理"等模糊描述。每个代码步骤必须包含完整可执行代码。
+2. **TDD 优先**：每个任务严格按"编写失败测试 → 运行验证失败 → 编写最少实现 → 运行验证通过 → commit"五步执行。不得跳过失败验证步骤。
+3. **每步即提交**：每个任务完成后立即 commit，commit message 遵守 Conventional Commits：`<type>(F2.1): <subject>`。type 限定为 `feat`/`fix`/`test`/`refactor`/`docs`/`chore`。
+4. **SwiftLint strict**：任何包含 Swift 代码的 commit 前必须运行 `swiftlint lint --strict` 并通过。禁止用 `// swiftlint:disable` 绕过。
+5. **Allman 大括号 + 4 空格缩进**：所有 Swift 代码必须遵守 `docs/CODING_STANDARDS.md` §4.1。类型/函数/初始化器/控制流的大括号起始行必须独占一行。
+6. **LogCategory 日志白名单（D15）**：日志只能输出以下 9 个字段：`module`、`operation`、`phase`、`result`、`errorCode`、`retryCount`、`changeCount`、`contentLength`、`fileName`。禁止输出：剪贴板原文、文件完整路径（含用户名）、密码、Token、验证码、bundleId 与 appName 的明文组合。使用 `LogCategory.capture` / `.storage` / `.ui` / `.app`。
+7. **不修改 F1.x 既有公共接口（F-11 例外）**：F1.x 既有模块的 `public`/`open` 接口不得修改。唯一例外是 F-11：扩展 `PasteboardWatcher.onPasteboardChange` 回调参数为 `CaptureEvent`（Phase 1 任务 1）。
+8. **macOS 12.4 兼容性**：不得使用 macOS 13+ 专属 API（如 `NavigationStack`、`@Observable`）。SwiftUI 使用 `NavigationView` + `ObservableObject`。`DispatchQueue` 与 `FileManager` API 必须在 macOS 12.4 可用。
+9. **不引入新外部依赖**：仅使用 Foundation/AppKit/SwiftUI/XCTest/XCUITest + 既有 SQLite.swift。不得新增 SPM 依赖。
+10. **类型一致性**：后续任务中使用的类型、方法签名、属性名必须与前面任务中定义的完全一致。例如 `CaptureEvent.changeCount` 在所有任务中必须是 `Int` 类型，`AutoSaveService.handle(event:)` 在所有任务中必须是 `(CaptureEvent) -> Void`。
+
+---
+
+## 8. 最终验收方式
+
+### 8.1 Phase 0 验收（核心保存逻辑）
+
+- [ ] 14 个任务全部 commit 完成，commit history 可查
+- [ ] `swiftlint lint --strict` 通过
+- [ ] `xcodebuild build` 通过
+- [ ] 49 条单元测试（TC-UT-01~49）全部通过（本地 `-only-testing` 逐文件验证）
+- [ ] 14 条并发场景测试（TC-CC-01~14）全部通过
+- [ ] 性能测试（D21）记录实际耗时并断言 P95
+- [ ] AC-04、AC-06、AC-10、AC-11、AC-12、AC-13、AC-14、AC-17~22 的 XCTest 部分通过
+
+### 8.2 Phase 1 验收（集成与 UI）
+
+- [ ] 10 个任务全部 commit 完成
+- [ ] `swiftlint lint --strict` 通过
+- [ ] `xcodebuild build` 通过
+- [ ] F1.x 既有单元测试全部回归通过（本地 `-only-testing` 验证关键类）
+- [ ] XCUITest（AC-07/09/15/16）由 CI 验证通过（本地不执行）
+- [ ] 手动验收脚本（AC-01/02/03/05/17~22）由开发者本机执行并记录结果
+
+### 8.3 整体验收（F2.1 功能完整交付）
+
+- [ ] 22 条 AC（AC-01~22）全部覆盖：XCTest 覆盖业务逻辑部分，XCUITest 覆盖 UI 交互部分，手动测试覆盖 OS 边界部分
+- [ ] 11 条 NFR（NFR-01~11）全部满足：性能（NFR-01~05）、可靠性（NFR-06~08）、安全（NFR-09~10）、兼容性（NFR-11）
+- [ ] 14 条约束（C-01~14）全部遵守
+- [ ] F-11 例外条款是唯一对 F1.x 既有公共接口的修改
+- [ ] 24 条决策（D1~D24）全部落地，可在代码中追溯
+
+---
+
+## 9. 版本记录
+
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v2.0 | 2026-07-22 | 基于 v1.1 设计文档套件完全重写：落地 24 条决策（D1~D24），新增 CaptureEvent/SensitiveMatchResult/F2xConfigSnapshot/SelfWriteSuppressor/FileWriter/ClipboardReplacer/PollingHelper 7 个模块，Phase 0 从 9 任务扩展为 14 任务，Phase 1 从 7 任务扩展为 10 任务，引入三层测试策略（D8）与日志白名单（D15） |
+| v1.2 | 2026-07-21 | 基于 v1.0 设计的旧版计划（已被 v2.0 替换） |
+| v1.1 | 2026-07-20 | 旧版初稿 |
+| v1.0 | 2026-07-19 | 旧版初稿 |
