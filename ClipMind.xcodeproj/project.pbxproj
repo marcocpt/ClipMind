@@ -111,6 +111,7 @@
 		B05C00B282972754DD8B9AF0 /* AutoSaveConcurrencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE161981845D4D086873D3B /* AutoSaveConcurrencyTests.swift */; };
 		B0EF50AFB4D773CA27277F30 /* PasteboardWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68549B8C3D2B23F12A5BED75 /* PasteboardWatcher.swift */; };
 		B1691C8F0FEABE7D136AB780 /* AutoSaveSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E61E8B108ADF7F9B2F82AF32 /* AutoSaveSettingsStore.swift */; };
+		B22DDC69B6F8D0346BC5993F /* AutoSaveSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7935CC53B02BBBB77C084742 /* AutoSaveSettingsView.swift */; };
 		B2B8CBA09173A237203ECB80 /* AutoSaveSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E04B3BCEDE19176C18F1885F /* AutoSaveSettings.swift */; };
 		B4A8B7DD3E48D04312E91293 /* LayoutConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5872E9B5D6F6F8ACAF6BC5D8 /* LayoutConstants.swift */; };
 		B98BFF2606B3BD5E0C2CD533 /* DefaultBlacklistTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2EB6BA90539D3F2B3E68D1 /* DefaultBlacklistTests.swift */; };
@@ -122,6 +123,7 @@
 		C4B895B2B488B0C870E2B9F8 /* MultiProviderLLMServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E345833B2DF4D17967D1EDBC /* MultiProviderLLMServiceTests.swift */; };
 		C542F568C195941D3D4B4D1B /* CleanupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85D7BA4202854BE0C73D609C /* CleanupServiceTests.swift */; };
 		C5AEC1F71E40638097EC44BA /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5453684DC1564FCFC943C9C /* StatusItemController.swift */; };
+		C87E87CF446A925F1297F3DE /* AutoSaveSettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB48C0A1A8FA2F5906AA2696 /* AutoSaveSettingsViewTests.swift */; };
 		CA302DD471B8590161C27BEA /* GlobalHotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A8080FEF0A7A06292BBF1F /* GlobalHotkeyService.swift */; };
 		CA4946890322645538C05FB7 /* AppDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823A498B061B251B3B6CA366 /* AppDetector.swift */; };
 		CA982445FAC93217B189F234 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = 3D8DE6DF230DD5FA5003DF8C /* SQLite */; };
@@ -249,6 +251,7 @@
 		71D402E808160065FE9E7575 /* AppDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetectorTests.swift; sourceTree = "<group>"; };
 		76718298C97DCB9738ADDEF3 /* FileWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWriter.swift; sourceTree = "<group>"; };
 		78922B73B4C72316CE935F12 /* DeduplicationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeduplicationTests.swift; sourceTree = "<group>"; };
+		7935CC53B02BBBB77C084742 /* AutoSaveSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettingsView.swift; sourceTree = "<group>"; };
 		7C670D2189867D5E2F4A9671 /* EncryptedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedStore.swift; sourceTree = "<group>"; };
 		7FA748543F08AF929614A1C2 /* TodoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoItem.swift; sourceTree = "<group>"; };
 		823A498B061B251B3B6CA366 /* AppDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetector.swift; sourceTree = "<group>"; };
@@ -326,6 +329,7 @@
 		E59153AE33F9659029A0BEA1 /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
 		E61E8B108ADF7F9B2F82AF32 /* AutoSaveSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettingsStore.swift; sourceTree = "<group>"; };
 		EA1BDBFA5937B3405FB3D17F /* sensitive_samples.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sensitive_samples.json; sourceTree = "<group>"; };
+		EB48C0A1A8FA2F5906AA2696 /* AutoSaveSettingsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettingsViewTests.swift; sourceTree = "<group>"; };
 		EF0DB96891BD84675CD39AF5 /* FilePathFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePathFormatterTests.swift; sourceTree = "<group>"; };
 		F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMindTests.swift; sourceTree = "<group>"; };
 		F45065D85CAD45C8E604E06A /* AppIconAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconAssetTests.swift; sourceTree = "<group>"; };
@@ -470,6 +474,7 @@
 		6A6FAD4946013532FCE5F51E /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				EB48C0A1A8FA2F5906AA2696 /* AutoSaveSettingsViewTests.swift */,
 				A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */,
 				34A320A2C325CDFC51979086 /* PermissionIconSymbolTests.swift */,
 			);
@@ -814,6 +819,7 @@
 			isa = PBXGroup;
 			children = (
 				0158AFEC98DEF7010FF07BA5 /* APIKeyConfigView.swift */,
+				7935CC53B02BBBB77C084742 /* AutoSaveSettingsView.swift */,
 				2E45398F36D9B149271B1E5E /* BlacklistManagementView.swift */,
 				6F6AD18B17E42B3C052D7BD4 /* GeneralSettingsView.swift */,
 				66FAEA1A8F6257627635F860 /* HotkeyRecorder.swift */,
@@ -963,6 +969,7 @@
 				3818BAF25FEB33169E8B8F21 /* AutoSaveService.swift in Sources */,
 				B2B8CBA09173A237203ECB80 /* AutoSaveSettings.swift in Sources */,
 				B1691C8F0FEABE7D136AB780 /* AutoSaveSettingsStore.swift in Sources */,
+				B22DDC69B6F8D0346BC5993F /* AutoSaveSettingsView.swift in Sources */,
 				EA97705B79A3BFD07E645084 /* BlacklistEntry.swift in Sources */,
 				DB5971D08DA6334C80621EFC /* BlacklistManagementView.swift in Sources */,
 				688F6EE2D610010D12C9CDD7 /* BlacklistService.swift in Sources */,
@@ -1045,6 +1052,7 @@
 				33319B95DDEB5A6ACFE2D80B /* AutoSaveServiceTests.swift in Sources */,
 				0D55538AF23C931B59612B39 /* AutoSaveSettingsStoreTests.swift in Sources */,
 				FD7ED8760842D9E46B1CA799 /* AutoSaveSettingsTests.swift in Sources */,
+				C87E87CF446A925F1297F3DE /* AutoSaveSettingsViewTests.swift in Sources */,
 				1CCB8A859D6CB2078D5356FE /* BlacklistServiceTests.swift in Sources */,
 				5AD99B75D6C26A3279E75DEB /* CaptureEventBuilderTests.swift in Sources */,
 				EF07AE02A1EB27D7FDD9FADB /* CaptureEventFixtures.swift in Sources */,
