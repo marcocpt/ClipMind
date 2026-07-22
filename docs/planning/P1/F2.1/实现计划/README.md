@@ -1,4 +1,4 @@
-> 最后更新：2026-07-22 | 版本：v2.1
+> 最后更新：2026-07-22 | 版本：v2.2
 
 # F2.1 自动保存到文件 实现计划
 
@@ -98,7 +98,7 @@
 | 文件路径 | 职责 | 对应任务 |
 |----------|------|----------|
 | `ClipMind/Capture/CaptureEventBuilder.swift` | 捕获事件构造器（B0，构造 CaptureEvent 含敏感识别与配置快照） | 任务 2 |
-| `ClipMind/UI/Settings/AutoSaveSettingsView.swift` | 配置面板 SwiftUI 视图（8 配置项 + 路径预览 + 二次确认） | 任务 4 |
+| `ClipMind/UI/Settings/AutoSaveSettingsView.swift` | 配置面板 SwiftUI 视图（8 配置项 + 路径预览 + 二次确认）。长度阈值/文件名长度控件类型变更：Stepper → TextField + @FocusState 失焦逻辑（决策 C1~C6，详见 `historys/2026-07-22-配置面板长度阈值改为TextField.md`） | 任务 4 |
 | `ClipMindUITests/AutoSaveSettingsUITests.swift` | AC-07/15/16 UI 测试（D19） | 任务 7 |
 | `ClipMindUITests/AutoSaveBehaviorUITests.swift` | AC-09 UI 测试（D19） | 任务 8 |
 | `docs/planning/P1/F2.1/实现计划/manual-acceptance-script.md` | 手动验收脚本（D20 OS 边界） | 任务 9 |
@@ -243,6 +243,7 @@ xcodebuild test \
 | 版本 | 日期 | 变更 |
 |------|------|------|
 | v2.1 | 2026-07-22 | 同步 §8.1/§8.2/§8.3 验收清单勾选状态：本地已验证项勾选（commit history/swiftlint/build/单元测试/并发测试/性能测试/F1.x 回归），§8.3 代码评审确认项勾选（约束/F-11/24 决策），XCUITest 与手动 OS 边界测试项保留 [ ] 待 CI 与开发者执行 |
+| v2.2 | 2026-07-22 | 配置面板长度阈值/文件名长度控件从 Stepper 改为 TextField（决策 C1~C6，详见 `historys/2026-07-22-配置面板长度阈值改为TextField.md`）。§4.2 Phase 1 新增文件表 AutoSaveSettingsView.swift 备注控件类型变更（Stepper → TextField + @FocusState 失焦逻辑）。新增 AutoSaveSettings.clampedInt 静态方法（决策 C2 夹紧 + C3 回退）。验证：SwiftLint 0 violations，xcodebuild build SUCCEEDED，ClipMindTests 449 tests 0 failures（含新增 8 个 clampedInt 测试 case），UI 测试环境问题已 stash 验证非本次改动回归 |
 | v2.0 | 2026-07-22 | 基于 v1.1 设计文档套件完全重写：落地 24 条决策（D1~D24），新增 CaptureEvent/SensitiveMatchResult/F2xConfigSnapshot/SelfWriteSuppressor/FileWriter/ClipboardReplacer/PollingHelper 7 个模块，Phase 0 从 9 任务扩展为 14 任务，Phase 1 从 7 任务扩展为 10 任务，引入三层测试策略（D8）与日志白名单（D15） |
 | v1.2 | 2026-07-21 | 基于 v1.0 设计的旧版计划（已被 v2.0 替换） |
 | v1.1 | 2026-07-20 | 旧版初稿 |

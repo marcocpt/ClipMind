@@ -65,6 +65,23 @@ public struct AutoSaveSettings: Codable, Equatable, Sendable
     public static let lengthThresholdRange = 1...10000
     public static let fileNameLengthRange = 1...50
 
+    /// 解析字符串为 Int，越界夹紧到 range 边界，空值/非数字/空白回退到 fallback。
+    /// 决策 C2（夹紧到边界）+ C3（空值/非数字回退到当前值）。
+    /// - Parameters:
+    ///   - text: 用户输入字符串
+    ///   - range: 合法范围闭区间
+    ///   - fallback: 解析失败时的回退值
+    /// - Returns: 夹紧后的整数
+    public static func clampedInt(_ text: String, range: ClosedRange<Int>, fallback: Int) -> Int
+    {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let value = Int(trimmed) else
+        {
+            return fallback
+        }
+        return min(max(value, range.lowerBound), range.upperBound)
+    }
+
     public static let defaultWhitelist: [String] = [
         "com.apple.Safari",
         "com.google.Chrome",

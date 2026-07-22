@@ -78,4 +78,127 @@ final class AutoSaveSettingsTests: XCTestCase
         let rhs = AutoSaveSettings()
         XCTAssertEqual(lhs, rhs)
     }
+
+    // MARK: - TC-UT-70：clampedInt 静态方法 - 字符串解析与夹紧
+
+    /// 验证 clampedInt 静态方法对各种输入的处理：
+    /// - 有效数字：直接返回
+    /// - 越界：夹紧到边界
+    /// - 空值/非数字/空白：回退到 fallback
+    /// 决策 C2（夹紧到边界）+ C3（空值/非数字回退到当前值）
+
+    func testClampedIntParsesValidNumber() throws
+    {
+        let result = AutoSaveSettings.clampedInt(
+            "100",
+            range: AutoSaveSettings.lengthThresholdRange,
+            fallback: 50
+        )
+        XCTAssertEqual(result, 100, "有效数字应直接返回")
+    }
+
+    func testClampedIntClampsAboveRange() throws
+    {
+        let result = AutoSaveSettings.clampedInt(
+            "10001",
+            range: AutoSaveSettings.lengthThresholdRange,
+            fallback: 50
+        )
+        XCTAssertEqual(result, 10000, "越界上界应夹紧到 upperBound")
+    }
+
+    func testClampedIntClampsBelowRange() throws
+    {
+        let result = AutoSaveSettings.clampedInt(
+            "0",
+            range: AutoSaveSettings.lengthThresholdRange,
+            fallback: 50
+        )
+        XCTAssertEqual(result, 1, "越界下界应夹紧到 lowerBound")
+    }
+
+    func testClampedIntClampsNegative() throws
+    {
+        let result = AutoSaveSettings.clampedInt(
+            "-5",
+            range: AutoSaveSettings.lengthThresholdRange,
+            fallback: 50
+        )
+        XCTAssertEqual(result, 1, "负数应夹紧到 lowerBound")
+    }
+
+    func testClampedIntEmptyFallback() throws
+    {
+        let result = AutoSaveSettings.clampedInt(
+            "",
+            range: AutoSaveSettings.lengthThresholdRange,
+            fallback: 50
+        )
+        XCTAssertEqual(result, 50, "空字符串应回退到 fallback")
+    }
+
+    func testClampedIntNonNumericFallback() throws
+    {
+        let result = AutoSaveSettings.clampedInt(
+            "abc",
+            range: AutoSaveSettings.lengthThresholdRange,
+            fallback: 50
+        )
+        XCTAssertEqual(result, 50, "非数字应回退到 fallback")
+    }
+
+    func testClampedIntWhitespaceFallback() throws
+    {
+        let result = AutoSaveSettings.clampedInt(
+            "   ",
+            range: AutoSaveSettings.lengthThresholdRange,
+            fallback: 50
+        )
+        XCTAssertEqual(result, 50, "纯空白应回退到 fallback")
+    }
+
+    // MARK: - TC-UT-71：clampedInt 套用 fileNameLengthRange
+
+    func testClampedIntFileNameLengthRange() throws
+    {
+        XCTAssertEqual(
+            AutoSaveSettings.clampedInt(
+                "30",
+                range: AutoSaveSettings.fileNameLengthRange,
+                fallback: 20
+            ),
+            30,
+            "fileNameLength 范围内有效数字应直接返回"
+        )
+
+        XCTAssertEqual(
+            AutoSaveSettings.clampedInt(
+                "100",
+                range: AutoSaveSettings.fileNameLengthRange,
+                fallback: 20
+            ),
+            50,
+            "fileNameLength 越界上界应夹紧到 50"
+        )
+
+        XCTAssertEqual(
+            AutoSaveSettings.clampedInt(
+                "0",
+                range: AutoSaveSettings.fileNameLengthRange,
+                fallback: 20
+            ),
+            1,
+            "fileNameLength 越界下界应夹紧到 1"
+        )
+
+        XCTAssertEqual(
+            AutoSaveSettings.clampedInt(
+                "",
+                range: AutoSaveSettings.fileNameLengthRange,
+                fallback: 20
+            ),
+            20,
+            "fileNameLength 空字符串应回退到 fallback"
+        )
+    }
 }

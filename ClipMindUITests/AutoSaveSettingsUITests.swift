@@ -39,6 +39,13 @@ final class AutoSaveSettingsUITests: XCTestCase
         let formatPicker = app.popUpButtons["fileFormatPicker"]
         XCTAssertTrue(formatPicker.waitForExistence(timeout: 3), "文件格式选择器应存在")
 
+        // 决策 C1：长度阈值/文件名长度改为 TextField（替换原 Stepper）
+        let lengthThresholdField = app.textFields["lengthThresholdField"]
+        XCTAssertTrue(lengthThresholdField.waitForExistence(timeout: 3), "长度阈值 TextField 应存在")
+
+        let fileNameLengthField = app.textFields["fileNameLengthField"]
+        XCTAssertTrue(fileNameLengthField.waitForExistence(timeout: 3), "文件名长度 TextField 应存在")
+
         // 验证路径格式选择器存在
         let pathPicker = app.popUpButtons["pathFormatPicker"]
         XCTAssertTrue(pathPicker.waitForExistence(timeout: 3), "路径格式选择器应存在")
