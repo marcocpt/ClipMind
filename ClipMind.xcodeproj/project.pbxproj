@@ -88,6 +88,7 @@
 		AFB9E71D5DB26DD1C1ECD2D7 /* PermissionRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EAA6D6E20E61EE8E12B6CA4 /* PermissionRequester.swift */; };
 		AFF6A2BD7AABFD3FC9DCCA1A /* llm_mock_responses.json in Resources */ = {isa = PBXBuildFile; fileRef = 476EDCC5B06E8BFF193C7245 /* llm_mock_responses.json */; };
 		B0EF50AFB4D773CA27277F30 /* PasteboardWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68549B8C3D2B23F12A5BED75 /* PasteboardWatcher.swift */; };
+		B2B8CBA09173A237203ECB80 /* AutoSaveSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E04B3BCEDE19176C18F1885F /* AutoSaveSettings.swift */; };
 		B4A8B7DD3E48D04312E91293 /* LayoutConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5872E9B5D6F6F8ACAF6BC5D8 /* LayoutConstants.swift */; };
 		B98BFF2606B3BD5E0C2CD533 /* DefaultBlacklistTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2EB6BA90539D3F2B3E68D1 /* DefaultBlacklistTests.swift */; };
 		BA7754C5642A7356E27B8C13 /* ClipMindUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37023D2FCB531B633F999B04 /* ClipMindUITests.swift */; };
@@ -125,6 +126,7 @@
 		F7BA652A80058AD2704733A7 /* MainWindowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */; };
 		F890459CC5D9DCC2C5851603 /* APIKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CAABFDA44691DAFE1ECF36 /* APIKeyManager.swift */; };
 		FBD1A50D6B0DFCDBD92CDAFA /* LocalEmbeddingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D638C38476AE5D6F481CE3F1 /* LocalEmbeddingServiceTests.swift */; };
+		FD7ED8760842D9E46B1CA799 /* AutoSaveSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 455772ECB5F7E6BA673F9A84 /* AutoSaveSettingsTests.swift */; };
 		FDFD1191DD1C38DB7463F418 /* ClipMindTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -177,6 +179,7 @@
 		40EB26C58B1F517AE16B2EAF /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		41CAABFDA44691DAFE1ECF36 /* APIKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyManager.swift; sourceTree = "<group>"; };
 		430B2325F5811137580C673F /* ClipItemDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipItemDecodingTests.swift; sourceTree = "<group>"; };
+		455772ECB5F7E6BA673F9A84 /* AutoSaveSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettingsTests.swift; sourceTree = "<group>"; };
 		4583B73F02FA8F021E13CC43 /* PermissionRequestUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequestUITests.swift; sourceTree = "<group>"; };
 		46B535E9A1383D11BF04E00E /* CleanupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanupService.swift; sourceTree = "<group>"; };
 		476EDCC5B06E8BFF193C7245 /* llm_mock_responses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = llm_mock_responses.json; sourceTree = "<group>"; };
@@ -254,6 +257,7 @@
 		DA1769A4084EFA0F4DEF90BA /* ContentType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentType.swift; sourceTree = "<group>"; };
 		DAF1D2E3F3601BCB00CF1B30 /* CrossLanguageSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossLanguageSearchTests.swift; sourceTree = "<group>"; };
 		DD62389F1D9CFF3C0E0C8D40 /* SampleDataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataSeeder.swift; sourceTree = "<group>"; };
+		E04B3BCEDE19176C18F1885F /* AutoSaveSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettings.swift; sourceTree = "<group>"; };
 		E0A5135CC88FD9B92C87EE80 /* ExtractTodoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractTodoTests.swift; sourceTree = "<group>"; };
 		E136E2DCA7C228E478AE00C7 /* BlacklistService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlacklistService.swift; sourceTree = "<group>"; };
 		E345833B2DF4D17967D1EDBC /* MultiProviderLLMServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderLLMServiceTests.swift; sourceTree = "<group>"; };
@@ -616,6 +620,7 @@
 		D9E5E08A2326006F39EDD535 /* AutoSave */ = {
 			isa = PBXGroup;
 			children = (
+				E04B3BCEDE19176C18F1885F /* AutoSaveSettings.swift */,
 				DB9E5118F6024264B60F1D9E /* Models */,
 			);
 			path = AutoSave;
@@ -683,6 +688,7 @@
 		F6D4E93C2E80605BA73F88D2 /* AutoSave */ = {
 			isa = PBXGroup;
 			children = (
+				455772ECB5F7E6BA673F9A84 /* AutoSaveSettingsTests.swift */,
 				8CEB124A50A01EAEBD4B1F56 /* SensitiveMatchResultTests.swift */,
 			);
 			path = AutoSave;
@@ -857,6 +863,7 @@
 				1C6A253154736B51144CEE58 /* APIProvider.swift in Sources */,
 				CA4946890322645538C05FB7 /* AppDetector.swift in Sources */,
 				4763D810F9669F789367F9FE /* AppSettings.swift in Sources */,
+				B2B8CBA09173A237203ECB80 /* AutoSaveSettings.swift in Sources */,
 				EA97705B79A3BFD07E645084 /* BlacklistEntry.swift in Sources */,
 				DB5971D08DA6334C80621EFC /* BlacklistManagementView.swift in Sources */,
 				688F6EE2D610010D12C9CDD7 /* BlacklistService.swift in Sources */,
@@ -922,6 +929,7 @@
 				28D09568B9C56DD57139F4B9 /* APIKeyManagerTests.swift in Sources */,
 				A4445C1F8221F67936F39B97 /* AppDetectorTests.swift in Sources */,
 				591D538D533DF346AA647A1A /* AppIconAssetTests.swift in Sources */,
+				FD7ED8760842D9E46B1CA799 /* AutoSaveSettingsTests.swift in Sources */,
 				1CCB8A859D6CB2078D5356FE /* BlacklistServiceTests.swift in Sources */,
 				EC935B02E51584F47DC9017C /* ClassificationAccuracyTests.swift in Sources */,
 				C542F568C195941D3D4B4D1B /* CleanupServiceTests.swift in Sources */,
