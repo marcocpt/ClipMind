@@ -233,7 +233,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         autoSaveService = autoSave
 
-        let watcher = PasteboardWatcher(eventBuilder: eventBuilder)
+        let watcher = PasteboardWatcher(eventBuilder: eventBuilder, suppressor: suppressor)
         captureService = ClipCaptureService(watcher: watcher, store: store, classifier: classifier)
         captureService?.autoSaveService = autoSave
         captureService?.start()

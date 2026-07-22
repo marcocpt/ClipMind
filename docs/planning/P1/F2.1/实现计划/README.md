@@ -1,4 +1,4 @@
-> 最后更新：2026-07-22 | 版本：v2.2
+> 最后更新：2026-07-22 | 版本：v2.3
 
 # F2.1 自动保存到文件 实现计划
 
@@ -244,6 +244,7 @@ xcodebuild test \
 |------|------|------|
 | v2.1 | 2026-07-22 | 同步 §8.1/§8.2/§8.3 验收清单勾选状态：本地已验证项勾选（commit history/swiftlint/build/单元测试/并发测试/性能测试/F1.x 回归），§8.3 代码评审确认项勾选（约束/F-11/24 决策），XCUITest 与手动 OS 边界测试项保留 [ ] 待 CI 与开发者执行 |
 | v2.2 | 2026-07-22 | 配置面板长度阈值/文件名长度控件从 Stepper 改为 TextField（决策 C1~C6，详见 `historys/2026-07-22-配置面板长度阈值改为TextField.md`）。§4.2 Phase 1 新增文件表 AutoSaveSettingsView.swift 备注控件类型变更（Stepper → TextField + @FocusState 失焦逻辑）。新增 AutoSaveSettings.clampedInt 静态方法（决策 C2 夹紧 + C3 回退）。验证：SwiftLint 0 violations，xcodebuild build SUCCEEDED，ClipMindTests 449 tests 0 failures（含新增 8 个 clampedInt 测试 case），UI 测试环境问题已 stash 验证非本次改动回归 |
+| v2.3 | 2026-07-22 | 修复自我写入抑制死循环 bug（FR-015/D4）：PasteboardWatcher.handlePasteboardChange 未调用 SelfWriteSuppressor.checkAndReset，导致 F2.1 替换剪贴板后文件路径被当作新复制内容再次保存形成死循环。修复：PasteboardWatcher init 新增 suppressor 可选参数（默认 nil，F1.x 兼容），handlePasteboardChange 在 changeCount 变化检测后加 checkAndReset 检查；ClipMindApp 装配时注入 suppressor。新增 TC-UT-72/73/74 三个测试 case。验证：SwiftLint 0 violations，ClipMindTests 452 tests 0 failures。修复详见 `historys/2026-07-22-修复自我写入抑制死循环.md` |
 | v2.0 | 2026-07-22 | 基于 v1.1 设计文档套件完全重写：落地 24 条决策（D1~D24），新增 CaptureEvent/SensitiveMatchResult/F2xConfigSnapshot/SelfWriteSuppressor/FileWriter/ClipboardReplacer/PollingHelper 7 个模块，Phase 0 从 9 任务扩展为 14 任务，Phase 1 从 7 任务扩展为 10 任务，引入三层测试策略（D8）与日志白名单（D15） |
 | v1.2 | 2026-07-21 | 基于 v1.0 设计的旧版计划（已被 v2.0 替换） |
 | v1.1 | 2026-07-20 | 旧版初稿 |

@@ -33,6 +33,12 @@ final class PasteboardWatcher: NSObject
     /// 为 nil 时回退为最小事件（仅含 content 与 changeCount），保证 F1.x 既有测试兼容
     private let eventBuilder: CaptureEventBuilder?
 
+    /// 自我写入抑制器（FR-015/D4）
+    /// 为 nil 时不检查自我写入（F1.x 兼容）；非 nil 时在 changeCount 变化检测后
+    /// 调用 checkAndReset，命中则跳过完整捕获流程，防止 F2.1 替换剪贴板后
+    /// 自己写入的文件路径被当作新复制内容再次触发自动保存（死循环 bug 根因）。
+    private let suppressor: SelfWriteSuppressor?
+
     /// 当检测到剪贴板变化（且非重复内容）时调用
     /// F-11 例外：回调参数从 ClipContent 扩展为 CaptureEvent
     var onPasteboardChange: ((CaptureEvent) -> Void)?
@@ -42,15 +48,18 @@ final class PasteboardWatcher: NSObject
     ///   - contentReader: 内容读取器，默认为 ContentReader()
     ///   - deduplicator: 去重器，默认为 Deduplicator()
     ///   - eventBuilder: 捕获事件构造器（B0），为 nil 时回退最小事件
+    ///   - suppressor: 自我写入抑制器（FR-015/D4），为 nil 时不检查自我写入（F1.x 兼容）
     init(pasteboard: NSPasteboard = .general,
          contentReader: ContentReader = ContentReader(),
          deduplicator: Deduplicator = Deduplicator(),
-         eventBuilder: CaptureEventBuilder? = nil)
+         eventBuilder: CaptureEventBuilder? = nil,
+         suppressor: SelfWriteSuppressor? = nil)
     {
         self.pasteboard = pasteboard
         self.contentReader = contentReader
         self.deduplicator = deduplicator
         self.eventBuilder = eventBuilder
+        self.suppressor = suppressor
         self.lastChangeCount = pasteboard.changeCount
         super.init()
     }
@@ -87,6 +96,17 @@ final class PasteboardWatcher: NSObject
             return
         }
         lastChangeCount = current
+
+        // FR-015/D4：自我写入抑制。ClipboardReplacer 替换剪贴板为文件路径后会
+        // markSelfWrite(newChangeCount)。此处 checkAndReset 命中则跳过完整捕获流程，
+        // 防止自己写入的文件路径被当作新复制内容再次触发自动保存（死循环 bug 根因）。
+        if let suppressor = suppressor, suppressor.checkAndReset(changeCount: current)
+        {
+            LogCategory.capture.logger.debug(
+                "Self-write detected, skip capture: changeCount=\(current, privacy: .public)"
+            )
+            return
+        }
 
         guard let content = contentReader.readContent(from: pasteboard) else
         {
