@@ -102,12 +102,7 @@ final class PasteboardWatcher: NSObject
         let event: CaptureEvent
         if let builder = eventBuilder
         {
-            guard let built = builder.build(content: content, changeCount: current) else
-            {
-                LogCategory.capture.logger.debug("EventBuilder returned nil, skipping")
-                return
-            }
-            event = built
+            event = builder.build(content: content, changeCount: current)
         } else {
             // F1.x 兼容回退：构造最小事件
             event = CaptureEvent(

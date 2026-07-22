@@ -26,6 +26,9 @@ public final class AutoSaveService
     /// 自动保存错误通知名称（D13 目录异常分级处理，AC-09 弹窗触发）
     static let errorNotification = Notification.Name("ClipMindAutoSaveError")
 
+    /// 保存完成通知名称（含成功与跳过，供测试条件等待替代固定 sleep）
+    static let savedNotification = Notification.Name("ClipMindAutoSaveSaved")
+
     public init(
         settingsStore: AutoSaveSettingsStore,
         pasteboard: NSPasteboard,
@@ -50,49 +53,49 @@ public final class AutoSaveService
         let config = event.f2xConfigSnapshot
         guard config.isEnabled else
         {
-            logger.debug("Skip: F2.1 disabled")
+            skipDebug(eventId: event.id, reason: "F2.1 disabled")
             return
         }
         guard !event.blacklisted else
         {
-            logger.debug("Skip: blacklisted app")
+            skipDebug(eventId: event.id, reason: "blacklisted app")
             return
         }
         guard config.isWhitelisted(bundleId: event.bundleId) else
         {
-            logger.debug("Skip: not in whitelist")
+            skipDebug(eventId: event.id, reason: "not in whitelist")
             return
         }
         guard case .text(let text) = event.content else
         {
-            logger.debug("Skip: non-text content (D12)")
+            skipDebug(eventId: event.id, reason: "non-text content (D12)")
             return
         }
         guard text.utf8.count <= Self.maxContentLength else
         {
-            logger.info("""
-            Skip: content too large (D12), length=\(text.count, privacy: .public) \
-            eventId=\(event.id, privacy: .public)
-            """)
+            skipInfo(
+                eventId: event.id,
+                message: "Skip: content too large (D12), length=\(text.count) eventId=\(event.id)"
+            )
             return
         }
         // D12：纯空白内容（只含空格/换行/Tab）跳过，避免写入无意义文件
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else
         {
-            logger.info("""
-            Skip: blank-only content (D12), length=\(text.count, privacy: .public) \
-            eventId=\(event.id, privacy: .public)
-            """)
+            skipInfo(
+                eventId: event.id,
+                message: "Skip: blank-only content (D12), length=\(text.count) eventId=\(event.id)"
+            )
             return
         }
         guard text.count >= config.lengthThreshold else
         {
-            logger.debug("Skip: below threshold")
+            skipDebug(eventId: event.id, reason: "below threshold")
             return
         }
         if config.sensitiveFilterEnabled && event.sensitiveResult.isSensitive
         {
-            logger.info("Skip: sensitive content detected, eventId=\(event.id, privacy: .public)")
+            skipInfo(eventId: event.id, message: "Skip: sensitive content detected, eventId=\(event.id)")
             return
         }
         queue.async { [weak self] in
@@ -109,6 +112,7 @@ public final class AutoSaveService
             expected=\(event.changeCount, privacy: .public) \
             current=\(self.pasteboard.changeCount, privacy: .public)
             """)
+            postSavedNotification(eventId: event.id, skipped: true)
             return
         }
         let baseFileURL = makeBaseFileURL(event: event, text: text, config: config)
@@ -116,8 +120,17 @@ public final class AutoSaveService
         // D10：EEXIST 重试——O_EXCL 检测到并发竞态时，递增序号重试
         guard let savedURL = writeWithEexistRetry(event: event, text: text, baseFileURL: baseFileURL) else
         {
+            postSavedNotification(eventId: event.id, skipped: true)
             return
         }
+
+        let contentLength = text.count
+        logger.info("""
+        Saved: fileName=\(savedURL.lastPathComponent, privacy: .public), \
+        contentLength=\(contentLength, privacy: .public), \
+        eventId=\(event.id, privacy: .public), \
+        changeCount=\(event.changeCount, privacy: .public)
+        """)
 
         let formattedPath = pathFormatter.format(url: savedURL, format: config.pathFormat)
         let replaced = clipboardReplacer.replace(with: formattedPath, expectedChangeCount: event.changeCount)
@@ -129,6 +142,7 @@ public final class AutoSaveService
             current=\(self.pasteboard.changeCount, privacy: .public)
             """)
         }
+        postSavedNotification(eventId: event.id, fileName: savedURL.lastPathComponent, skipped: false)
     }
 
     private func makeBaseFileURL(event: CaptureEvent, text: String, config: F2xConfigSnapshot) -> URL
@@ -159,7 +173,10 @@ public final class AutoSaveService
             do {
                 candidateURL = try conflictResolver.resolve(baseFileURL)
             } catch {
-                logger.error("Conflict: eventId=\(event.id, privacy: .public) code=\(error._code, privacy: .public)")
+                logger.error("""
+                Conflict: eventId=\(event.id, privacy: .public) \
+                code=\(String(describing: error), privacy: .public)
+                """)
                 return nil
             }
             do {
@@ -184,7 +201,7 @@ public final class AutoSaveService
             } catch {
                 logger.error("""
                 Write failed: eventId=\(event.id, privacy: .public) \
-                code=\(error._code, privacy: .public)
+                code=\(String(describing: error), privacy: .public)
                 """)
                 // D13：目录异常分级处理，发送错误通知触发弹窗（AC-09）
                 NotificationCenter.default.post(
@@ -195,6 +212,35 @@ public final class AutoSaveService
                 return nil
             }
         }
+    }
+
+    /// 发送保存完成通知（成功或跳过），供测试条件等待替代固定 sleep。
+    private func postSavedNotification(eventId: String, fileName: String? = nil, skipped: Bool)
+    {
+        var userInfo: [String: Any] = ["eventId": eventId]
+        if let fileName = fileName
+        {
+            userInfo["fileName"] = fileName
+        }
+        if skipped
+        {
+            userInfo["skipped"] = true
+        }
+        NotificationCenter.default.post(name: Self.savedNotification, object: nil, userInfo: userInfo)
+    }
+
+    /// 记录 debug 级别跳过日志并发送跳过通知。
+    private func skipDebug(eventId: String, reason: String)
+    {
+        logger.debug("Skip: \(reason, privacy: .public)")
+        postSavedNotification(eventId: eventId, skipped: true)
+    }
+
+    /// 记录 info 级别跳过日志并发送跳过通知。
+    private func skipInfo(eventId: String, message: String)
+    {
+        logger.info("\(message, privacy: .public)")
+        postSavedNotification(eventId: eventId, skipped: true)
     }
 }
 

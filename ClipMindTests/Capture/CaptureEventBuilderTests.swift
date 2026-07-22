@@ -42,7 +42,7 @@ final class CaptureEventBuilderTests: XCTestCase
     func testBuildEventContainsAllFields() throws
     {
         let content = ClipContent.text("一段测试内容用于构造事件")
-        let event = try XCTUnwrap(builder.build(content: content, changeCount: 10))
+        let event = builder.build(content: content, changeCount: 10)
 
         XCTAssertEqual(event.changeCount, 10)
         XCTAssertEqual(event.content, content)
@@ -56,7 +56,7 @@ final class CaptureEventBuilderTests: XCTestCase
     {
         defaults.set(true, forKey: SensitiveDetector.storageKey)
         let content = ClipContent.text("password=supersecret")
-        let event = try XCTUnwrap(builder.build(content: content, changeCount: 1))
+        let event = builder.build(content: content, changeCount: 1)
 
         XCTAssertTrue(event.sensitiveResult.isSensitive, "敏感内容应被识别")
         XCTAssertFalse(event.sensitiveResult.matchedPatterns.isEmpty, "应包含命中模式")
@@ -66,7 +66,7 @@ final class CaptureEventBuilderTests: XCTestCase
     {
         defaults.set(true, forKey: SensitiveDetector.storageKey)
         let content = ClipContent.text("这是一段普通的非敏感文本内容")
-        let event = try XCTUnwrap(builder.build(content: content, changeCount: 2))
+        let event = builder.build(content: content, changeCount: 2)
 
         XCTAssertFalse(event.sensitiveResult.isSensitive)
         XCTAssertTrue(event.sensitiveResult.matchedPatterns.isEmpty)
@@ -78,7 +78,7 @@ final class CaptureEventBuilderTests: XCTestCase
     {
         // 由于 AppDetector 在测试中无法识别真实前台 App，使用回退 bundleId
         let content = ClipContent.text("黑名单测试内容")
-        let event = try XCTUnwrap(builder.build(content: content, changeCount: 3))
+        let event = builder.build(content: content, changeCount: 3)
 
         // event.blacklisted 取决于前台 App 是否在黑名单，测试环境通常为 false
         XCTAssertNotNil(event.blacklisted)
@@ -95,7 +95,7 @@ final class CaptureEventBuilderTests: XCTestCase
         settingsStore.save(settings)
 
         let content = ClipContent.text("配置快照测试内容")
-        let event = try XCTUnwrap(builder.build(content: content, changeCount: 4))
+        let event = builder.build(content: content, changeCount: 4)
 
         XCTAssertEqual(event.f2xConfigSnapshot.isEnabled, true)
         XCTAssertEqual(event.f2xConfigSnapshot.saveDirectory, "~/Documents/ClipMind/Clips/")
@@ -112,7 +112,7 @@ final class CaptureEventBuilderTests: XCTestCase
         settingsStore.save(settings)
 
         let content = ClipContent.text("快照不可变性测试")
-        let event = try XCTUnwrap(builder.build(content: content, changeCount: 5))
+        let event = builder.build(content: content, changeCount: 5)
 
         // 构造事件后修改配置
         var newSettings = AutoSaveSettings()
@@ -130,7 +130,7 @@ final class CaptureEventBuilderTests: XCTestCase
     func testF1xBlacklistSnapshotRead() throws
     {
         let content = ClipContent.text("F1.x 黑名单快照测试")
-        let event = try XCTUnwrap(builder.build(content: content, changeCount: 6))
+        let event = builder.build(content: content, changeCount: 6)
 
         XCTAssertNotNil(event.f1xConfigSnapshot.blacklistBundleIds)
     }
@@ -140,7 +140,7 @@ final class CaptureEventBuilderTests: XCTestCase
     func testNonTextContentSkipsSensitiveDetection() throws
     {
         let content = ClipContent.image(Data([0x89, 0x50, 0x4E, 0x47]))
-        let event = try XCTUnwrap(builder.build(content: content, changeCount: 7))
+        let event = builder.build(content: content, changeCount: 7)
 
         XCTAssertEqual(event.sensitiveResult, .none, "非文本内容敏感结果应为 .none")
     }

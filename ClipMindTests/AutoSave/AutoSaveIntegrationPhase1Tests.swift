@@ -95,15 +95,23 @@ final class AutoSaveIntegrationPhase1Tests: XCTestCase
             timestamp: Date()
         )
 
+        let expectation = XCTestExpectation(description: "自动保存完成")
+        let observer = NotificationCenter.default.addObserver(
+            forName: AutoSaveService.savedNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            let eventId = notification.userInfo?["eventId"] as? String
+            if eventId == event.id
+            {
+                expectation.fulfill()
+            }
+        }
+
         captureService.handleCaptureEvent(event)
 
-        // 等待异步保存完成
-        let expectation = XCTestExpectation(description: "文件应被保存")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0)
-        {
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 3.0)
+        wait(for: [expectation], timeout: 5.0)
+        NotificationCenter.default.removeObserver(observer)
 
         // 验证文件已保存
         let files = try FileManager.default.contentsOfDirectory(at: saveDir, includingPropertiesForKeys: nil)
@@ -136,14 +144,23 @@ final class AutoSaveIntegrationPhase1Tests: XCTestCase
             timestamp: Date()
         )
 
+        let expectation = XCTestExpectation(description: "自动保存跳过通知")
+        let observer = NotificationCenter.default.addObserver(
+            forName: AutoSaveService.savedNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            let eventId = notification.userInfo?["eventId"] as? String
+            if eventId == event.id
+            {
+                expectation.fulfill()
+            }
+        }
+
         captureService.handleCaptureEvent(event)
 
-        let expectation = XCTestExpectation(description: "等待异步检查")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0)
-        {
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 3.0)
+        wait(for: [expectation], timeout: 5.0)
+        NotificationCenter.default.removeObserver(observer)
 
         // 验证无文件保存
         let files = try FileManager.default.contentsOfDirectory(at: saveDir, includingPropertiesForKeys: nil)
@@ -176,6 +193,19 @@ final class AutoSaveIntegrationPhase1Tests: XCTestCase
             timestamp: Date()
         )
 
+        let expectation = XCTestExpectation(description: "自动保存完成")
+        let observer = NotificationCenter.default.addObserver(
+            forName: AutoSaveService.savedNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            let eventId = notification.userInfo?["eventId"] as? String
+            if eventId == event.id
+            {
+                expectation.fulfill()
+            }
+        }
+
         // F1.x 分支：敏感命中不入库（ClipCaptureService 在敏感命中时直接返回）
         captureService.handleCaptureEvent(event)
 
@@ -184,12 +214,8 @@ final class AutoSaveIntegrationPhase1Tests: XCTestCase
         // 故此处直接调用 AutoSaveService.handle 验证 F2.1 分支独立行为。
         autoSaveService.handle(event: event)
 
-        let expectation = XCTestExpectation(description: "等待异步保存")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0)
-        {
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 3.0)
+        wait(for: [expectation], timeout: 5.0)
+        NotificationCenter.default.removeObserver(observer)
 
         // 验证 F2.1 分支保存了敏感内容（敏感过滤关闭）
         let files = try FileManager.default.contentsOfDirectory(at: saveDir, includingPropertiesForKeys: nil)
@@ -218,14 +244,29 @@ final class AutoSaveIntegrationPhase1Tests: XCTestCase
             timestamp: Date()
         )
 
+        let expectation = XCTestExpectation(description: "自动保存跳过通知")
+        let observer = NotificationCenter.default.addObserver(
+            forName: AutoSaveService.savedNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            let eventId = notification.userInfo?["eventId"] as? String
+            if eventId == event.id
+            {
+                expectation.fulfill()
+            }
+        }
+
+        // F1.x 分支：敏感命中不入库（ClipCaptureService 在敏感命中时直接返回）
         captureService.handleCaptureEvent(event)
 
-        let expectation = XCTestExpectation(description: "等待异步检查")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0)
-        {
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 3.0)
+        // F2.1 分支：敏感过滤开启时跳过保存。
+        // 注：ClipCaptureService 敏感命中提前返回不派发 F2.1，
+        // 故此处直接调用 AutoSaveService.handle 验证 F2.1 分支跳过行为。
+        autoSaveService.handle(event: event)
+
+        wait(for: [expectation], timeout: 5.0)
+        NotificationCenter.default.removeObserver(observer)
 
         // 验证无文件保存
         let files = try FileManager.default.contentsOfDirectory(at: saveDir, includingPropertiesForKeys: nil)

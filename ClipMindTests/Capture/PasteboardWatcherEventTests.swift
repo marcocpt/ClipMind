@@ -71,7 +71,7 @@ final class PasteboardWatcherEventTests: XCTestCase
         } else {
             XCTFail("内容应为 .text 类型")
         }
-        XCTAssertFalse(event.bundleId.isEmpty, "bundleId 应非空（来源 App 无法识别时 build 返回 nil，事件内始终非空）")
+        XCTAssertFalse(event.bundleId.isEmpty, "bundleId 应非空（来源 App 无法识别时使用回退值，事件内始终非空）")
         XCTAssertFalse(event.appName.isEmpty, "appName 应非空")
     }
 

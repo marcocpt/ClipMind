@@ -50,20 +50,15 @@ final class AutoSaveBehaviorUITests: XCTestCase
         // App 不应崩溃
         XCTAssertTrue(app.waitForExistence(timeout: 3), "App 不应崩溃")
 
-        // 验证错误弹窗出现（autoSaveErrorAlert accessibility identifier）
-        // 弹窗由 AutoSaveService 在目录异常时触发
-        let errorAlert = app.alerts["autoSaveErrorAlert"]
+        // 验证错误弹窗的确定按钮出现（弹窗存在的可靠标志）
+        let okButton = app.buttons["确定"]
         XCTAssertTrue(
-            errorAlert.waitForExistence(timeout: 10),
+            okButton.waitForExistence(timeout: 10),
             "保存目录异常时应显示错误弹窗"
         )
 
         // 点击确定关闭弹窗
-        let okButton = errorAlert.buttons["确定"]
-        if okButton.exists
-        {
-            okButton.click()
-        }
+        okButton.click()
     }
 
     // MARK: - AC-08：禁用总开关不触发保存（UI 烟雾测试）

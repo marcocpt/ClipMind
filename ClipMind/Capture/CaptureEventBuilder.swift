@@ -52,8 +52,8 @@ final class CaptureEventBuilder
     /// - Parameters:
     ///   - content: 剪贴板内容
     ///   - changeCount: 当前 pasteboard.changeCount
-    /// - Returns: 构造的事件；来源 App 无法识别时使用回退值，始终返回非 nil 事件
-    func build(content: ClipContent, changeCount: Int) -> CaptureEvent?
+    /// - Returns: 构造的事件；来源 App 无法识别时使用回退值
+    func build(content: ClipContent, changeCount: Int) -> CaptureEvent
     {
         // 步骤 2：识别来源 App（无法识别时回退 "unknown"/"Unknown"）
         let (bundleId, appName) = appDetector.currentFrontmostApp() ?? ("unknown", "Unknown")
