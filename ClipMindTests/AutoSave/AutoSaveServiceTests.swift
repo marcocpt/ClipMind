@@ -247,4 +247,75 @@ final class AutoSaveServiceTests: XCTestCase
         service.queue.async { expectation.fulfill() }
         wait(for: [expectation], timeout: 2.0)
     }
+
+    // MARK: - TC-UT-75：showFilePathInHistory=on 时 onFilePathSaved 回调触发
+
+    func testOnFilePathSavedTriggeredWhenEnabled() throws
+    {
+        var settings = settingsStore.load()
+        settings.showFilePathInHistory = true
+        settingsStore.save(settings)
+
+        pasteboard.clearContents()
+        pasteboard.setString("original long content", forType: .string)
+        let changeCount = pasteboard.changeCount
+
+        let event = CaptureEvent(
+            changeCount: changeCount,
+            content: .text(String(repeating: "a", count: 100)),
+            bundleId: "com.apple.Safari",
+            appName: "Safari",
+            blacklisted: false,
+            sensitiveResult: .none,
+            f1xConfigSnapshot: F1xConfigSnapshot(blacklistBundleIds: []),
+            f2xConfigSnapshot: F2xConfigSnapshot(from: settingsStore.load())
+        )
+
+        var savedURL: URL?
+        var savedFormat: PathFormat?
+        service.onFilePathSaved = { url, format in
+            savedURL = url
+            savedFormat = format
+        }
+
+        service.handle(event: event)
+        waitForQueue()
+
+        XCTAssertNotNil(savedURL, "showFilePathInHistory=on 时应触发 onFilePathSaved 回调")
+        XCTAssertEqual(savedFormat, .plainPath)
+    }
+
+    // MARK: - TC-UT-76：showFilePathInHistory=off 时不触发回调
+
+    func testOnFilePathSavedNotTriggeredWhenDisabled() throws
+    {
+        var settings = settingsStore.load()
+        settings.showFilePathInHistory = false
+        settingsStore.save(settings)
+
+        pasteboard.clearContents()
+        pasteboard.setString("original long content", forType: .string)
+        let changeCount = pasteboard.changeCount
+
+        let event = CaptureEvent(
+            changeCount: changeCount,
+            content: .text(String(repeating: "a", count: 100)),
+            bundleId: "com.apple.Safari",
+            appName: "Safari",
+            blacklisted: false,
+            sensitiveResult: .none,
+            f1xConfigSnapshot: F1xConfigSnapshot(blacklistBundleIds: []),
+            f2xConfigSnapshot: F2xConfigSnapshot(from: settingsStore.load())
+        )
+
+        var callbackFired = false
+        service.onFilePathSaved = { _, _ in
+            callbackFired = true
+        }
+
+        service.handle(event: event)
+        waitForQueue()
+
+        XCTAssertFalse(callbackFired, "showFilePathInHistory=off 时不应触发 onFilePathSaved 回调")
+    }
 }

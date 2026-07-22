@@ -62,6 +62,11 @@ public struct AutoSaveSettings: Codable, Equatable, Sendable
     public var sensitiveFilterEnabled: Bool
     public var pathFormat: PathFormat
 
+    /// 文件路径是否进入 ClipMind 历史条目（默认开，可拖拽文件路径）。
+    /// 开启时，F2.1 保存文件后将文件路径以 ClipContent.filePath 存入历史；
+    /// 关闭时，历史中只有原始内容条目，无文件路径条目。
+    public var showFilePathInHistory: Bool
+
     public static let lengthThresholdRange = 1...10000
     public static let fileNameLengthRange = 1...50
 
@@ -100,7 +105,8 @@ public struct AutoSaveSettings: Codable, Equatable, Sendable
         lengthThreshold: Int = 50,
         fileNameLength: Int = 20,
         sensitiveFilterEnabled: Bool = true,
-        pathFormat: PathFormat = .plainPath
+        pathFormat: PathFormat = .plainPath,
+        showFilePathInHistory: Bool = true
     )
     {
         self.isEnabled = isEnabled
@@ -111,5 +117,6 @@ public struct AutoSaveSettings: Codable, Equatable, Sendable
         self.fileNameLength = fileNameLength
         self.sensitiveFilterEnabled = sensitiveFilterEnabled
         self.pathFormat = pathFormat
+        self.showFilePathInHistory = showFilePathInHistory
     }
 }

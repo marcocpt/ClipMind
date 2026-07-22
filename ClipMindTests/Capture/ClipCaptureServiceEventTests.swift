@@ -90,7 +90,8 @@ final class ClipCaptureServiceEventTests: XCTestCase
                 lengthThreshold: 50,
                 fileNameLength: 20,
                 sensitiveFilterEnabled: true,
-                pathFormat: .plainPath
+                pathFormat: .plainPath,
+                showFilePathInHistory: true
             ),
             timestamp: Date()
         )
@@ -122,7 +123,8 @@ final class ClipCaptureServiceEventTests: XCTestCase
                 lengthThreshold: 50,
                 fileNameLength: 20,
                 sensitiveFilterEnabled: true,
-                pathFormat: .plainPath
+                pathFormat: .plainPath,
+                showFilePathInHistory: true
             ),
             timestamp: Date()
         )

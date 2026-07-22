@@ -47,7 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         "F2.1.autoSave.lengthThreshold",
         "F2.1.autoSave.fileNameLength",
         "F2.1.autoSave.sensitiveFilterEnabled",
-        "F2.1.autoSave.pathFormat"
+        "F2.1.autoSave.pathFormat",
+        "F2.1.autoSave.showFilePathInHistory"
     ]
 
     /// 重置 F2.1 自动保存配置（供 `applyUITestOverrides` 与单元测试共用）。
@@ -233,12 +234,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         autoSaveService = autoSave
 
+        // 装配 onFilePathSaved 回调：将文件路径以 ClipContent.filePath 存入历史
+        autoSave.onFilePathSaved = { [weak self] savedURL, _ in
+            self?.saveFilePathToHistory(savedURL, store: store)
+        }
+
         let watcher = PasteboardWatcher(eventBuilder: eventBuilder, suppressor: suppressor)
         captureService = ClipCaptureService(watcher: watcher, store: store, classifier: classifier)
         captureService?.autoSaveService = autoSave
         captureService?.start()
 
         LogCategory.app.logger.info("剪贴板捕获服务已启动（含 F2.1 自动保存）")
+    }
+
+    /// 将文件路径存入 ClipMind 历史（以 ClipContent.filePath 可拖拽格式）。
+    /// 由 AutoSaveService.onFilePathSaved 回调触发（在 AutoSave 串行队列上）。
+    /// 派发到主线程执行 store.save，避免与 ClipCaptureService 的 store.save 产生 SQLite 竞态。
+    private func saveFilePathToHistory(_ fileURL: URL, store: EncryptedStore)
+    {
+        DispatchQueue.main.async
+        {
+            let item = ClipItem.makeFilePath(
+                [fileURL],
+                contentType: .other,
+                sourceApp: "com.clipmind.autoSave",
+                sourceAppName: "ClipMind"
+            )
+            do {
+                try store.save(item)
+                LogCategory.capture.logger.info(
+                    "FilePath saved to history: fileName=\(fileURL.lastPathComponent, privacy: .public)"
+                )
+                NotificationCenter.default.post(
+                    name: ClipCaptureService.clipDidUpdateNotification, object: nil
+                )
+            } catch {
+                LogCategory.storage.logger.error(
+                    "FilePath history save failed: errorCode=\(error.localizedDescription, privacy: .public)"
+                )
+            }
+        }
     }
 
     /// 初始化清理服务并启动

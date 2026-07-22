@@ -124,30 +124,36 @@ final class PasteboardWatcher: NSObject
         {
             event = builder.build(content: content, changeCount: current)
         } else {
-            // F1.x 兼容回退：构造最小事件
-            event = CaptureEvent(
-                id: UUID().uuidString,
-                changeCount: current,
-                content: content,
-                bundleId: "unknown",
-                appName: "Unknown",
-                blacklisted: false,
-                sensitiveResult: .none,
-                f1xConfigSnapshot: F1xConfigSnapshot(blacklistBundleIds: []),
-                f2xConfigSnapshot: F2xConfigSnapshot(
-                    isEnabled: false,
-                    saveDirectory: "",
-                    whitelistBundleIds: [],
-                    fileFormat: .markdown,
-                    lengthThreshold: 50,
-                    fileNameLength: 20,
-                    sensitiveFilterEnabled: true,
-                    pathFormat: .plainPath
-                ),
-                timestamp: Date()
-            )
+            event = makeFallbackEvent(content: content, changeCount: current)
         }
 
         onPasteboardChange?(event)
+    }
+
+    /// F1.x 兼容回退：构造最小 CaptureEvent（eventBuilder 为 nil 时使用）
+    private func makeFallbackEvent(content: ClipContent, changeCount: Int) -> CaptureEvent
+    {
+        CaptureEvent(
+            id: UUID().uuidString,
+            changeCount: changeCount,
+            content: content,
+            bundleId: "unknown",
+            appName: "Unknown",
+            blacklisted: false,
+            sensitiveResult: .none,
+            f1xConfigSnapshot: F1xConfigSnapshot(blacklistBundleIds: []),
+            f2xConfigSnapshot: F2xConfigSnapshot(
+                isEnabled: false,
+                saveDirectory: "",
+                whitelistBundleIds: [],
+                fileFormat: .markdown,
+                lengthThreshold: 50,
+                fileNameLength: 20,
+                sensitiveFilterEnabled: true,
+                pathFormat: .plainPath,
+                showFilePathInHistory: true
+            ),
+            timestamp: Date()
+        )
     }
 }

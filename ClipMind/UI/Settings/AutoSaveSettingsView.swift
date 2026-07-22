@@ -55,6 +55,7 @@ struct AutoSaveSettingsView: View
             formatSection
             pathFormatSection
             sensitiveSection
+            filePathHistorySection
             responsibilitySection
         }
         .padding()
@@ -253,6 +254,22 @@ struct AutoSaveSettingsView: View
                 }
 
             Text("开启后，敏感内容不保存到文件；关闭时需二次确认")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+
+    // MARK: - 文件路径进历史
+
+    private var filePathHistorySection: some View
+    {
+        Section("历史显示")
+        {
+            Toggle("文件路径进历史", isOn: $settings.showFilePathInHistory)
+                .accessibilityIdentifier("showFilePathInHistoryToggle")
+                .onChange(of: settings.showFilePathInHistory) { _ in saveSettings() }
+
+            Text("开启后，自动保存的文件路径以可拖拽格式进入历史列表")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

@@ -17,6 +17,7 @@ public final class AutoSaveSettingsStore
         static let fileNameLength = "F2.1.autoSave.fileNameLength"
         static let sensitiveFilterEnabled = "F2.1.autoSave.sensitiveFilterEnabled"
         static let pathFormat = "F2.1.autoSave.pathFormat"
+        static let showFilePathInHistory = "F2.1.autoSave.showFilePathInHistory"
     }
 
     public init(defaults: UserDefaults = .standard)
@@ -38,6 +39,7 @@ public final class AutoSaveSettingsStore
         let sensitiveFilterEnabled = defaults.object(forKey: Keys.sensitiveFilterEnabled) as? Bool ?? true
         let pathFormatRaw = defaults.string(forKey: Keys.pathFormat) ?? PathFormat.plainPath.rawValue
         let pathFormat = PathFormat(rawValue: pathFormatRaw) ?? .plainPath
+        let showFilePathInHistory = defaults.object(forKey: Keys.showFilePathInHistory) as? Bool ?? true
 
         return AutoSaveSettings(
             isEnabled: isEnabled,
@@ -47,7 +49,8 @@ public final class AutoSaveSettingsStore
             lengthThreshold: clamped(lengthThreshold, range: AutoSaveSettings.lengthThresholdRange),
             fileNameLength: clamped(fileNameLength, range: AutoSaveSettings.fileNameLengthRange),
             sensitiveFilterEnabled: sensitiveFilterEnabled,
-            pathFormat: pathFormat
+            pathFormat: pathFormat,
+            showFilePathInHistory: showFilePathInHistory
         )
     }
 
@@ -65,6 +68,7 @@ public final class AutoSaveSettingsStore
         defaults.set(clampedFileNameLength, forKey: Keys.fileNameLength)
         defaults.set(settings.sensitiveFilterEnabled, forKey: Keys.sensitiveFilterEnabled)
         defaults.set(settings.pathFormat.rawValue, forKey: Keys.pathFormat)
+        defaults.set(settings.showFilePathInHistory, forKey: Keys.showFilePathInHistory)
 
         // D15：日志仅输出 isEnabled 字段，不输出敏感信息或用户输入内容。
         LogCategory.storage.logger.info("Config saved: isEnabled=\(settings.isEnabled, privacy: .public)")

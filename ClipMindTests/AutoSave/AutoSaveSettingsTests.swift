@@ -18,6 +18,7 @@ final class AutoSaveSettingsTests: XCTestCase
         XCTAssertEqual(settings.fileNameLength, 20)
         XCTAssertTrue(settings.sensitiveFilterEnabled)
         XCTAssertEqual(settings.pathFormat, .plainPath)
+        XCTAssertTrue(settings.showFilePathInHistory, "showFilePathInHistory 默认应为开启")
     }
 
     // MARK: - TC-UT-15：范围常量

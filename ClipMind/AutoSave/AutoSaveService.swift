@@ -17,6 +17,11 @@ public final class AutoSaveService
     private let clipboardReplacer: ClipboardReplacer
     private let logger = LogCategory.capture.logger
 
+    /// 文件保存成功并替换剪贴板后的回调（用于将文件路径存入历史）。
+    /// 参数：(savedFileURL, pathFormat)。
+    /// 仅当 config.showFilePathInHistory == true 时触发。
+    var onFilePathSaved: ((URL, PathFormat) -> Void)?
+
     /// D12：内容上限 100KB。
     private static let maxContentLength = 100 * 1024
 
@@ -141,6 +146,12 @@ public final class AutoSaveService
             expected=\(event.changeCount, privacy: .public) \
             current=\(self.pasteboard.changeCount, privacy: .public)
             """)
+        }
+
+        // 文件路径存入历史：当 showFilePathInHistory 开启且剪贴板替换成功时触发回调
+        if config.showFilePathInHistory && replaced
+        {
+            onFilePathSaved?(savedURL, config.pathFormat)
         }
         postSavedNotification(eventId: event.id, fileName: savedURL.lastPathComponent, skipped: false)
     }
