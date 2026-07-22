@@ -23,6 +23,9 @@ public final class AutoSaveService
     /// D10：EEXIST 重试次数上限，与 ConflictResolver.maxAttempts 一致。
     private static let maxEexistRetries = 999
 
+    /// 自动保存错误通知名称（D13 目录异常分级处理，AC-09 弹窗触发）
+    static let errorNotification = Notification.Name("ClipMindAutoSaveError")
+
     public init(
         settingsStore: AutoSaveSettingsStore,
         pasteboard: NSPasteboard,
@@ -183,6 +186,12 @@ public final class AutoSaveService
                 Write failed: eventId=\(event.id, privacy: .public) \
                 code=\(error._code, privacy: .public)
                 """)
+                // D13：目录异常分级处理，发送错误通知触发弹窗（AC-09）
+                NotificationCenter.default.post(
+                    name: Self.errorNotification,
+                    object: nil,
+                    userInfo: ["errorCode": error.localizedDescription]
+                )
                 return nil
             }
         }

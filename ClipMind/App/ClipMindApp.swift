@@ -78,6 +78,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .openMainWindow,
             object: nil
         )
+        // 监听 F2.1 自动保存错误通知（D13 目录异常分级处理）
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAutoSaveError(_:)),
+            name: AutoSaveService.errorNotification,
+            object: nil
+        )
     }
 
     /// 应用通用启动参数重置（非 UITEST 专用）
@@ -268,6 +275,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for window in NSApp.windows where window.canBecomeKey {
             window.makeKeyAndOrderFront(nil)
             break
+        }
+    }
+
+    /// 处理 F2.1 自动保存错误，显示弹窗（AC-09）
+    @objc private func handleAutoSaveError(_ notification: Notification)
+    {
+        let errorCode = notification.userInfo?["errorCode"] as? String ?? "unknown"
+        LogCategory.app.error("AutoSave error: errorCode=\(errorCode)")
+
+        DispatchQueue.main.async
+        {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = "自动保存失败"
+            alert.informativeText = "保存目录异常，文件未能保存。剪贴板内容保持原文。"
+            alert.addButton(withTitle: "确定")
+            alert.setValue("autoSaveErrorAlert", forKey: "accessibilityLabel")
+            alert.runModal()
         }
     }
 }

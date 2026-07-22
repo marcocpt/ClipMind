@@ -92,6 +92,7 @@
 		8F0E67485CB804EDB0ED1283 /* AutoSaveIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A28285DF25AD18762E16D26 /* AutoSaveIntegrationTests.swift */; };
 		9172F099C3B6A5DEB5067C0C /* PollingHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8962BAEA39300C713197F8E7 /* PollingHelper.swift */; };
 		9275B3A8D350E84173E3E723 /* TypeEmbeddings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C582EEDD350412F14933BD06 /* TypeEmbeddings.swift */; };
+		986749C996E6986A1FB997A7 /* AutoSaveBehaviorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D331CEF56652ECC8282BE3 /* AutoSaveBehaviorUITests.swift */; };
 		9881DEE68EEF01F509C0A234 /* AutoSaveIntegrationPhase1Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CBC52D4BFC541BF5AC1125C /* AutoSaveIntegrationPhase1Tests.swift */; };
 		995230116C9F1B2C0397E1A9 /* LLMServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1F57D65AA987167C9BC502 /* LLMServiceTests.swift */; };
 		9C86550BCEB7477EBDFF03AA /* FirstLaunchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBE3CEC209DA4A78E7178025 /* FirstLaunchUITests.swift */; };
@@ -256,6 +257,7 @@
 		6F6AD18B17E42B3C052D7BD4 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
 		71D402E808160065FE9E7575 /* AppDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetectorTests.swift; sourceTree = "<group>"; };
 		76718298C97DCB9738ADDEF3 /* FileWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWriter.swift; sourceTree = "<group>"; };
+		77D331CEF56652ECC8282BE3 /* AutoSaveBehaviorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveBehaviorUITests.swift; sourceTree = "<group>"; };
 		78922B73B4C72316CE935F12 /* DeduplicationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeduplicationTests.swift; sourceTree = "<group>"; };
 		7935CC53B02BBBB77C084742 /* AutoSaveSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettingsView.swift; sourceTree = "<group>"; };
 		7C670D2189867D5E2F4A9671 /* EncryptedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedStore.swift; sourceTree = "<group>"; };
@@ -679,6 +681,7 @@
 		CF0F878E167271BC52B32350 /* ClipMindUITests */ = {
 			isa = PBXGroup;
 			children = (
+				77D331CEF56652ECC8282BE3 /* AutoSaveBehaviorUITests.swift */,
 				D35F0EA2C5EDFF6181390B24 /* AutoSaveSettingsUITests.swift */,
 				37023D2FCB531B633F999B04 /* ClipMindUITests.swift */,
 				FBE3CEC209DA4A78E7178025 /* FirstLaunchUITests.swift */,
@@ -1128,6 +1131,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				986749C996E6986A1FB997A7 /* AutoSaveBehaviorUITests.swift in Sources */,
 				FDD655EC5BF93601BC695A28 /* AutoSaveSettingsUITests.swift in Sources */,
 				BA7754C5642A7356E27B8C13 /* ClipMindUITests.swift in Sources */,
 				9C86550BCEB7477EBDFF03AA /* FirstLaunchUITests.swift in Sources */,
