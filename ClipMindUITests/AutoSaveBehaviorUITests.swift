@@ -28,7 +28,7 @@ final class AutoSaveBehaviorUITests: XCTestCase
         settingsButton.click()
 
         // 开启总开关
-        let enabledToggle = app.checkBoxes["autoSaveEnabledToggle"]
+        let enabledToggle = app.switches["autoSaveEnabledToggle"]
         XCTAssertTrue(enabledToggle.waitForExistence(timeout: 5))
         if enabledToggle.value as? String == "0"
         {
@@ -79,7 +79,7 @@ final class AutoSaveBehaviorUITests: XCTestCase
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
         settingsButton.click()
 
-        let enabledToggle = app.checkBoxes["autoSaveEnabledToggle"]
+        let enabledToggle = app.switches["autoSaveEnabledToggle"]
         XCTAssertTrue(enabledToggle.waitForExistence(timeout: 5))
         XCTAssertEqual(
             enabledToggle.value as? String,

@@ -28,7 +28,7 @@ final class AutoSaveSettingsUITests: XCTestCase
         settingsButton.click()
 
         // 验证总开关存在
-        let enabledToggle = app.checkBoxes["autoSaveEnabledToggle"]
+        let enabledToggle = app.switches["autoSaveEnabledToggle"]
         XCTAssertTrue(enabledToggle.waitForExistence(timeout: 5), "总开关应存在")
 
         // 验证保存目录输入框存在
@@ -44,7 +44,7 @@ final class AutoSaveSettingsUITests: XCTestCase
         XCTAssertTrue(pathPicker.waitForExistence(timeout: 3), "路径格式选择器应存在")
 
         // 验证敏感过滤开关存在
-        let sensitiveToggle = app.checkBoxes["sensitiveFilterToggle"]
+        let sensitiveToggle = app.switches["sensitiveFilterToggle"]
         XCTAssertTrue(sensitiveToggle.waitForExistence(timeout: 3), "敏感过滤开关应存在")
 
         // 验证路径预览存在
@@ -112,7 +112,7 @@ final class AutoSaveSettingsUITests: XCTestCase
         settingsButton.click()
 
         // 开启总开关
-        let enabledToggle = app.checkBoxes["autoSaveEnabledToggle"]
+        let enabledToggle = app.switches["autoSaveEnabledToggle"]
         XCTAssertTrue(enabledToggle.waitForExistence(timeout: 5))
         if enabledToggle.value as? String == "0"
         {
@@ -135,7 +135,7 @@ final class AutoSaveSettingsUITests: XCTestCase
         XCTAssertTrue(settingsButton2.waitForExistence(timeout: 5))
         settingsButton2.click()
 
-        let enabledToggle2 = app2.checkBoxes["autoSaveEnabledToggle"]
+        let enabledToggle2 = app2.switches["autoSaveEnabledToggle"]
         XCTAssertTrue(enabledToggle2.waitForExistence(timeout: 5))
         XCTAssertEqual(enabledToggle2.value as? String, "1", "总开关状态应持久化保留")
     }
@@ -159,7 +159,7 @@ final class AutoSaveSettingsUITests: XCTestCase
         settingsButton.click()
 
         // 敏感过滤默认开启，点击关闭
-        let sensitiveToggle = app.checkBoxes["sensitiveFilterToggle"]
+        let sensitiveToggle = app.switches["sensitiveFilterToggle"]
         XCTAssertTrue(sensitiveToggle.waitForExistence(timeout: 5))
         XCTAssertEqual(sensitiveToggle.value as? String, "1", "敏感过滤应默认开启")
         sensitiveToggle.click()
@@ -170,7 +170,7 @@ final class AutoSaveSettingsUITests: XCTestCase
 
         // 点击取消，开关应恢复为开启
         cancelButton.click()
-        let sensitiveToggleAfter = app.checkBoxes["sensitiveFilterToggle"]
+        let sensitiveToggleAfter = app.switches["sensitiveFilterToggle"]
         XCTAssertEqual(sensitiveToggleAfter.value as? String, "1", "取消后敏感过滤应恢复开启")
     }
 }
