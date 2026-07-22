@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00090E23CE65C4C37AAEA327 /* DeduplicationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78922B73B4C72316CE935F12 /* DeduplicationTests.swift */; };
+		00627CBF855AA8790BFDA84E /* ClipCaptureServiceEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD83213DE4C9F4EEC36DBB6 /* ClipCaptureServiceEventTests.swift */; };
 		038D2F6AB128E67B0902C83E /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40EB26C58B1F517AE16B2EAF /* OnboardingView.swift */; };
 		04005F1CCC0AADE73B75A32F /* ClipItemDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430B2325F5811137580C673F /* ClipItemDecodingTests.swift */; };
 		043BD6F0E918EA893A42DCA5 /* InterceptingURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355A69DF340BFD385AA90A99 /* InterceptingURLProtocol.swift */; };
@@ -256,6 +257,7 @@
 		8746040340A99D2E81DD6057 /* SampleDataSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataSearchTests.swift; sourceTree = "<group>"; };
 		8962BAEA39300C713197F8E7 /* PollingHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollingHelper.swift; sourceTree = "<group>"; };
 		8B176355F678A8067619BEFA /* AutoSaveSettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettingsStoreTests.swift; sourceTree = "<group>"; };
+		8CD83213DE4C9F4EEC36DBB6 /* ClipCaptureServiceEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipCaptureServiceEventTests.swift; sourceTree = "<group>"; };
 		8CEB124A50A01EAEBD4B1F56 /* SensitiveMatchResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveMatchResultTests.swift; sourceTree = "<group>"; };
 		8EB3FAD2DCAE5F4E00347288 /* ClipMind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipMind.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F23B0900C3E3C4C6C129E60 /* LLMError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMError.swift; sourceTree = "<group>"; };
@@ -641,6 +643,7 @@
 			children = (
 				71D402E808160065FE9E7575 /* AppDetectorTests.swift */,
 				C604633C675BAF669C6866AA /* CaptureEventBuilderTests.swift */,
+				8CD83213DE4C9F4EEC36DBB6 /* ClipCaptureServiceEventTests.swift */,
 				BB064000B7D667AB412B5E4A /* ClipCaptureServiceTests.swift */,
 				3AFB70953AAE16C89101A34B /* ContentReaderTests.swift */,
 				78922B73B4C72316CE935F12 /* DeduplicationTests.swift */,
@@ -1048,6 +1051,7 @@
 				3EB3B71D472C4EE3EF2C2EE5 /* CaptureEventTests.swift in Sources */,
 				EC935B02E51584F47DC9017C /* ClassificationAccuracyTests.swift in Sources */,
 				C542F568C195941D3D4B4D1B /* CleanupServiceTests.swift in Sources */,
+				00627CBF855AA8790BFDA84E /* ClipCaptureServiceEventTests.swift in Sources */,
 				46D8162AB3FEAF385E4891C0 /* ClipCaptureServiceTests.swift in Sources */,
 				04005F1CCC0AADE73B75A32F /* ClipItemDecodingTests.swift in Sources */,
 				6DA69A5A7D088EF4CA724425 /* ClipItemModelTests.swift in Sources */,

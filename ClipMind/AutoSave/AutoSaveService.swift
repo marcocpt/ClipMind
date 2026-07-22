@@ -188,3 +188,7 @@ public final class AutoSaveService
         }
     }
 }
+
+// MARK: - AutoSaveServiceProtocol 遵循（F2.1 任务 3，D22 不修改公共接口）
+
+extension AutoSaveService: AutoSaveServiceProtocol {}
