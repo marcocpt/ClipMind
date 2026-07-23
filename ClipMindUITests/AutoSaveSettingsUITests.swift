@@ -8,6 +8,29 @@ final class AutoSaveSettingsUITests: XCTestCase
         continueAfterFailure = false
     }
 
+    /// 通过 accessibility identifier 查找元素。
+    ///
+    /// SwiftUI Toggle 在 macOS XCUITest 中可能映射为 switch、checkbox 或 otherElements，
+    /// 使用 descendants(.any) 兜底（参考 PrivacyUITests/SettingsUITests 模式）。
+    private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement
+    {
+        app.descendants(matching: .any)[identifier].firstMatch
+    }
+
+    /// 获取 Toggle 的布尔值（macOS 上 Toggle.value 可能为 Int 1/0 或 String "0"/"1"）。
+    private func toggleValue(_ toggle: XCUIElement) -> Int
+    {
+        if let intValue = toggle.value as? Int
+        {
+            return intValue
+        }
+        if let stringValue = toggle.value as? String
+        {
+            return Int(stringValue) ?? 0
+        }
+        return 0
+    }
+
     // MARK: - AC-07：配置面板可修改全部配置项
 
     /// 验证自动保存配置面板所有控件存在且可交互。
@@ -28,7 +51,7 @@ final class AutoSaveSettingsUITests: XCTestCase
         settingsButton.click()
 
         // 验证总开关存在
-        let enabledToggle = app.switches["autoSaveEnabledToggle"]
+        let enabledToggle = element("autoSaveEnabledToggle", in: app)
         XCTAssertTrue(enabledToggle.waitForExistence(timeout: 5), "总开关应存在")
 
         // 验证保存目录输入框存在
@@ -51,7 +74,7 @@ final class AutoSaveSettingsUITests: XCTestCase
         XCTAssertTrue(pathPicker.waitForExistence(timeout: 3), "路径格式选择器应存在")
 
         // 验证敏感过滤开关存在
-        let sensitiveToggle = app.switches["sensitiveFilterToggle"]
+        let sensitiveToggle = element("sensitiveFilterToggle", in: app)
         XCTAssertTrue(sensitiveToggle.waitForExistence(timeout: 3), "敏感过滤开关应存在")
 
         // 验证路径预览存在
@@ -119,13 +142,13 @@ final class AutoSaveSettingsUITests: XCTestCase
         settingsButton.click()
 
         // 开启总开关
-        let enabledToggle = app.switches["autoSaveEnabledToggle"]
+        let enabledToggle = element("autoSaveEnabledToggle", in: app)
         XCTAssertTrue(enabledToggle.waitForExistence(timeout: 5))
-        if enabledToggle.value as? String == "0"
+        if toggleValue(enabledToggle) == 0
         {
             enabledToggle.click()
         }
-        XCTAssertEqual(enabledToggle.value as? String, "1", "总开关应已开启")
+        XCTAssertEqual(toggleValue(enabledToggle), 1, "总开关应已开启")
 
         // 重启 App
         app.terminate()
@@ -142,9 +165,9 @@ final class AutoSaveSettingsUITests: XCTestCase
         XCTAssertTrue(settingsButton2.waitForExistence(timeout: 5))
         settingsButton2.click()
 
-        let enabledToggle2 = app2.switches["autoSaveEnabledToggle"]
+        let enabledToggle2 = element("autoSaveEnabledToggle", in: app2)
         XCTAssertTrue(enabledToggle2.waitForExistence(timeout: 5))
-        XCTAssertEqual(enabledToggle2.value as? String, "1", "总开关状态应持久化保留")
+        XCTAssertEqual(toggleValue(enabledToggle2), 1, "总开关状态应持久化保留")
     }
 
     // MARK: - AC-14：关闭敏感过滤二次确认 UI
@@ -166,18 +189,21 @@ final class AutoSaveSettingsUITests: XCTestCase
         settingsButton.click()
 
         // 敏感过滤默认开启，点击关闭
-        let sensitiveToggle = app.switches["sensitiveFilterToggle"]
+        let sensitiveToggle = element("sensitiveFilterToggle", in: app)
         XCTAssertTrue(sensitiveToggle.waitForExistence(timeout: 5))
-        XCTAssertEqual(sensitiveToggle.value as? String, "1", "敏感过滤应默认开启")
+        XCTAssertEqual(toggleValue(sensitiveToggle), 1, "敏感过滤应默认开启")
         sensitiveToggle.click()
 
-        // 验证二次确认弹窗出现
-        let cancelButton = app.buttons["取消"]
-        XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "二次确认弹窗应出现")
+        // 验证二次确认弹窗出现（macOS SwiftUI .alert 以 sheet 形式呈现，
+        // 参考 FirstLaunchUITests/SampleDataUITests 的查询模式）
+        let alertSheet = app.sheets.firstMatch
+        XCTAssertTrue(alertSheet.waitForExistence(timeout: 3), "二次确认弹窗应出现")
 
         // 点击取消，开关应恢复为开启
+        let cancelButton = alertSheet.buttons["取消"]
+        XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "取消按钮应存在")
         cancelButton.click()
-        let sensitiveToggleAfter = app.switches["sensitiveFilterToggle"]
-        XCTAssertEqual(sensitiveToggleAfter.value as? String, "1", "取消后敏感过滤应恢复开启")
+        let sensitiveToggleAfter = element("sensitiveFilterToggle", in: app)
+        XCTAssertEqual(toggleValue(sensitiveToggleAfter), 1, "取消后敏感过滤应恢复开启")
     }
 }
