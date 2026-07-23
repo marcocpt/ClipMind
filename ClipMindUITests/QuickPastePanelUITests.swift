@@ -76,12 +76,8 @@ final class QuickPastePanelUITests: XCTestCase
             accuracy: 50,
             "面板应显示在屏幕中央水平位置"
         )
-
-        // 垂直位置验证：搜索框在面板顶部，面板居中时搜索框应在屏幕上半部分
-        XCTAssertTrue(
-            searchFieldFrame.midY > screenFrame.midY,
-            "面板居中时搜索框应在屏幕上半部分"
-        )
+        // 垂直精确居中由单元测试 testShowPanel_AtScreenCenter_WhenNoLastPosition 验证。
+        // XCUITest 与 AppKit 坐标系 Y 轴方向可能不一致，不在 UI 测试中断言垂直位置。
     }
 
     // MARK: - TC-F1.9-8-01 Esc 键关闭面板不粘贴
@@ -333,27 +329,27 @@ final class QuickPastePanelUITests: XCTestCase
         ]
         app.launch()
 
-        let rows = app.descendants(matching: .any).matching(
-            NSPredicate(format: "identifier CONTAINS 'quickPasteRow'")
-        )
-        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 5))
+        // 预置数据顺序：image=row0（默认高亮）, filePath=row1, text=row2
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5), "第一行应默认高亮")
 
-        // 双击第一行（图片）显示提示
-        rows.firstMatch.doubleClick()
+        // 双击第一行（image）显示提示
+        firstRow.doubleClick()
         let hint = app.staticTexts["textOnlyHint"].firstMatch
-        XCTAssertTrue(hint.waitForExistence(timeout: 2))
+        XCTAssertTrue(hint.waitForExistence(timeout: 3), "应显示'仅支持文本粘贴'提示")
 
-        // 单击第二行
-        let secondRow = rows.element(boundBy: 1)
-        if secondRow.exists
-        {
-            secondRow.click()
-            let hintCleared = NSPredicate(format: "exists == NO")
-            let expectation = XCTNSPredicateExpectation(
-                predicate: hintCleared,
-                object: hint
-            )
-            wait(for: [expectation], timeout: 2.0)
-        }
+        // 单击第二行（filePath）应清除提示
+        let secondRow = app.descendants(matching: .any)["quickPasteRow_1"].firstMatch
+        XCTAssertTrue(secondRow.waitForExistence(timeout: 3), "第二行应存在")
+        secondRow.click()
+
+        // 等待提示消失
+        let hintCleared = NSPredicate(format: "exists == NO")
+        let expectation = XCTNSPredicateExpectation(
+            predicate: hintCleared,
+            object: hint
+        )
+        wait(for: [expectation], timeout: 3.0)
+        XCTAssertFalse(hint.exists, "点击其他行后提示应清除")
     }
 }

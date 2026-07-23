@@ -35,6 +35,28 @@ final class QuickPasteOverlayUITests: XCTestCase
         UserDefaults.standard.removeObject(forKey: "F1.9.quickPaste.overlayDuration")
     }
 
+    /// 等待浮层可见性 test hook 达到指定状态。
+    ///
+    /// NSPanel(.nonactivatingPanel) 在 CI 中无法被 XCUITest 可靠检测，
+    /// 改为检测主窗口的 `quickPasteTestOverlayVisible` 元素（label "1"=可见, "0"=不可见）。
+    /// - Parameters:
+    ///   - app: XCUIApplication
+    ///   - visible: 期望状态（true=可见, false=不可见）
+    ///   - timeout: 超时秒数
+    /// - Returns: 是否在超时内达到期望状态
+    private func waitOverlayState(
+        _ app: XCUIApplication,
+        visible: Bool,
+        timeout: TimeInterval
+    ) -> Bool {
+        let stateElement = app.staticTexts["quickPasteTestOverlayVisible"].firstMatch
+        let expectedLabel = visible ? "1" : "0"
+        let predicate = NSPredicate(format: "label == %@", expectedLabel)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: stateElement)
+        wait(for: [expectation], timeout: timeout)
+        return stateElement.label == expectedLabel
+    }
+
     // MARK: - TC-F1.9-7-04 设置面板包含浮层超时配置 Stepper
 
     func testSettings_ContainsOverlayTimeoutStepper()
@@ -70,6 +92,9 @@ final class QuickPasteOverlayUITests: XCTestCase
 
     // MARK: - TC-F1.9-7-01 无权限时双击降级粘贴流程
 
+    /// 浮层为 NSPanel(.nonactivatingPanel)，CI 中 XCUITest 无法可靠检测浮层本身。
+    /// 改为检测主窗口的 `quickPasteTestOverlayVisible` test hook 元素（label "1"=浮层可见）。
+    /// 浮层文案与不显示剪贴板原文由 `PasteOverlayControllerTests` 单元测试覆盖。
     func testDegradedPaste_ShowsOverlay_OnDoubleClick()
     {
         let app = XCUIApplication()
@@ -86,8 +111,7 @@ final class QuickPasteOverlayUITests: XCTestCase
 
         firstRow.doubleClick()
 
-        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
-        XCTAssertTrue(overlayMessage.waitForExistence(timeout: 3), "应显示降级浮层")
+        XCTAssertTrue(waitOverlayState(app, visible: true, timeout: 3), "应显示降级浮层")
     }
 
     // MARK: - TC-F1.9-7-03 降级浮层在超时兜底后消失（默认 5 秒，测试用 1 秒加速）
@@ -108,16 +132,10 @@ final class QuickPasteOverlayUITests: XCTestCase
         XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
         firstRow.doubleClick()
 
-        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
-        XCTAssertTrue(overlayMessage.waitForExistence(timeout: 3), "浮层应显示")
+        XCTAssertTrue(waitOverlayState(app, visible: true, timeout: 3), "浮层应显示")
 
         // 等待超时消失（1 秒 + 余量）
-        let expectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "exists == NO"),
-            object: overlayMessage
-        )
-        wait(for: [expectation], timeout: 5.0)
-        XCTAssertFalse(overlayMessage.exists, "超时后浮层应消失")
+        XCTAssertTrue(waitOverlayState(app, visible: false, timeout: 5), "超时后浮层应消失")
     }
 
     // MARK: - TC-F1.9-7-02 降级浮层在剪贴板被消费后消失
@@ -138,16 +156,10 @@ final class QuickPasteOverlayUITests: XCTestCase
         XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
         firstRow.doubleClick()
 
-        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
-        XCTAssertTrue(overlayMessage.waitForExistence(timeout: 3), "浮层应显示")
+        XCTAssertTrue(waitOverlayState(app, visible: true, timeout: 3), "浮层应显示")
 
         // 等待消费模拟触发浮层消失
-        let expectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "exists == NO"),
-            object: overlayMessage
-        )
-        wait(for: [expectation], timeout: 5.0)
-        XCTAssertFalse(overlayMessage.exists, "消费后浮层应消失")
+        XCTAssertTrue(waitOverlayState(app, visible: false, timeout: 5), "消费后浮层应消失")
     }
 
     // MARK: - TC-F1.9-7-04 超时配置变更为 10 秒后立即生效
@@ -170,18 +182,13 @@ final class QuickPasteOverlayUITests: XCTestCase
         XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
         firstRow.doubleClick()
 
-        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
-        XCTAssertTrue(overlayMessage.waitForExistence(timeout: 3), "浮层应显示")
+        XCTAssertTrue(waitOverlayState(app, visible: true, timeout: 3), "浮层应显示")
 
         // 验证浮层在 5 秒内不消失（配置为 10 秒）
-        // isInverted = true：谓词 exists == NO 在 timeout 内未满足才算 fulfill
-        let notDisappearedExpectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "exists == NO"),
-            object: overlayMessage
+        XCTAssertFalse(
+            waitOverlayState(app, visible: false, timeout: 5),
+            "配置 10 秒后，5 秒内浮层应仍存在"
         )
-        notDisappearedExpectation.isInverted = true
-        wait(for: [notDisappearedExpectation], timeout: 5.0)
-        XCTAssertTrue(overlayMessage.exists, "配置 10 秒后，5 秒内浮层应仍存在")
 
         // 第二次：修改配置为 3 秒超时，验证 4 秒内浮层消失
         app.terminate()
@@ -199,16 +206,13 @@ final class QuickPasteOverlayUITests: XCTestCase
         XCTAssertTrue(firstRow2.waitForExistence(timeout: 5))
         firstRow2.doubleClick()
 
-        let overlayMessage2 = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
-        XCTAssertTrue(overlayMessage2.waitForExistence(timeout: 3), "浮层应再次显示")
+        XCTAssertTrue(waitOverlayState(app, visible: true, timeout: 3), "浮层应再次显示")
 
-        // 验证浮层在 4 秒内消失（配置为 3 秒，isInverted = false：谓词满足即 fulfill）
-        let disappearExpectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "exists == NO"),
-            object: overlayMessage2
+        // 验证浮层在 4 秒内消失（配置为 3 秒）
+        XCTAssertTrue(
+            waitOverlayState(app, visible: false, timeout: 4),
+            "配置 3 秒后，4 秒内浮层应消失"
         )
-        wait(for: [disappearExpectation], timeout: 4.0)
-        XCTAssertFalse(overlayMessage2.exists, "配置 3 秒后，4 秒内浮层应消失")
 
         // 清理配置
         UserDefaults.standard.removeObject(forKey: "F1.9.quickPaste.overlayDuration")
@@ -233,15 +237,10 @@ final class QuickPasteOverlayUITests: XCTestCase
 
         // 验证无权限时走降级路径（显示浮层）
         firstRow.doubleClick()
-        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
-        XCTAssertTrue(overlayMessage.waitForExistence(timeout: 3), "无权限时应显示降级浮层")
+        XCTAssertTrue(waitOverlayState(app, visible: true, timeout: 3), "无权限时应显示降级浮层")
 
         // 等待浮层超时消失
-        let disappearExpectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "exists == NO"),
-            object: overlayMessage
-        )
-        wait(for: [disappearExpectation], timeout: 5.0)
+        XCTAssertTrue(waitOverlayState(app, visible: false, timeout: 5), "超时后浮层应消失")
     }
 
     // MARK: - Phase 4：有权限路径 UI 测试（仅 ClipMind-Dev Scheme 运行）

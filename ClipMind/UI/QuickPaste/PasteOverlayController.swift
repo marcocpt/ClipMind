@@ -2,6 +2,16 @@ import AppKit
 import Foundation
 import SwiftUI
 
+/// 浮层可见性变更通知名（UI 测试 test hook 用）。
+///
+/// NSPanel(.nonactivatingPanel) 在 CI 中无法被 XCUITest 可靠检测，
+/// 通过此通知把浮层可见状态广播到主窗口的 test hook 元素，供 UI 测试验证。
+/// 生产代码不依赖此通知。
+extension Notification.Name
+{
+    static let pasteOverlayVisibilityChanged = Notification.Name("F1.9.quickPaste.overlayVisibilityChanged")
+}
+
 /// 浮层定位协议（依赖注入，便于测试 mock）。
 protocol OverlayScreenLocating: AnyObject
 {
@@ -91,6 +101,9 @@ final class PasteOverlayController: OverlayShowing
     /// 浮层固定尺寸。
     private static let overlaySize = NSSize(width: 220, height: 60)
 
+    /// 浮层可见性通知 userInfo 键（test hook 用）。
+    static let visibilityUserInfoKey = "isOverlayVisible"
+
     private let consumerWatcher: ClipboardConsumerWatcherProtocol
     private let timerScheduler: OverlayTimerScheduling
     private let settings: QuickPasteSettings
@@ -144,6 +157,7 @@ final class PasteOverlayController: OverlayShowing
         }
 
         LogCategory.ui.info("Paste overlay shown, timeout: \(duration)s")
+        postVisibilityChangedNotification(visible: true)
     }
 
     func hideOverlay()
@@ -158,6 +172,7 @@ final class PasteOverlayController: OverlayShowing
         panel = nil
         isOverlayVisible = false
         LogCategory.ui.info("Paste overlay hidden")
+        postVisibilityChangedNotification(visible: false)
     }
 
     // MARK: - 测试辅助
@@ -169,6 +184,16 @@ final class PasteOverlayController: OverlayShowing
     }
 
     // MARK: - 私有
+
+    /// 广播浮层可见性变更通知（test hook 用，供主窗口 test 元素反映状态）。
+    private func postVisibilityChangedNotification(visible: Bool)
+    {
+        NotificationCenter.default.post(
+            name: .pasteOverlayVisibilityChanged,
+            object: nil,
+            userInfo: [Self.visibilityUserInfoKey: visible]
+        )
+    }
 
     private func makePanel() -> NSPanel
     {

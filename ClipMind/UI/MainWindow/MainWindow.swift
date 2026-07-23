@@ -7,6 +7,9 @@ struct MainWindow: View {
     @State private var isSearching = false
     @State private var selectedSourceApp: String?
     @StateObject private var clipStore = ClipStore()
+    /// 浮层可见性 test hook（监听 PasteOverlayController 广播，供 UI 测试检测浮层状态）。
+    /// NSPanel(.nonactivatingPanel) 在 CI 中无法被 XCUITest 可靠检测，主窗口元素反映状态。
+    @State private var overlayVisibleForTesting = false
 
     private var allClips: [ClipItem] {
         ClipTestData.isUITesting ? ClipTestData.previewClips : clipStore.clips
@@ -38,6 +41,17 @@ struct MainWindow: View {
                 selectedClip = allClips.first
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .pasteOverlayVisibilityChanged)) { note in
+            if let visible = note.userInfo?[PasteOverlayController.visibilityUserInfoKey] as? Bool {
+                overlayVisibleForTesting = visible
+            }
+        }
+        // 浮层可见性 test hook 元素（隐藏，不影响视觉）。
+        // 值为 "1" 表示浮层可见，"0" 表示不可见。供 QuickPasteOverlayUITests 检测。
+        Text(overlayVisibleForTesting ? "1" : "0")
+            .accessibilityIdentifier("quickPasteTestOverlayVisible")
+            .frame(width: 0, height: 0)
+            .opacity(0)
     }
 
     private var searchPanel: some View {
