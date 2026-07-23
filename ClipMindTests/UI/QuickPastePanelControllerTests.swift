@@ -130,4 +130,54 @@ final class QuickPastePanelControllerTests: XCTestCase
             return screenFrame.contains(panelRect)
         }
     }
+
+    // MARK: - TC-F1.9-8-01 Esc 键关闭面板不粘贴
+
+    func testClosePanel_OnEscKey_ClosesPanelWithoutPaste()
+    {
+        let controller = QuickPastePanelController(screenLocator: ScreenCenterLocator())
+        var pasteCalled = false
+        controller.onPasteTriggeredForTesting = { _ in pasteCalled = true }
+
+        controller.showPanel()
+        XCTAssertTrue(controller.isPanelVisible)
+
+        controller.handleEscKeyForTesting()
+
+        XCTAssertFalse(controller.isPanelVisible, "Esc 键应关闭面板")
+        XCTAssertFalse(pasteCalled, "Esc 关闭不应触发粘贴流程")
+    }
+
+    // MARK: - TC-F1.9-9-01 面板失焦自动关闭
+
+    func testClosePanel_OnResignKey_ClosesPanelWithoutPaste()
+    {
+        let controller = QuickPastePanelController(screenLocator: ScreenCenterLocator())
+        var pasteCalled = false
+        controller.onPasteTriggeredForTesting = { _ in pasteCalled = true }
+
+        controller.showPanel()
+        XCTAssertTrue(controller.isPanelVisible)
+
+        controller.handleDidResignKeyForTesting()
+
+        XCTAssertFalse(controller.isPanelVisible, "失焦应关闭面板")
+        XCTAssertFalse(pasteCalled, "失焦关闭不应触发粘贴流程")
+    }
+
+    // MARK: - TC-F1.9-S-02 三种关闭路径互不冲突（双击+失焦竞态）
+
+    func testClosePanel_OnEscAndResignKey_OnlyClosesOnce()
+    {
+        let controller = QuickPastePanelController(screenLocator: ScreenCenterLocator())
+        controller.showPanel()
+        XCTAssertTrue(controller.isPanelVisible)
+
+        controller.handleEscKeyForTesting()
+        let visibleAfterEsc = controller.isPanelVisible
+        controller.handleDidResignKeyForTesting()
+
+        XCTAssertFalse(visibleAfterEsc, "Esc 后应已关闭")
+        XCTAssertFalse(controller.isPanelVisible, "再次失焦不应崩溃或重复关闭")
+    }
 }

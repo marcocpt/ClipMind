@@ -62,6 +62,13 @@ final class QuickPastePanelController
         let position = screenLocator.locatePosition(lastClosedPosition: lastClosedPosition)
         panel.setFrameOrigin(position)
         panel.makeKeyAndOrderFront(nil)
+        resignObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleDidResignKey()
+        }
         isPanelVisible = true
         LogCategory.ui.info("QuickPaste panel shown at position")
     }
@@ -80,10 +87,50 @@ final class QuickPastePanelController
         let frame = panel.frame
         recordLastClosedPosition(NSPoint(x: frame.origin.x, y: frame.origin.y))
 
+        if let observer = resignObserver
+        {
+            NotificationCenter.default.removeObserver(observer)
+            resignObserver = nil
+        }
+
         panel.orderOut(nil)
         self.panel = nil
         isPanelVisible = false
         LogCategory.ui.info("QuickPaste panel closed, position recorded")
+    }
+
+    /// 仅供测试注入的粘贴回调（Phase 2/3 接入真实 PasteCoordinator 后移除）。
+    var onPasteTriggeredForTesting: ((ClipItem) -> Void)?
+
+    /// 失焦通知观察者。
+    private var resignObserver: NSObjectProtocol?
+
+    /// Esc 键处理（由 QuickPasteView 的 NSEvent 监听器调用，任务 6 接入）。
+    func handleEscKey()
+    {
+        guard isPanelVisible else { return }
+        LogCategory.ui.info("QuickPaste panel closed by Esc key")
+        closePanelInternal()
+    }
+
+    /// 失焦处理（由 NSPanel.didResignKeyNotification 触发）。
+    @objc func handleDidResignKey()
+    {
+        guard isPanelVisible else { return }
+        LogCategory.ui.info("QuickPaste panel closed by resign key")
+        closePanelInternal()
+    }
+
+    /// 仅供测试触发 Esc 关闭。
+    func handleEscKeyForTesting()
+    {
+        handleEscKey()
+    }
+
+    /// 仅供测试触发失焦关闭。
+    func handleDidResignKeyForTesting()
+    {
+        handleDidResignKey()
     }
 
     // MARK: - 测试辅助
