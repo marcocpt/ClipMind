@@ -60,4 +60,74 @@ final class QuickPastePanelControllerTests: XCTestCase
             )
         }
     }
+
+    // MARK: - TC-F1.9-3-02 无权限时面板显示在上次关闭位置
+
+    func testShowPanel_AtLastClosedPosition_WhenPositionInVisibleRange()
+    {
+        let locator = LastClosedPositionLocator()
+        let controller = QuickPastePanelController(screenLocator: locator)
+
+        // 模拟上次关闭位置（屏幕中央偏移 100 点）
+        let screenFrame = NSScreen.main?.frame ?? .zero
+        let recordedPosition = NSPoint(x: screenFrame.midX - 100, y: screenFrame.midY - 100)
+        controller.setLastClosedPositionForTesting(recordedPosition)
+
+        controller.showPanel()
+
+        let panelFrame = controller.panelFrameForTesting
+        XCTAssertEqual(panelFrame.origin.x, recordedPosition.x, accuracy: 1.0, "面板应在上次关闭位置")
+        XCTAssertEqual(panelFrame.origin.y, recordedPosition.y, accuracy: 1.0, "面板应在上次关闭位置")
+
+        controller.closePanel()
+    }
+
+    // MARK: - 屏幕可视范围校验（上次位置超出屏幕时降级到屏幕中央）
+
+    func testShowPanel_FallsBackToScreenCenter_WhenLastPositionOutOfScreen()
+    {
+        let locator = LastClosedPositionLocator()
+        let controller = QuickPastePanelController(screenLocator: locator)
+
+        // 模拟上次关闭位置在屏幕外（负坐标）
+        controller.setLastClosedPositionForTesting(NSPoint(x: -10000, y: -10000))
+
+        controller.showPanel()
+
+        let panelFrame = controller.panelFrameForTesting
+        let screenFrame = NSScreen.main?.frame ?? .zero
+        let expectedCenterX = screenFrame.midX - panelFrame.width / 2.0
+        XCTAssertEqual(panelFrame.origin.x, expectedCenterX, accuracy: 1.0, "上次位置超出屏幕时应降级到屏幕中央")
+
+        controller.closePanel()
+    }
+
+    // MARK: - 测试辅助：上次关闭位置定位器
+
+    /// 上次关闭位置定位器（无权限路径使用 lastClosedPosition）。
+    private final class LastClosedPositionLocator: PanelScreenLocating
+    {
+        func locatePosition(lastClosedPosition: NSPoint?) -> NSPoint
+        {
+            guard let lastClosedPosition = lastClosedPosition,
+                  isPositionVisible(lastClosedPosition)
+            else
+            {
+                let screenFrame = NSScreen.main?.frame ?? .zero
+                return NSPoint(
+                    x: screenFrame.midX - QuickPastePanelController.panelSize.width / 2.0,
+                    y: screenFrame.midY - QuickPastePanelController.panelSize.height / 2.0
+                )
+            }
+            return lastClosedPosition
+        }
+
+        private func isPositionVisible(_ position: NSPoint) -> Bool
+        {
+            let screenFrame = NSScreen.main?.frame ?? .zero
+            let panelSize = QuickPastePanelController.panelSize
+            let panelRect = NSRect(origin: position, size: panelSize)
+            return screenFrame.contains(panelRect)
+        }
+    }
 }

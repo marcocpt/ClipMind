@@ -94,6 +94,12 @@ final class QuickPastePanelController
         panel?.frame ?? .zero
     }
 
+    /// 仅供单元测试注入上次关闭位置（模拟位置记忆场景）。
+    func setLastClosedPositionForTesting(_ position: NSPoint)
+    {
+        lastClosedPosition = position
+    }
+
     // MARK: - 私有
 
     private func makePanel() -> NSPanel
