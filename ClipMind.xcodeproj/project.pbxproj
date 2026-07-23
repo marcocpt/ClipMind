@@ -1267,6 +1267,14 @@
 			};
 			name = Debug;
 		};
+		44AE533BF954D13B26B66AC9 /* DebugDev */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				TEST_TARGET_NAME = ClipMind;
+			};
+			name = DebugDev;
+		};
 		47C59EABE1C03401BA99BC84 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1279,6 +1287,20 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 			};
 			name = Release;
+		};
+		7163E22F7CEC063C2EA32962 /* DebugDev */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ClipMind/Resources/ClipMind.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_TESTABILITY = YES;
+				INFOPLIST_FILE = ClipMind/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = CLIPMIND_DEV;
+			};
+			name = DebugDev;
 		};
 		76EA24B9FC675E1719217EA8 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1295,6 +1317,15 @@
 				SWIFT_VERSION = 5.7;
 			};
 			name = Debug;
+		};
+		83B8BD83A2F5D23D1D2F023D /* DebugDev */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ClipMind.app/Contents/MacOS/ClipMind";
+			};
+			name = DebugDev;
 		};
 		8D32D79F6F36250E0F32A74C /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1329,6 +1360,21 @@
 			};
 			name = Debug;
 		};
+		C3655D88EA534CD36D67AF08 /* DebugDev */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clipmind.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.7;
+			};
+			name = DebugDev;
+		};
 		E62AA310946487C7C3816B8F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1344,6 +1390,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3BFA54CBC46BDFD925BDA9F1 /* Debug */,
+				7163E22F7CEC063C2EA32962 /* DebugDev */,
 				47C59EABE1C03401BA99BC84 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -1353,6 +1400,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E62AA310946487C7C3816B8F /* Debug */,
+				44AE533BF954D13B26B66AC9 /* DebugDev */,
 				2CA87C1D3D68F32A794BA462 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -1362,6 +1410,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C0A59EFA442BD8A8FF5699CD /* Debug */,
+				83B8BD83A2F5D23D1D2F023D /* DebugDev */,
 				8D32D79F6F36250E0F32A74C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -1371,6 +1420,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				76EA24B9FC675E1719217EA8 /* Debug */,
+				C3655D88EA534CD36D67AF08 /* DebugDev */,
 				B0F57935BDD2FEB31729C15B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
