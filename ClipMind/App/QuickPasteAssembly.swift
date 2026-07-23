@@ -160,6 +160,11 @@ extension AppDelegate
     }
 
     /// UI 测试专用：预置图片+文件路径数据到 EncryptedStore。
+    ///
+    /// 存储顺序：先存 text 和 filePath（较旧），最后存 image（最新）。
+    /// loadAll 按 timestamp.desc（最新优先）返回，因此 image 为第一行（row 0），
+    /// filePath 为第二行（row 1），text 为第三行（row 2）。
+    /// UI 测试 testDoubleClick_OnImageRow_ShowsTextOnlyHint 依赖此顺序。
     func prepopulateImageAndFilePathForTesting()
     {
         do {
@@ -182,9 +187,10 @@ extension AppDelegate
                 sourceApp: "com.test",
                 sourceAppName: "Test"
             )
-            try store.save(imageClip)
-            try store.save(filePathClip)
+            // 先存 text 和 filePath（较旧），最后存 image（最新 = row 0）
             try store.save(textClip)
+            try store.save(filePathClip)
+            try store.save(imageClip)
             NotificationCenter.default.post(
                 name: ClipCaptureService.clipDidUpdateNotification,
                 object: nil

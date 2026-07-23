@@ -126,7 +126,10 @@ final class PasteOverlayController: OverlayShowing
 
         let position = screenLocator.locatePosition()
         panel.setFrameOrigin(position)
-        panel.makeKeyAndOrderFront(nil)
+        // 使用 orderFrontRegardless 而非 makeKeyAndOrderFront：浮层为非激活面板，
+        // 在面板关闭后 app 可能失焦，makeKeyAndOrderFront 可能无法可靠显示浮层。
+        // orderFrontRegardless 不要求 app 处于活动状态，CI 环境更可靠。
+        panel.orderFrontRegardless()
         isOverlayVisible = true
 
         // 启动消费监听

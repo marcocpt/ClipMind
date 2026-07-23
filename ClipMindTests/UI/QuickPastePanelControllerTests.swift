@@ -68,9 +68,15 @@ final class QuickPastePanelControllerTests: XCTestCase
         let locator = LastClosedPositionLocator()
         let controller = QuickPastePanelController(screenLocator: locator)
 
-        // 模拟上次关闭位置（屏幕中央偏移 100 点）
-        let screenFrame = NSScreen.main?.frame ?? .zero
-        let recordedPosition = NSPoint(x: screenFrame.midX - 100, y: screenFrame.midY - 100)
+        // 使用 visibleFrame（排除菜单栏和 Dock）计算位置，确保面板完全在可视范围内，
+        // 避免 macOS 在 makeKeyAndOrderFront 时自动调整位置导致断言失败。
+        let visibleFrame = NSScreen.main?.visibleFrame ?? NSScreen.main?.frame ?? .zero
+        let panelSize = QuickPastePanelController.panelSize
+        // 偏移 20 点（确保仍在 visibleFrame 内，不被 macOS 约束调整）
+        let recordedPosition = NSPoint(
+            x: visibleFrame.minX + (visibleFrame.width - panelSize.width) / 2.0 + 20,
+            y: visibleFrame.minY + (visibleFrame.height - panelSize.height) / 2.0 + 20
+        )
         controller.setLastClosedPositionForTesting(recordedPosition)
 
         controller.showPanel()

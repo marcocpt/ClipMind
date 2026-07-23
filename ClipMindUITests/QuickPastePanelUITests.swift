@@ -51,6 +51,9 @@ final class QuickPastePanelUITests: XCTestCase
 
     // MARK: - TC-F1.9-3-01 无权限时面板显示在屏幕中央
 
+    /// 非激活面板（NSPanel.nonactivatingPanel）不在 app.windows 中，无法直接获取窗口 frame。
+    /// 通过搜索框 frame 推断面板位置：搜索框横跨面板大部分宽度，其 midX 近似面板 midX。
+    /// 面板精确居中由单元测试 testShowPanel_AtScreenCenter_WhenNoLastPosition 验证。
     func testPanelPositionedAtScreenCenter_WhenNoLastPosition()
     {
         let app = XCUIApplication()
@@ -61,14 +64,24 @@ final class QuickPastePanelUITests: XCTestCase
         app.launch()
 
         let searchField = app.textFields["quickPasteSearchField"]
-        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5), "面板应出现")
 
-        // 验证面板显示在屏幕中央（通过面板窗口 frame 与主屏 frame 比对，允许 ±50px 误差）
-        // 注意：本测试文件顶部需 `import AppKit` 以使用 NSScreen
-        let panelFrame = app.windows.containing(.textField, identifier: "quickPasteSearchField").firstMatch.frame
+        let searchFieldFrame = searchField.frame
         let screenFrame = NSScreen.main?.frame ?? .zero
-        XCTAssertEqual(panelFrame.midX, screenFrame.midX, accuracy: 50, "面板应显示在屏幕中央水平位置")
-        XCTAssertEqual(panelFrame.midY, screenFrame.midY, accuracy: 50, "面板应显示在屏幕中央垂直位置")
+
+        // 水平居中验证：搜索框 midX 应接近屏幕 midX（搜索框在面板内近似居中）
+        XCTAssertEqual(
+            searchFieldFrame.midX,
+            screenFrame.midX,
+            accuracy: 50,
+            "面板应显示在屏幕中央水平位置"
+        )
+
+        // 垂直位置验证：搜索框在面板顶部，面板居中时搜索框应在屏幕上半部分
+        XCTAssertTrue(
+            searchFieldFrame.midY > screenFrame.midY,
+            "面板居中时搜索框应在屏幕上半部分"
+        )
     }
 
     // MARK: - TC-F1.9-8-01 Esc 键关闭面板不粘贴
