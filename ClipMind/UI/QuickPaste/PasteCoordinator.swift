@@ -39,7 +39,13 @@ protocol PanelClosing: AnyObject
 /// 职责：接收双击/回车事件 → 检测权限 → 写剪贴板 → 关闭面板 → 分支有权限/无权限路径。
 ///
 /// Phase 3 实现无权限降级分支（显示浮层）。
-/// Phase 4 会扩展有权限分支（模拟粘贴按键），通过新增 `pasteSimulator` 依赖实现。
+/// Phase 4 扩展有权限分支（模拟粘贴按键），通过 `pasteSimulator` 依赖实现。
+///
+/// 编译条件说明：
+/// - 主 Scheme `ClipMind`（无 CLIPMIND_DEV）：`pasteSimulator` 参数类型为 `Any?`（默认 nil），
+///   不调用模拟粘贴，有权限路径回退到显示浮层
+/// - ClipMind-Dev Scheme（有 CLIPMIND_DEV）：`pasteSimulator` 传入 `PasteSimulating?`，
+///   有权限路径通过 `as? PasteSimulating` 类型转换后调用模拟粘贴
 ///
 /// 关键约束：
 /// - 每次粘贴流程重新检测权限，不缓存（AC-F1.9-12）
@@ -53,17 +59,24 @@ final class PasteCoordinator
     private let panelCloser: PanelClosing
     private let overlayShower: OverlayShowing
 
+    /// 模拟粘贴按键依赖。主 Scheme 下为 nil（不模拟粘贴，回退到显示浮层）；
+    /// ClipMind-Dev Scheme 下传入 `PasteSimulating?`（通过 `#if CLIPMIND_DEV` 内的 `as? PasteSimulating` 类型转换访问）。
+    /// 使用 `Any?` 避免条件编译包裹 init 参数导致的脆弱语法。
+    private let pasteSimulator: Any?
+
     init(
         permissionChecker: PastePermissionChecking,
         clipboardWriter: ClipboardWriting,
         panelCloser: PanelClosing,
-        overlayShower: OverlayShowing
+        overlayShower: OverlayShowing,
+        pasteSimulator: Any? = nil
     )
     {
         self.permissionChecker = permissionChecker
         self.clipboardWriter = clipboardWriter
         self.panelCloser = panelCloser
         self.overlayShower = overlayShower
+        self.pasteSimulator = pasteSimulator
     }
 
     /// 处理粘贴请求（由 QuickPasteViewModel.onPasteTriggered 调用）。
@@ -91,9 +104,18 @@ final class PasteCoordinator
         // 关闭快速粘贴面板
         panelCloser.closePanel()
 
-        if hasPermission {
-            // Phase 3 阶段：主 Scheme 沙盒内无法模拟 Cmd+V，有权限路径回退显示降级浮层作为合规回退（Fix 10）
-            // Phase 4 会在此分支接入 PasteSimulator 模拟粘贴按键（ClipMind-Dev Scheme）
+        if hasPermission
+        {
+            #if CLIPMIND_DEV
+            if let simulator = pasteSimulator as? PasteSimulating
+            {
+                // 有权限路径：模拟粘贴按键（设计文档第 7.4 节，面板关闭后再模拟粘贴）
+                simulator.simulatePaste()
+                LogCategory.app.info("Paste flow: permission granted path, paste simulated")
+                return
+            }
+            #endif
+            // 主 Scheme 或无 pasteSimulator 时：有权限路径回退到显示浮层（合规回退）
             overlayShower.showOverlay()
             LogCategory.app.info("Paste flow: permission granted path (compliance fallback, overlay shown)")
         } else {

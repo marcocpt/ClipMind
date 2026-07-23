@@ -22,6 +22,18 @@ protocol PasteEventSending: AnyObject
     )
 }
 
+/// 粘贴模拟协议（依赖注入，便于测试 mock）。
+///
+/// 设计文档第 3.6 节。PasteSimulator 默认实现遵循此协议。
+protocol PasteSimulating: AnyObject
+{
+    /// 模拟系统标准粘贴按键。
+    func simulatePaste()
+}
+
+/// 使 PasteSimulator 遵循 PasteSimulating 协议。
+extension PasteSimulator: PasteSimulating {}
+
 /// 模拟粘贴按键模块（合规待定，仅 ClipMind-Dev Scheme 编译）。
 ///
 /// 设计文档第 3.6 节 + 第 10.3 节「合规待定」标注。
