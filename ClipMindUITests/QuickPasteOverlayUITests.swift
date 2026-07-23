@@ -67,4 +67,86 @@ final class QuickPasteOverlayUITests: XCTestCase
             "设置面板应包含浮层超时 Stepper"
         )
     }
+
+    // MARK: - TC-F1.9-7-01 无权限时双击降级粘贴流程
+
+    func testDegradedPaste_ShowsOverlay_OnDoubleClick()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_NO_PERMISSION"
+        ]
+        app.launch()
+
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
+
+        firstRow.doubleClick()
+
+        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertTrue(overlayMessage.waitForExistence(timeout: 3), "应显示降级浮层")
+    }
+
+    // MARK: - TC-F1.9-7-03 降级浮层在超时兜底后消失（默认 5 秒，测试用 1 秒加速）
+
+    func testOverlay_Disappears_OnTimeout()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_NO_PERMISSION",
+            "--UITEST_OVERLAY_TIMEOUT_1S"
+        ]
+        app.launch()
+
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
+        firstRow.doubleClick()
+
+        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertTrue(overlayMessage.waitForExistence(timeout: 3), "浮层应显示")
+
+        // 等待超时消失（1 秒 + 余量）
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: overlayMessage
+        )
+        wait(for: [expectation], timeout: 5.0)
+        XCTAssertFalse(overlayMessage.exists, "超时后浮层应消失")
+    }
+
+    // MARK: - TC-F1.9-7-02 降级浮层在剪贴板被消费后消失
+
+    func testOverlay_Disappears_OnClipboardConsumption()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_NO_PERMISSION",
+            "--UITEST_SIMULATE_CONSUMPTION_AFTER_1S"
+        ]
+        app.launch()
+
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
+        firstRow.doubleClick()
+
+        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertTrue(overlayMessage.waitForExistence(timeout: 3), "浮层应显示")
+
+        // 等待消费模拟触发浮层消失
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: overlayMessage
+        )
+        wait(for: [expectation], timeout: 5.0)
+        XCTAssertFalse(overlayMessage.exists, "消费后浮层应消失")
+    }
 }

@@ -110,6 +110,7 @@
 		9F2B97FBD7795F7362834084 /* QuickPastePanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A18DC1E3566CBF0A8F9AB9 /* QuickPastePanelController.swift */; };
 		9F60A77B902552D7481B2EB2 /* ClipMindApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEAD6A3DC6A94528FD16BF3C /* ClipMindApp.swift */; };
 		A1CA08AEDBA47FC9BA9F9C53 /* APIKeyGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 962A852A25DDD9EC7568A689 /* APIKeyGuideView.swift */; };
+		A2711868FA5102DF2A8ABD5F /* QuickPasteAssembly.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C267BB983293AE2BA19C621 /* QuickPasteAssembly.swift */; };
 		A298ECBA04CC7B7012B93C9E /* MainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E59153AE33F9659029A0BEA1 /* MainWindow.swift */; };
 		A4445C1F8221F67936F39B97 /* AppDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71D402E808160065FE9E7575 /* AppDetectorTests.swift */; };
 		A519B4344D6C650285E87A94 /* PermissionRequestUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4583B73F02FA8F021E13CC43 /* PermissionRequestUITests.swift */; };
@@ -223,6 +224,7 @@
 		260A0141E4A31D823771994B /* AutoSaveError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveError.swift; sourceTree = "<group>"; };
 		28B67ED5A9989DC7CD8F05EC /* PrivacyNoticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyNoticeView.swift; sourceTree = "<group>"; };
 		2A2FC0B31144E8B9FAE834B0 /* CaptureEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureEvent.swift; sourceTree = "<group>"; };
+		2C267BB983293AE2BA19C621 /* QuickPasteAssembly.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPasteAssembly.swift; sourceTree = "<group>"; };
 		2C9CB20EDAAE01F2E5D960CE /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		2E45398F36D9B149271B1E5E /* BlacklistManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlacklistManagementView.swift; sourceTree = "<group>"; };
 		2E75A4AB12472E0016164F8D /* SampleDataUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataUITests.swift; sourceTree = "<group>"; };
@@ -764,6 +766,7 @@
 			children = (
 				CEAD6A3DC6A94528FD16BF3C /* ClipMindApp.swift */,
 				48A8080FEF0A7A06292BBF1F /* GlobalHotkeyService.swift */,
+				2C267BB983293AE2BA19C621 /* QuickPasteAssembly.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -1100,6 +1103,7 @@
 				53A7C14D78583095E3B72FDA /* PrivacySettingsView.swift in Sources */,
 				EDFF80AF3F770B1509B29C0A /* ProcessingButtons.swift in Sources */,
 				85C5546F6963B351F3A2A937 /* PromptTemplates.swift in Sources */,
+				A2711868FA5102DF2A8ABD5F /* QuickPasteAssembly.swift in Sources */,
 				9F2B97FBD7795F7362834084 /* QuickPastePanelController.swift in Sources */,
 				D42913CBFA9684C55E0F8E07 /* QuickPasteSettings.swift in Sources */,
 				608170364FEBC113318753A7 /* QuickPasteView.swift in Sources */,
