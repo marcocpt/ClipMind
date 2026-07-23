@@ -15,6 +15,7 @@ enum LogCategory: String, CaseIterable {
     // swiftlint:disable:next identifier_name
     case ui = "UI"
     case app = "App"
+    case toast = "Toast"
 
     /// 该分类对应的 os.Logger 实例
     var logger: Logger {
