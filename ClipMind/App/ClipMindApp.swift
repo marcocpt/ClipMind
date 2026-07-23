@@ -88,6 +88,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: AutoSaveService.errorNotification,
             object: nil
         )
+        // F2.1.1 测试入口：通过 --UITEST_TOAST_TRIGGER 模拟保存成功通知
+        handleToastUITestTriggerIfNeeded()
+    }
+
+    /// F2.1.1 UITEST 入口：通过 `--UITEST_TOAST_TRIGGER <fileName>` 模拟保存成功通知。
+    ///
+    /// 仅在 XCUITest 环境使用，生产环境不触发。
+    /// ToastCoordinator 在 `setupCaptureService` 中完成装配并订阅通知，该方法在
+    /// `applicationDidFinishLaunching` 末尾调用，派发到下一个主线程 runloop 触发，
+    /// 确保 App 启动流程结束、主窗口就绪后再呈现 Toast，避免与启动动画冲突。
+    private func handleToastUITestTriggerIfNeeded()
+    {
+        let args = CommandLine.arguments
+        guard let triggerIndex = args.firstIndex(of: "--UITEST_TOAST_TRIGGER") else
+        {
+            return
+        }
+        let fileName = (triggerIndex + 1 < args.count)
+            ? args[triggerIndex + 1]
+            : "test.md"
+        LogCategory.app.logger.info("UITEST 触发 Toast: fileName=\(fileName, privacy: .public)")
+        DispatchQueue.main.async
+        {
+            NotificationCenter.default.post(
+                name: AutoSaveService.savedNotification,
+                object: nil,
+                userInfo: [
+                    "eventId": "uitest-toast-trigger",
+                    "fileName": fileName,
+                    "skipped": false
+                ]
+            )
+        }
     }
 
     /// 应用通用启动参数重置（非 UITEST 专用）
@@ -131,6 +164,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         {
             Self.resetAutoSaveSettings(in: UserDefaults.standard)
             LogCategory.app.logger.info("已通过 --UITEST_RESET_AUTOSAVE_SETTINGS 重置 F2.1 配置")
+        }
+        if CommandLine.arguments.contains("--UITEST_ENABLE_AUTOSAVE")
+        {
+            let store = AutoSaveSettingsStore()
+            var settings = store.load()
+            settings.isEnabled = true
+            store.save(settings)
+            LogCategory.app.logger.info("已通过 --UITEST_ENABLE_AUTOSAVE 启用 F2.1 总开关")
         }
     }
 
