@@ -21,11 +21,15 @@ extension AppDelegate
             permissionChecker = SystemPastePermissionChecker()
         }
 
-        // UI 测试启动参数：超时 1 秒加速
+        // UI 测试启动参数：超时加速（1 秒或 3 秒）
         let settings: QuickPasteSettings
         if CommandLine.arguments.contains("--UITEST_OVERLAY_TIMEOUT_1S") {
             let testDefaults = UserDefaults.standard
             testDefaults.set(1.0, forKey: "F1.9.quickPaste.overlayDuration")
+            settings = QuickPasteSettings(defaults: testDefaults)
+        } else if CommandLine.arguments.contains("--UITEST_OVERLAY_TIMEOUT_3S") {
+            let testDefaults = UserDefaults.standard
+            testDefaults.set(3.0, forKey: "F1.9.quickPaste.overlayDuration")
             settings = QuickPasteSettings(defaults: testDefaults)
         } else {
             settings = QuickPasteSettings()

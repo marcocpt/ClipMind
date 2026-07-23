@@ -149,4 +149,98 @@ final class QuickPasteOverlayUITests: XCTestCase
         wait(for: [expectation], timeout: 5.0)
         XCTAssertFalse(overlayMessage.exists, "消费后浮层应消失")
     }
+
+    // MARK: - TC-F1.9-7-04 超时配置变更为 10 秒后立即生效
+
+    func testOverlayTimeout_ConfigChangeTakesEffectImmediately()
+    {
+        // 第一次：配置 10 秒超时，验证 5 秒内浮层不消失
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_NO_PERMISSION"
+        ]
+        // 启动前预设 10 秒超时配置（验证配置变更立即生效）
+        UserDefaults.standard.set(10.0, forKey: "F1.9.quickPaste.overlayDuration")
+        app.launch()
+
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
+        firstRow.doubleClick()
+
+        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertTrue(overlayMessage.waitForExistence(timeout: 3), "浮层应显示")
+
+        // 验证浮层在 5 秒内不消失（配置为 10 秒）
+        // isInverted = true：谓词 exists == NO 在 timeout 内未满足才算 fulfill
+        let notDisappearedExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: overlayMessage
+        )
+        notDisappearedExpectation.isInverted = true
+        wait(for: [notDisappearedExpectation], timeout: 5.0)
+        XCTAssertTrue(overlayMessage.exists, "配置 10 秒后，5 秒内浮层应仍存在")
+
+        // 第二次：修改配置为 3 秒超时，验证 4 秒内浮层消失
+        app.terminate()
+        UserDefaults.standard.set(3.0, forKey: "F1.9.quickPaste.overlayDuration")
+
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_NO_PERMISSION"
+        ]
+        app.launch()
+
+        let firstRow2 = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow2.waitForExistence(timeout: 5))
+        firstRow2.doubleClick()
+
+        let overlayMessage2 = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertTrue(overlayMessage2.waitForExistence(timeout: 3), "浮层应再次显示")
+
+        // 验证浮层在 4 秒内消失（配置为 3 秒，isInverted = false：谓词满足即 fulfill）
+        let disappearExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: overlayMessage2
+        )
+        wait(for: [disappearExpectation], timeout: 4.0)
+        XCTAssertFalse(overlayMessage2.exists, "配置 3 秒后，4 秒内浮层应消失")
+
+        // 清理配置
+        UserDefaults.standard.removeObject(forKey: "F1.9.quickPaste.overlayDuration")
+    }
+
+    // MARK: - TC-F1.9-12-01 权限撤销时自动降级（UI 层验证降级路径）
+
+    func testPermissionRevoked_FallsBackToDegradedPath()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_NO_PERMISSION",
+            "--UITEST_OVERLAY_TIMEOUT_1S"
+        ]
+        app.launch()
+
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
+
+        // 验证无权限时走降级路径（显示浮层）
+        firstRow.doubleClick()
+        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertTrue(overlayMessage.waitForExistence(timeout: 3), "无权限时应显示降级浮层")
+
+        // 等待浮层超时消失
+        let disappearExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: overlayMessage
+        )
+        wait(for: [disappearExpectation], timeout: 5.0)
+    }
 }
