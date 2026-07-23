@@ -3,14 +3,33 @@ import Foundation
 /// 文件名生成器（D9 8 步单一确定顺序，与需求文档 FR-006/D9 严格一致）。
 public struct FileNameGenerator
 {
-    /// 非法字符集合（D9 步骤 4）：换行符、路径分隔符、文件系统特殊字符、Markdown 链接字符。
-    /// 注意：`.` 的首尾去除在步骤 5 处理。
-    private static let illegalCharacters: Set<Character> = [
-        "\n", "\r", "\t",
+    /// 需替换为下划线的特殊字符集合（D9 步骤 4）：
+    /// - 路径分隔符与文件系统特殊字符
+    /// - Markdown 格式符号
+    /// - Shell 特殊字符
+    /// - 中文与英文标点符号
+    /// 注意：`.` 与 `-` 保留（文件名常用）；空格保留（步骤 2 已折叠）；
+    /// `\n \r \t` 由步骤 2 标准化为空格，此处不再列出。
+    private static let specialCharacters: Set<Character> = [
+        // 路径分隔符
         "/", "\\",
+        // 文件系统特殊字符
         ":", "*", "?", "\"", "<", ">", "|",
-        "[", "]"
+        // Markdown 格式符号
+        "#", "`", "~", "[", "]",
+        // Shell 特殊字符
+        "%", "&", ";", "$", "(", ")", "{", "}", "'", "!",
+        // 中文标点
+        "，", "。", "、", "；", "：", "！", "？",
+        "\u{201C}", "\u{201D}", "\u{2018}", "\u{2019}",
+        "（", "）", "【", "】", "《", "》", "—", "…", "·",
+        // 英文标点（不含 . 和 -）
+        ",", ";", ":", "!", "?", "'", "(", ")"
     ]
+
+    /// 首尾修剪字符集：空白、点、下划线（D9 步骤 5）。
+    private static let trimCharacterSet = CharacterSet.whitespacesAndNewlines
+        .union(CharacterSet(charactersIn: "._"))
 
     public init() {}
 
@@ -34,19 +53,14 @@ public struct FileNameGenerator
         // 步骤 3：取前 N 个用户可见字符（按 Character 组合字符簇计算）
         let prefix = String(collapsed.prefix(fileNameLength))
 
-        // 步骤 4：过滤非法字符
-        let filtered = prefix.filter { !Self.illegalCharacters.contains($0) }
+        // 步骤 4：将特殊字符替换为下划线（保留分隔语义，D9 步骤 4）
+        let replaced = Self.replaceSpecialCharacters(prefix)
 
-        // 步骤 5：去除首尾空白与首尾的点
-        var trimmed = filtered.trimmingCharacters(in: .whitespacesAndNewlines)
-        while trimmed.hasPrefix(".")
-        {
-            trimmed.removeFirst()
-        }
-        while trimmed.hasSuffix(".")
-        {
-            trimmed.removeLast()
-        }
+        // 步骤 4.5：折叠连续下划线为单个下划线（D9 步骤 4.5）
+        let underscoreCollapsed = Self.collapseUnderscores(replaced)
+
+        // 步骤 5：去除首尾空白、首尾的点与首尾下划线
+        let trimmed = underscoreCollapsed.trimmingCharacters(in: Self.trimCharacterSet)
 
         // 步骤 6：为空时使用备用文件名 clip-{timestamp}（毫秒时间戳，保证并发唯一性）
         let baseName: String
@@ -84,6 +98,36 @@ public struct FileNameGenerator
             {
                 result.append(char)
                 lastWasWhitespace = false
+            }
+        }
+        return result
+    }
+
+    /// 将特殊字符替换为下划线（D9 步骤 4）。
+    private static func replaceSpecialCharacters(_ text: String) -> String
+    {
+        let chars = text.map { specialCharacters.contains($0) ? "_" : $0 }
+        return String(chars)
+    }
+
+    /// 折叠连续下划线为单个下划线（D9 步骤 4.5）。
+    private static func collapseUnderscores(_ text: String) -> String
+    {
+        var result = ""
+        var lastWasUnderscore = false
+        for char in text
+        {
+            if char == "_"
+            {
+                if !lastWasUnderscore
+                {
+                    result.append(char)
+                    lastWasUnderscore = true
+                }
+            } else
+            {
+                result.append(char)
+                lastWasUnderscore = false
             }
         }
         return result
