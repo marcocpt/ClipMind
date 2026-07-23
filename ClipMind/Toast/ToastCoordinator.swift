@@ -68,11 +68,14 @@ public final class ToastCoordinator
         stop()
     }
 
-    /// 停止协调模块，取消所有计时器与通知订阅（用于 App 退出与测试 tearDown）。
+    /// 停止协调模块，取消所有计时器与通知订阅，并清理状态（用于 App 退出与测试 tearDown）。
     public func stop()
     {
         currentTimerHandle?.cancel()
         currentTimerHandle = nil
+        pendingFileName = nil
+        currentFileName = nil
+        currentState = .hidden
         if let observer = observer
         {
             NotificationCenter.default.removeObserver(observer)
@@ -201,6 +204,9 @@ public final class ToastCoordinator
         windowManager.onDidCloseImmediately = { [weak self] in
             self?.handleDidCloseImmediately()
         }
+        windowManager.onShowFailed = { [weak self] in
+            self?.handleShowFailed()
+        }
     }
 
     private func handleDidAppear()
@@ -242,5 +248,23 @@ public final class ToastCoordinator
         }
         pendingFileName = nil
         startAppearing(fileName: newFileName)
+    }
+
+    /// 处理窗口显示失败（E4 屏幕查询失败、E5 窗口创建失败）。
+    ///
+    /// 场景：
+    /// - NSScreen.main 为 nil（E4）
+    /// - 窗口创建异常（E5，当前实现未抛出，但保留回调入口以备扩展）
+    ///
+    /// 处理策略：降级到 hidden 状态，清理计时器与待显示资源，
+    /// 不重试、不阻塞后续通知（下一次通知会重新触发正常流程）。
+    private func handleShowFailed()
+    {
+        logger.error("Toast show failed, fallback to hidden")
+        currentTimerHandle?.cancel()
+        currentTimerHandle = nil
+        pendingFileName = nil
+        currentFileName = nil
+        currentState = .hidden
     }
 }

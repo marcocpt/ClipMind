@@ -334,6 +334,59 @@ final class ToastCoordinatorTests: XCTestCase
         timerSource.advance(by: 1.0)
         XCTAssertEqual(coordinator.currentState, .disappearing, "新 Toast 2 秒后应触发消失")
     }
+
+    // MARK: - E4 屏幕信息查询失败
+
+    func testE4ScreenQueryFailureDoesNotTriggerToast()
+    {
+        let windowManager = NoScreenToastWindowManager()
+        let coordinator = ToastCoordinator(
+            windowManager: windowManager,
+            timerSource: timerSource,
+            isEnabledProvider: { true }
+        )
+        let notification = ToastCoordinatorFixtures.makeSavedNotification(fileName: "test.md")
+        coordinator.handleSavedNotification(notification)
+
+        // show 失败应保持隐藏状态
+        XCTAssertEqual(coordinator.currentState, .hidden, "E4: 屏幕查询失败应保持隐藏")
+        XCTAssertNil(coordinator.currentFileName)
+    }
+
+    // MARK: - E6 动画异常跳到目标状态
+
+    func testE6AnimationFailureSkipsToDisplayed()
+    {
+        let windowManager = AnimFailureToastWindowManager()
+        let coordinator = ToastCoordinator(
+            windowManager: windowManager,
+            timerSource: timerSource,
+            isEnabledProvider: { true }
+        )
+        let notification = ToastCoordinatorFixtures.makeSavedNotification(fileName: "test.md")
+        coordinator.handleSavedNotification(notification)
+
+        // 进入动画异常时，windowManager.simulateDidAppear 兜底触发
+        windowManager.simulateDidAppear()
+        XCTAssertEqual(coordinator.currentState, .displayed, "E6: 动画异常应跳到已显示")
+    }
+
+    // MARK: - E7 计时器异常（stop 后状态已清理）
+
+    func testE7TimerFiresButStateAlreadyHidden()
+    {
+        let notification = ToastCoordinatorFixtures.makeSavedNotification(fileName: "a.md")
+        coordinator.handleSavedNotification(notification)
+        windowManager.simulateDidAppear()
+        XCTAssertEqual(coordinator.currentState, .displayed)
+
+        // 模拟状态已被外部清理（stop 调用：取消计时器并回到隐藏）
+        coordinator.stop()
+
+        // 推进计时器（已取消，不应触发；状态应保持隐藏）
+        timerSource.advance(by: 2.0)
+        XCTAssertEqual(coordinator.currentState, .hidden, "E7: stop 后计时器不应改变状态")
+    }
 }
 
 /// 测试专用窗口承载模块，记录调用并支持手动触发回调。
