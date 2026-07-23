@@ -132,4 +132,81 @@ final class QuickPastePanelUITests: XCTestCase
         let firstRowSelected = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
         XCTAssertTrue(firstRowSelected.waitForExistence(timeout: 5), "第一行应默认高亮选中")
     }
+
+    // MARK: - TC-F1.9-4-01 单击列表行高亮选中
+
+    func testSingleClick_OnSecondRow_HighlightsSecondRow()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL"
+        ]
+        app.launch()
+
+        // 单击前：第一行高亮（quickPasteRow_0_selected），第二行未高亮（quickPasteRow_1）
+        let row0Selected = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        let row1Selected = app.descendants(matching: .any)["quickPasteRow_1_selected"].firstMatch
+        XCTAssertTrue(row0Selected.waitForExistence(timeout: 5), "初始第一行应高亮")
+        XCTAssertFalse(row1Selected.exists, "初始第二行不应高亮")
+
+        // 单击第二行（未高亮状态的 identifier）
+        let row1 = app.descendants(matching: .any)["quickPasteRow_1"].firstMatch
+        XCTAssertTrue(row1.waitForExistence(timeout: 2), "第二行应存在")
+        row1.click()
+
+        // 单击后：第二行高亮，第一行取消高亮
+        XCTAssertTrue(row1Selected.waitForExistence(timeout: 2), "单击后第二行应高亮")
+        XCTAssertFalse(
+            app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch.exists,
+            "单击后第一行应取消高亮"
+        )
+    }
+
+    // MARK: - TC-F1.9-4-02 方向键上下移动高亮
+
+    func testArrowKeys_MoveHighlightDownAndUp()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL"
+        ]
+        app.launch()
+
+        let searchField = app.textFields["quickPasteSearchField"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        searchField.click()
+
+        // 初始：第一行高亮（quickPasteRow_0_selected）
+        XCTAssertTrue(
+            app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch.exists,
+            "初始第一行应高亮"
+        )
+
+        // 按下方向键 3 次（移到第四行，索引 3）
+        searchField.typeKey(XCUIKeyboardKey.downArrow, modifierFlags: [])
+        searchField.typeKey(XCUIKeyboardKey.downArrow, modifierFlags: [])
+        searchField.typeKey(XCUIKeyboardKey.downArrow, modifierFlags: [])
+
+        // 验证：第四行高亮（索引 3）
+        XCTAssertTrue(
+            app.descendants(matching: .any)["quickPasteRow_3_selected"].firstMatch.waitForExistence(timeout: 2),
+            "按 3 次下方向键后第四行应高亮"
+        )
+
+        // 按上方向键 1 次（回到第三行，索引 2）
+        searchField.typeKey(XCUIKeyboardKey.upArrow, modifierFlags: [])
+
+        // 验证：第三行高亮（索引 2）
+        XCTAssertTrue(
+            app.descendants(matching: .any)["quickPasteRow_2_selected"].firstMatch.waitForExistence(timeout: 2),
+            "按 1 次上方向键后第三行应高亮"
+        )
+
+        // 验证面板仍然存在（方向键不应关闭面板）
+        XCTAssertTrue(searchField.exists, "方向键不应关闭面板")
+    }
 }
