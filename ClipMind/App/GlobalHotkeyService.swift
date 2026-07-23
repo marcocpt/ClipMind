@@ -1,6 +1,12 @@
 import Carbon
 import Foundation
 
+extension Notification.Name
+{
+    /// F1.9：全局快捷键触发呼出快速粘贴面板。
+    static let openQuickPaste = Notification.Name("ClipMindOpenQuickPaste")
+}
+
 /// 全局快捷键注册器协议。
 ///
 /// 将 Carbon API 调用抽象为协议，便于测试时注入 mock，
@@ -150,6 +156,6 @@ final class GlobalHotkeyService {
 
     private func handleHotkeyPressed() {
         LogCategory.app.info("全局快捷键已触发: \(hotkey)")
-        NotificationCenter.default.post(name: .openMainWindow, object: nil)
+        NotificationCenter.default.post(name: .openQuickPaste, object: nil)
     }
 }

@@ -120,11 +120,11 @@ final class GlobalHotkeyServiceTests: XCTestCase {
 
     // MARK: - 快捷键触发
 
-    func testGlobalHotkeyService_HotkeyPressed_PostsOpenMainWindowNotification() {
+    func testGlobalHotkeyService_HotkeyPressed_PostsOpenQuickPasteNotification() {
         let mock = MockHotkeyRegistrar()
         let service = GlobalHotkeyService(hotkey: "cmd+shift+v", registrar: mock)
 
-        let expectation = XCTNSNotificationExpectation(name: .openMainWindow)
+        let expectation = XCTNSNotificationExpectation(name: .openQuickPaste)
         mock.simulateHotkeyPressed()
         wait(for: [expectation], timeout: 1.0)
         // 保持 service 引用避免被释放

@@ -42,7 +42,7 @@ public final class QuickPasteSettings
     {
         let clampedDuration = clamped(duration)
         defaults.set(clampedDuration, forKey: Keys.overlayDuration)
-        LogCategory.app.logger.info("QuickPaste overlay duration saved: \(clampedDuration, privacy: .public)s")
+        LogCategory.app.info("QuickPaste overlay duration saved: \(clampedDuration)s")
         NotificationCenter.default.post(name: Self.didChangeNotification, object: self)
     }
 
