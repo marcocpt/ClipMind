@@ -36,6 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkeyService: GlobalHotkeyService?
     private var autoSaveService: AutoSaveService?
     private var selfWriteSuppressor: SelfWriteSuppressor?
+    // F2.1.1 新增：Toast 协调模块
+    private var toastCoordinator: ToastCoordinator?
 
     /// F2.1 自动保存配置键列表（供 `--UITEST_RESET_AUTOSAVE_SETTINGS` 重置与单元测试共用）。
     /// 与 `AutoSaveSettingsStore` 使用的键保持一致。
@@ -239,12 +241,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.saveFilePathToHistory(savedURL, store: store)
         }
 
+        // F2.1.1 装配：Toast 协调模块
+        // - 注入 MainTimerSource 作为生产计时器源（D7）
+        // - 注入 F2.1 总开关查询闭包，读取 AutoSaveSettingsStore 快照（D4）
+        let toastWindowManager = ToastWindowManager()
+        let toastCoordinator = ToastCoordinator(
+            windowManager: toastWindowManager,
+            timerSource: MainTimerSource(),
+            isEnabledProvider: { settingsStore.load().isEnabled }
+        )
+        self.toastCoordinator = toastCoordinator
+
         let watcher = PasteboardWatcher(eventBuilder: eventBuilder, suppressor: suppressor)
         captureService = ClipCaptureService(watcher: watcher, store: store, classifier: classifier)
         captureService?.autoSaveService = autoSave
         captureService?.start()
 
-        LogCategory.app.logger.info("剪贴板捕获服务已启动（含 F2.1 自动保存）")
+        LogCategory.app.logger.info("剪贴板捕获服务已启动（含 F2.1 自动保存 + F2.1.1 Toast）")
     }
 
     /// 将文件路径存入 ClipMind 历史（以 ClipContent.filePath 可拖拽格式）。
