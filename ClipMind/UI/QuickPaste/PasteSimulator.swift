@@ -67,18 +67,28 @@ final class PasteSimulator
     ///
     /// 发送顺序：Cmd 按下 + V 按下 → V 释放 + Cmd 释放。
     /// 仅发送标准粘贴按键，不发送其他按键序列（TC-F1.9-SEC-03）。
+    ///
+    /// UI 测试模式（`--UITEST_QUICK_PASTE_PANEL` 启动参数）下跳过 CGEvent 发送：
+    /// 面板关闭后前台应用不可预测（可能是 WPS Office/Finder 等），
+    /// 真实 Cmd+V 会激活该应用并干扰 XCUITest 元素查询。
+    /// 仅记录调用标记供 UI 测试验证。
     func simulatePaste()
     {
+        let isUITestMode = ProcessInfo.processInfo.arguments.contains(Self.uiTestLaunchArg)
+
         if let eventSender = eventSender
         {
             sendViaMock(eventSender)
+            LogCategory.ui.info("Paste simulated: Cmd+V sent")
+        } else if isUITestMode {
+            LogCategory.ui.info("Paste simulated (UI test mode): CGEvent skipped")
         } else {
             sendViaCGEvent()
+            LogCategory.ui.info("Paste simulated: Cmd+V sent")
         }
-        LogCategory.ui.info("Paste simulated: Cmd+V sent")
 
         // test hook：UI 测试启动参数下记录 simulatePaste() 被调用，供 UI 测试验证
-        if ProcessInfo.processInfo.arguments.contains(Self.uiTestLaunchArg)
+        if isUITestMode
         {
             UserDefaults.standard.set(true, forKey: Self.uiTestCalledKey)
         }

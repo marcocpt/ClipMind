@@ -243,4 +243,173 @@ final class QuickPasteOverlayUITests: XCTestCase
         )
         wait(for: [disappearExpectation], timeout: 5.0)
     }
+
+    // MARK: - Phase 4：有权限路径 UI 测试（仅 ClipMind-Dev Scheme 运行）
+
+    #if CLIPMIND_DEV
+
+    // MARK: - TC-F1.9-6-01 有权限时双击自动粘贴（剪贴板写入 + 面板关闭）
+
+    func testPermissionGrantedPaste_WritesClipboard_ClosesPanel()
+    {
+        // 重置 test hook：PasteSimulator 调用标记
+        UserDefaults.standard.set(false, forKey: "UITest_pasteSimulatorCalled")
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_PERMISSION"
+        ]
+        app.launch()
+
+        // 记录剪贴板初始内容
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString("__INITIAL__", forType: .string)
+        let initialCount = pasteboard.changeCount
+
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
+
+        firstRow.doubleClick()
+
+        // 验证剪贴板已写入（changeCount 增加）
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "changeCount > \(initialCount)"),
+            object: pasteboard
+        )
+        wait(for: [expectation], timeout: 3.0)
+
+        let clipboardContent = pasteboard.string(forType: .string)
+        XCTAssertNotNil(clipboardContent, "剪贴板应已写入")
+        XCTAssertNotEqual(clipboardContent, "__INITIAL__", "剪贴板应已写入新内容")
+
+        // 验证面板已关闭（quickPasteRow 不再存在）
+        let panelClosedExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: firstRow
+        )
+        wait(for: [panelClosedExpectation], timeout: 3.0)
+        XCTAssertFalse(firstRow.exists, "有权限粘贴后面板应关闭")
+
+        // test hook：PasteSimulator.simulatePaste() 在 --UITEST_QUICK_PASTE_PANEL 启动参数下
+        // 写入 UserDefaults["UITest_pasteSimulatorCalled"]，UI 测试读取验证
+        let pasteSimulatorCalled = UserDefaults.standard.bool(forKey: "UITest_pasteSimulatorCalled")
+        XCTAssertTrue(pasteSimulatorCalled, "应调用 PasteSimulator 模拟粘贴")
+
+        app.terminate()
+    }
+
+    // MARK: - TC-F1.9-10-01 粘贴后面板自动关闭（有权限路径）
+
+    func testPermissionGrantedPaste_PanelClosesAfterPaste()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_PERMISSION"
+        ]
+        app.launch()
+
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
+
+        firstRow.doubleClick()
+
+        // 验证面板关闭（quickPasteRow 消失）
+        let panelClosedExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: firstRow
+        )
+        wait(for: [panelClosedExpectation], timeout: 3.0)
+        XCTAssertFalse(firstRow.exists, "有权限路径粘贴后面板应自动关闭")
+
+        // 验证降级浮层未显示（有权限路径不显示浮层）
+        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertFalse(overlayMessage.exists, "有权限路径不应显示降级浮层")
+
+        app.terminate()
+    }
+
+    // MARK: - TC-F1.9-12-01 权限撤销时自动降级（UI 层验证降级路径切换）
+
+    func testPermissionRevoked_FallsBackFromSimulateToOverlay()
+    {
+        // 第一次：有权限（模拟粘贴，不显示浮层）
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_PERMISSION"
+        ]
+        app.launch()
+
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
+        firstRow.doubleClick()
+
+        // 验证有权限路径：面板关闭 + 无浮层
+        let panelClosedExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: firstRow
+        )
+        wait(for: [panelClosedExpectation], timeout: 3.0)
+
+        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertFalse(overlayMessage.exists, "有权限路径不应显示浮层")
+
+        app.terminate()
+
+        // 第二次：无权限（降级路径，显示浮层）
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_NO_PERMISSION",
+            "--UITEST_OVERLAY_TIMEOUT_1S"
+        ]
+        app.launch()
+
+        let firstRow2 = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow2.waitForExistence(timeout: 5))
+        firstRow2.doubleClick()
+
+        let overlayMessage2 = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertTrue(overlayMessage2.waitForExistence(timeout: 3), "无权限时应显示降级浮层")
+
+        // 等待浮层超时消失
+        let disappearExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: overlayMessage2
+        )
+        wait(for: [disappearExpectation], timeout: 5.0)
+
+        app.terminate()
+    }
+
+    // MARK: - TC-F1.9-2-01/02 caret 定位（XCUITest 仅验证面板出现，真实 caret 定位手动验证）
+
+    func testCaretLocation_PanelAppears_WithPermission()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_FORCE_PERMISSION"
+        ]
+        app.launch()
+
+        // 验证面板出现
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5), "有权限时面板应出现（caret 定位或鼠标位置降级）")
+
+        app.terminate()
+    }
+
+    #endif
 }
