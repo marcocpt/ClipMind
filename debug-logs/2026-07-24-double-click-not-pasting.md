@@ -109,6 +109,28 @@ ForEach(Array(filteredClips.enumerated()), id: \.element.id)
 `QuickPasteViewModel`：新增 `handleDoubleClick(clip: ClipItem)` 方法，按 clip 而非 index 查找。
 `QuickPasteView`：`onDoubleClick` 传入 `clip` 而非 `index`。
 
+### 修复 3：UI 测试对齐修复后行为
+
+`QuickPastePanelUITests.swift`：更新 `testDoubleClick_OnTextRow_TriggersPaste` 与 `testEnterKey_TriggersPaste`。
+
+修复后双击/回车触发 `PasteCoordinator.handlePaste` → 关闭面板 + 显示浮层，旧测试断言的
+`quickPasteTestTriggeredClipId` 元素随面板关闭而消失，导致 CI 失败。
+
+更新后 UI 测试验证端到端流程：
+1. 面板关闭（搜索框消失，`XCTNSPredicateExpectation` 等待 `exists == NO`）
+2. 浮层出现（`pasteOverlayMessage` 元素存在）
+
+正确 clip 的传入由单元测试覆盖：
+- `testHandleDoubleClick_ByClip_PastesCorrectClip_EvenWhenFiltered`（搜索过滤场景）
+- `testHandleDoubleClick_OnTextRow_TriggersPasteCallback`（按 index 场景）
+
+## [验证]
+
+- SwiftLint strict：0 违规
+- 主 Scheme build：SUCCEEDED
+- 单元测试（QuickPasteViewTests + PasteCoordinatorTests）：22 passed, 0 failures
+- UI 测试：延迟到 CI 验证（本地输入法弹窗干扰）
+
 ## 总结
 
 两个 bug 共同导致"双击没有粘贴"：

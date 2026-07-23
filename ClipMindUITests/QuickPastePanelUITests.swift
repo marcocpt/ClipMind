@@ -212,6 +212,9 @@ final class QuickPastePanelUITests: XCTestCase
 
     // MARK: - TC-F1.9-5-01 双击文本行触发粘贴流程
 
+    /// 修复后行为：双击文本行触发 PasteCoordinator.handlePaste → 关闭面板 + 显示浮层。
+    /// 正确 clip 的传入由单元测试 `testHandleDoubleClick_ByClip_PastesCorrectClip_EvenWhenFiltered`
+    /// 验证；UI 测试只验证端到端流程（面板关闭 + 浮层出现）。
     func testDoubleClick_OnTextRow_TriggersPaste()
     {
         let app = XCUIApplication()
@@ -222,27 +225,33 @@ final class QuickPastePanelUITests: XCTestCase
         ]
         app.launch()
 
-        // 第一行默认高亮（identifier 带 _selected 后缀），读取其 clip.id（accessibilityValue）
+        let searchField = app.textFields["quickPasteSearchField"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5), "面板应出现")
+
+        // 第一行默认高亮（identifier 带 _selected 后缀）
         let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
         XCTAssertTrue(firstRow.waitForExistence(timeout: 5), "第一行应存在")
-        let firstClipId = firstRow.value as? String
 
         firstRow.doubleClick()
 
-        // Phase 2 验证回调触发；面板关闭与真实粘贴在 Phase 3/4 验证
-        // test hook：双击触发 onPasteTriggered 后，viewModel.lastTriggeredClipIdForTesting 更新，
-        // 通过测试元素 quickPasteTestTriggeredClipId 暴露触发的 clip.id
-        let triggeredClipIdElement = app.descendants(matching: .any)["quickPasteTestTriggeredClipId"].firstMatch
-        XCTAssertTrue(triggeredClipIdElement.waitForExistence(timeout: 2), "双击应触发粘贴回调")
-        XCTAssertEqual(
-            triggeredClipIdElement.value as? String,
-            firstClipId,
-            "双击应触发粘贴回调并传入正确 ClipItem"
+        // 面板关闭验证（搜索框消失）
+        let panelClosedExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: searchField
         )
+        wait(for: [panelClosedExpectation], timeout: 3.0)
+        XCTAssertFalse(searchField.exists, "双击触发粘贴后面板应关闭")
+
+        // 浮层出现验证（pasteOverlayMessage）
+        let overlay = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertTrue(overlay.waitForExistence(timeout: 3), "双击文本行应显示粘贴浮层")
     }
 
     // MARK: - TC-F1.9-5-02 回车键触发粘贴流程
 
+    /// 修复后行为：回车触发 PasteCoordinator.handlePaste → 关闭面板 + 显示浮层。
+    /// 正确 clip 的传入由单元测试 `testHandleDoubleClick_OnTextRow_TriggersPasteCallback`
+    /// 验证；UI 测试只验证端到端流程（面板关闭 + 浮层出现）。
     func testEnterKey_TriggersPaste()
     {
         let app = XCUIApplication()
@@ -253,27 +262,28 @@ final class QuickPastePanelUITests: XCTestCase
         ]
         app.launch()
 
-        // 默认高亮第一行，读取其 clip.id（accessibilityValue）
-        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
-        XCTAssertTrue(firstRow.waitForExistence(timeout: 5), "第一行应存在")
-        let firstClipId = firstRow.value as? String
-
         let searchField = app.textFields["quickPasteSearchField"]
-        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5), "面板应出现")
         searchField.click()
+
+        // 默认高亮第一行
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5), "第一行应默认高亮")
 
         // 按回车键
         searchField.typeKey(XCUIKeyboardKey.return, modifierFlags: [])
 
-        // Phase 2 验证回调触发；面板关闭与真实粘贴在 Phase 3/4 验证
-        // test hook：回车触发 onPasteTriggered 后，通过测试元素 quickPasteTestTriggeredClipId 暴露触发的 clip.id
-        let triggeredClipIdElement = app.descendants(matching: .any)["quickPasteTestTriggeredClipId"].firstMatch
-        XCTAssertTrue(triggeredClipIdElement.waitForExistence(timeout: 2), "回车应触发粘贴回调")
-        XCTAssertEqual(
-            triggeredClipIdElement.value as? String,
-            firstClipId,
-            "回车应触发粘贴回调并传入正确 ClipItem"
+        // 面板关闭验证（搜索框消失）
+        let panelClosedExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == NO"),
+            object: searchField
         )
+        wait(for: [panelClosedExpectation], timeout: 3.0)
+        XCTAssertFalse(searchField.exists, "回车触发粘贴后面板应关闭")
+
+        // 浮层出现验证（pasteOverlayMessage）
+        let overlay = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        XCTAssertTrue(overlay.waitForExistence(timeout: 3), "回车应显示粘贴浮层")
     }
 
     // MARK: - TC-F1.9-11-01 双击图片类型行显示提示
