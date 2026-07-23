@@ -209,4 +209,70 @@ final class QuickPastePanelUITests: XCTestCase
         // 验证面板仍然存在（方向键不应关闭面板）
         XCTAssertTrue(searchField.exists, "方向键不应关闭面板")
     }
+
+    // MARK: - TC-F1.9-5-01 双击文本行触发粘贴流程
+
+    func testDoubleClick_OnTextRow_TriggersPaste()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL"
+        ]
+        app.launch()
+
+        // 第一行默认高亮（identifier 带 _selected 后缀），读取其 clip.id（accessibilityValue）
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5), "第一行应存在")
+        let firstClipId = firstRow.value as? String
+
+        firstRow.doubleClick()
+
+        // Phase 2 验证回调触发；面板关闭与真实粘贴在 Phase 3/4 验证
+        // test hook：双击触发 onPasteTriggered 后，viewModel.lastTriggeredClipIdForTesting 更新，
+        // 通过测试元素 quickPasteTestTriggeredClipId 暴露触发的 clip.id
+        let triggeredClipIdElement = app.descendants(matching: .any)["quickPasteTestTriggeredClipId"].firstMatch
+        XCTAssertTrue(triggeredClipIdElement.waitForExistence(timeout: 2), "双击应触发粘贴回调")
+        XCTAssertEqual(
+            triggeredClipIdElement.value as? String,
+            firstClipId,
+            "双击应触发粘贴回调并传入正确 ClipItem"
+        )
+    }
+
+    // MARK: - TC-F1.9-5-02 回车键触发粘贴流程
+
+    func testEnterKey_TriggersPaste()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_SAMPLE_AND_REAL",
+            "--UITEST_QUICK_PASTE_PANEL"
+        ]
+        app.launch()
+
+        // 默认高亮第一行，读取其 clip.id（accessibilityValue）
+        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5), "第一行应存在")
+        let firstClipId = firstRow.value as? String
+
+        let searchField = app.textFields["quickPasteSearchField"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        searchField.click()
+
+        // 按回车键
+        searchField.typeKey(XCUIKeyboardKey.return, modifierFlags: [])
+
+        // Phase 2 验证回调触发；面板关闭与真实粘贴在 Phase 3/4 验证
+        // test hook：回车触发 onPasteTriggered 后，通过测试元素 quickPasteTestTriggeredClipId 暴露触发的 clip.id
+        let triggeredClipIdElement = app.descendants(matching: .any)["quickPasteTestTriggeredClipId"].firstMatch
+        XCTAssertTrue(triggeredClipIdElement.waitForExistence(timeout: 2), "回车应触发粘贴回调")
+        XCTAssertEqual(
+            triggeredClipIdElement.value as? String,
+            firstClipId,
+            "回车应触发粘贴回调并传入正确 ClipItem"
+        )
+    }
 }
