@@ -275,4 +275,68 @@ final class QuickPastePanelUITests: XCTestCase
             "回车应触发粘贴回调并传入正确 ClipItem"
         )
     }
+
+    // MARK: - TC-F1.9-11-01 双击图片类型行显示提示
+
+    func testDoubleClick_OnImageRow_ShowsTextOnlyHint()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_IMAGE_AND_FILEPATH",  // 新启动参数：预置图片+文件路径
+            "--UITEST_QUICK_PASTE_PANEL"
+        ]
+        app.launch()
+
+        // 找到图片行（通过 accessibilityIdentifier 后缀或类型标签）
+        let imageRow = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier CONTAINS 'quickPasteRow'")
+        ).firstMatch
+        XCTAssertTrue(imageRow.waitForExistence(timeout: 5))
+
+        imageRow.doubleClick()
+
+        let hint = app.staticTexts["textOnlyHint"].firstMatch
+        XCTAssertTrue(hint.waitForExistence(timeout: 2), "应显示'仅支持文本粘贴'提示")
+
+        // 验证面板未关闭
+        let searchField = app.textFields["quickPasteSearchField"]
+        XCTAssertTrue(searchField.exists, "双击图片行不应关闭面板")
+    }
+
+    // MARK: - TC-F1.9-11-03 提示后可继续操作其他行
+
+    func testHint_ClearsOnClickOtherRow()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREPOPULATE_IMAGE_AND_FILEPATH",
+            "--UITEST_QUICK_PASTE_PANEL"
+        ]
+        app.launch()
+
+        let rows = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier CONTAINS 'quickPasteRow'")
+        )
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 5))
+
+        // 双击第一行（图片）显示提示
+        rows.firstMatch.doubleClick()
+        let hint = app.staticTexts["textOnlyHint"].firstMatch
+        XCTAssertTrue(hint.waitForExistence(timeout: 2))
+
+        // 单击第二行
+        let secondRow = rows.element(boundBy: 1)
+        if secondRow.exists
+        {
+            secondRow.click()
+            let hintCleared = NSPredicate(format: "exists == NO")
+            let expectation = XCTNSPredicateExpectation(
+                predicate: hintCleared,
+                object: hint
+            )
+            wait(for: [expectation], timeout: 2.0)
+        }
+    }
 }

@@ -310,6 +310,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // UI 测试启动参数：直接显示面板
         if CommandLine.arguments.contains("--UITEST_QUICK_PASTE_PANEL") {
+            // 预置图片+文件路径数据（用于 AC-F1.9-11 UI 测试）
+            if CommandLine.arguments.contains("--UITEST_PREPOPULATE_IMAGE_AND_FILEPATH") {
+                prepopulateImageAndFilePathForTesting()
+            }
             quickPastePanelController?.showPanel()
         }
     }
@@ -384,6 +388,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 x: screenFrame.midX - QuickPastePanelController.panelSize.width / 2.0,
                 y: screenFrame.midY - QuickPastePanelController.panelSize.height / 2.0
             )
+        }
+    }
+}
+
+private extension AppDelegate
+{
+    /// UI 测试专用：预置图片+文件路径数据到 EncryptedStore。
+    func prepopulateImageAndFilePathForTesting()
+    {
+        do
+        {
+            let store = try EncryptedStore()
+            let imageClip = ClipItem.makeImage(
+                Data([0x89, 0x50, 0x4E, 0x47]),
+                contentType: .other,
+                sourceApp: "com.test",
+                sourceAppName: "Test"
+            )
+            let filePathClip = ClipItem.makeFilePath(
+                [URL(fileURLWithPath: "/tmp/test.txt")],
+                contentType: .other,
+                sourceApp: "com.test",
+                sourceAppName: "Test"
+            )
+            let textClip = ClipItem.makeText(
+                "文本内容",
+                contentType: .other,
+                sourceApp: "com.test",
+                sourceAppName: "Test"
+            )
+            try store.save(imageClip)
+            try store.save(filePathClip)
+            try store.save(textClip)
+            NotificationCenter.default.post(
+                name: ClipCaptureService.clipDidUpdateNotification,
+                object: nil
+            )
+        } catch
+        {
+            LogCategory.storage.error("预置图片/文件路径测试数据失败: \(error.localizedDescription)")
         }
     }
 }
