@@ -145,6 +145,71 @@ final class ToastCoordinatorTests: XCTestCase
         // 主线程派发后状态应已变更
         XCTAssertEqual(coordinator.currentState, .appearing, "应在主线程派发后转换状态")
     }
+
+    // MARK: - TC-UT-09 启动新 2 秒计时（D2 不变量）
+
+    func testNewTimerStartedOnAppearing()
+    {
+        let notification = ToastCoordinatorFixtures.makeSavedNotification(fileName: "a.md")
+        coordinator.handleSavedNotification(notification)
+        windowManager.simulateDidAppear()
+        XCTAssertEqual(coordinator.currentState, .displayed)
+
+        // 推进 1 秒，不应触发消失
+        timerSource.advance(by: 1.0)
+        XCTAssertEqual(coordinator.currentState, .displayed)
+
+        // 再推进 1 秒，应触发消失
+        timerSource.advance(by: 1.0)
+        XCTAssertEqual(coordinator.currentState, .disappearing)
+    }
+
+    // MARK: - E1 通知载荷缺失文件名
+
+    func testE1MissingFileNameDoesNotTriggerToast()
+    {
+        let notification = ToastCoordinatorFixtures.makeSavedNotification(
+            fileName: nil,
+            skipped: false
+        )
+        coordinator.handleSavedNotification(notification)
+
+        XCTAssertEqual(coordinator.currentState, .hidden, "文件名缺失应保持隐藏")
+        XCTAssertNil(windowManager.lastShownFileName)
+    }
+
+    // MARK: - E2 通知载荷事件标识缺失（降级处理）
+
+    func testE2MissingEventIdStillTriggersToast()
+    {
+        let notification = ToastCoordinatorFixtures.makeSavedNotification(
+            eventId: "",
+            fileName: "test.md",
+            skipped: false
+        )
+        coordinator.handleSavedNotification(notification)
+
+        XCTAssertEqual(coordinator.currentState, .appearing, "eventId 缺失应降级处理仍触发 Toast")
+    }
+
+    // MARK: - E3 F2.1 总开关查询失败（保守策略，不显示）
+
+    func testE3IsEnabledProviderThrowsDoesNotTriggerToast()
+    {
+        let throwingProvider: () throws -> Bool = {
+            struct ToastTestError: Error {}
+            throw ToastTestError()
+        }
+        let coordinator = ToastCoordinator(
+            windowManager: windowManager,
+            timerSource: timerSource,
+            isEnabledProvider: throwingProvider
+        )
+        let notification = ToastCoordinatorFixtures.makeSavedNotification(fileName: "test.md")
+        coordinator.handleSavedNotification(notification)
+
+        XCTAssertEqual(coordinator.currentState, .hidden, "查询失败应保守不显示")
+    }
 }
 
 /// 测试专用窗口承载模块，记录调用并支持手动触发回调。
