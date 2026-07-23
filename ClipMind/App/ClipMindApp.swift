@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkeyService: GlobalHotkeyService?
     private var autoSaveService: AutoSaveService?
     private var selfWriteSuppressor: SelfWriteSuppressor?
+    private var quickPastePanelController: QuickPastePanelController?
 
     /// F2.1 自动保存配置键列表（供 `--UITEST_RESET_AUTOSAVE_SETTINGS` 重置与单元测试共用）。
     /// 与 `AutoSaveSettingsStore` 使用的键保持一致。
@@ -77,6 +78,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self,
             selector: #selector(handleOpenMainWindow),
             name: .openMainWindow,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOpenQuickPaste),
+            name: .openQuickPaste,
             object: nil
         )
         // 监听 F2.1 自动保存错误通知（D13 目录异常分级处理）
@@ -149,6 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             statusItemController?.setup()
             setupServices()
             setupHotkeyService()
+            setupQuickPastePanelController()
         } else {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
@@ -290,6 +298,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyService = GlobalHotkeyService(hotkey: settings.hotkey)
     }
 
+    /// 初始化快速粘贴面板控制器（F1.9）
+    private func setupQuickPastePanelController() {
+        let locator = ScreenCenterPanelLocator()
+        quickPastePanelController = QuickPastePanelController(screenLocator: locator)
+
+        // UI 测试启动参数：直接显示面板
+        if CommandLine.arguments.contains("--UITEST_QUICK_PASTE_PANEL") {
+            quickPastePanelController?.showPanel()
+        }
+    }
+
+    /// F1.9：接收全局快捷键通知，呼出快速粘贴面板。
+    @objc private func handleOpenQuickPaste() {
+        quickPastePanelController?.showPanel()
+    }
+
     private func showPopoverContentInWindow() {
         NSApp.setActivationPolicy(.regular)
         let window = NSWindow(
@@ -327,6 +351,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             alert.informativeText = "保存目录异常，文件未能保存。剪贴板内容保持原文。"
             alert.addButton(withTitle: "确定")
             alert.runModal()
+        }
+    }
+
+    /// 屏幕中央面板定位器（生产环境无权限路径使用）。
+    /// Phase 4 会根据权限状态切换为 CaretPanelLocator。
+    private final class ScreenCenterPanelLocator: PanelScreenLocating
+    {
+        func locatePosition(lastClosedPosition: NSPoint?) -> NSPoint
+        {
+            // 优先使用上次关闭位置（若在屏幕可视范围内）
+            if let last = lastClosedPosition,
+               let screenFrame = NSScreen.main?.frame
+            {
+                let panelRect = NSRect(
+                    origin: last,
+                    size: QuickPastePanelController.panelSize
+                )
+                if screenFrame.contains(panelRect)
+                {
+                    return last
+                }
+            }
+            // 降级到屏幕中央
+            let screenFrame = NSScreen.main?.frame ?? .zero
+            return NSPoint(
+                x: screenFrame.midX - QuickPastePanelController.panelSize.width / 2.0,
+                y: screenFrame.midY - QuickPastePanelController.panelSize.height / 2.0
+            )
         }
     }
 }
