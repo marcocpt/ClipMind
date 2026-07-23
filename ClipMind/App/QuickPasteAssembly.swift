@@ -9,40 +9,12 @@ extension AppDelegate
     @MainActor
     func setupQuickPastePanelController()
     {
-        let locator = ScreenCenterPanelLocator()
+        let (locator, permissionChecker) = resolveLocatorAndPermissionChecker()
         let panelController = QuickPastePanelController(screenLocator: locator)
         quickPastePanelController = panelController
 
-        // UI 测试启动参数：强制无权限（避免依赖真实辅助功能权限状态）
-        let permissionChecker: PastePermissionChecking
-        if CommandLine.arguments.contains("--UITEST_FORCE_NO_PERMISSION") {
-            permissionChecker = UITestNoPermissionChecker()
-        } else {
-            permissionChecker = SystemPastePermissionChecker()
-        }
-
-        // UI 测试启动参数：超时加速（1 秒或 3 秒）
-        let settings: QuickPasteSettings
-        if CommandLine.arguments.contains("--UITEST_OVERLAY_TIMEOUT_1S") {
-            let testDefaults = UserDefaults.standard
-            testDefaults.set(1.0, forKey: "F1.9.quickPaste.overlayDuration")
-            settings = QuickPasteSettings(defaults: testDefaults)
-        } else if CommandLine.arguments.contains("--UITEST_OVERLAY_TIMEOUT_3S") {
-            let testDefaults = UserDefaults.standard
-            testDefaults.set(3.0, forKey: "F1.9.quickPaste.overlayDuration")
-            settings = QuickPasteSettings(defaults: testDefaults)
-        } else {
-            settings = QuickPasteSettings()
-        }
-
-        // UI 测试启动参数：1 秒后模拟消费
-        let consumerWatcher: ClipboardConsumerWatcherProtocol
-        if CommandLine.arguments.contains("--UITEST_SIMULATE_CONSUMPTION_AFTER_1S") {
-            consumerWatcher = UITestSimulatedConsumerWatcher(delay: 1.0)
-        } else {
-            consumerWatcher = ClipboardConsumerWatcher()
-        }
-
+        let settings = makeQuickPasteSettings()
+        let consumerWatcher = makeConsumerWatcher()
         let overlayLocator = ScreenCenterOverlayLocator()
         let overlayController = PasteOverlayController(
             consumerWatcher: consumerWatcher,
@@ -51,11 +23,10 @@ extension AppDelegate
             screenLocator: overlayLocator
         )
 
-        let coordinator = PasteCoordinator(
+        let coordinator = makePasteCoordinator(
             permissionChecker: permissionChecker,
-            clipboardWriter: ClipboardWriter(),
-            panelCloser: panelController,
-            overlayShower: overlayController
+            panelController: panelController,
+            overlayController: overlayController
         )
         pasteCoordinator = coordinator
 
@@ -67,6 +38,88 @@ extension AppDelegate
             let contentController = makeQuickPasteContentController(coordinator: coordinator)
             panelController.showPanel(contentController: contentController)
         }
+    }
+
+    /// 根据编译条件解析面板定位器与权限检测器。
+    /// - ClipMind-Dev Scheme：CaretPanelLocator + AccessibilityService（含 UITEST_FORCE_PERMISSION 测试钩子）
+    /// - 主 Scheme：ScreenCenterPanelLocator + SystemPastePermissionChecker
+    @MainActor
+    private func resolveLocatorAndPermissionChecker() -> (PanelScreenLocating, PastePermissionChecking)
+    {
+        #if CLIPMIND_DEV
+        let accessibilityService = AccessibilityService()
+        let locator = CaretPanelLocator(accessibilityService: accessibilityService)
+        let permissionChecker: PastePermissionChecking
+        if CommandLine.arguments.contains("--UITEST_FORCE_NO_PERMISSION") {
+            permissionChecker = UITestNoPermissionChecker()
+        } else if CommandLine.arguments.contains("--UITEST_FORCE_PERMISSION") {
+            permissionChecker = UITestPermissionChecker()
+        } else {
+            permissionChecker = accessibilityService
+        }
+        return (locator, permissionChecker)
+        #else
+        let locator = ScreenCenterPanelLocator()
+        let permissionChecker: PastePermissionChecking
+        if CommandLine.arguments.contains("--UITEST_FORCE_NO_PERMISSION") {
+            permissionChecker = UITestNoPermissionChecker()
+        } else {
+            permissionChecker = SystemPastePermissionChecker()
+        }
+        return (locator, permissionChecker)
+        #endif
+    }
+
+    /// 根据启动参数构造快速粘贴设置（含超时加速 1s/3s）。
+    @MainActor
+    private func makeQuickPasteSettings() -> QuickPasteSettings
+    {
+        let testDefaults = UserDefaults.standard
+        if CommandLine.arguments.contains("--UITEST_OVERLAY_TIMEOUT_1S") {
+            testDefaults.set(1.0, forKey: "F1.9.quickPaste.overlayDuration")
+            return QuickPasteSettings(defaults: testDefaults)
+        }
+        if CommandLine.arguments.contains("--UITEST_OVERLAY_TIMEOUT_3S") {
+            testDefaults.set(3.0, forKey: "F1.9.quickPaste.overlayDuration")
+            return QuickPasteSettings(defaults: testDefaults)
+        }
+        return QuickPasteSettings()
+    }
+
+    /// 根据启动参数构造剪贴板消费监听器（含 1s 后模拟消费）。
+    @MainActor
+    private func makeConsumerWatcher() -> ClipboardConsumerWatcherProtocol
+    {
+        if CommandLine.arguments.contains("--UITEST_SIMULATE_CONSUMPTION_AFTER_1S") {
+            return UITestSimulatedConsumerWatcher(delay: 1.0)
+        }
+        return ClipboardConsumerWatcher()
+    }
+
+    /// 构造粘贴协调器。ClipMind-Dev Scheme 注入 PasteSimulator 启用有权限路径模拟按键。
+    @MainActor
+    private func makePasteCoordinator(
+        permissionChecker: PastePermissionChecking,
+        panelController: QuickPastePanelController,
+        overlayController: PasteOverlayController
+    ) -> PasteCoordinator
+    {
+        #if CLIPMIND_DEV
+        return PasteCoordinator(
+            permissionChecker: permissionChecker,
+            clipboardWriter: ClipboardWriter(),
+            panelCloser: panelController,
+            overlayShower: overlayController,
+            pasteSimulator: PasteSimulator()
+        )
+        #else
+        return PasteCoordinator(
+            permissionChecker: permissionChecker,
+            clipboardWriter: ClipboardWriter(),
+            panelCloser: panelController,
+            overlayShower: overlayController
+        )
+        #endif
     }
 
     /// 创建快速粘贴面板内容视图控制器。
@@ -190,6 +243,14 @@ private final class UITestNoPermissionChecker: PastePermissionChecking
 {
     func isAccessibilityGranted() -> Bool { false }
 }
+
+#if CLIPMIND_DEV
+/// UI 测试专用：始终返回有权限的权限检测器（仅 ClipMind-Dev Scheme 编译）。
+private final class UITestPermissionChecker: PastePermissionChecking
+{
+    func isAccessibilityGranted() -> Bool { true }
+}
+#endif
 
 /// UI 测试专用：延迟后模拟消费的监听器。
 private final class UITestSimulatedConsumerWatcher: ClipboardConsumerWatcherProtocol
