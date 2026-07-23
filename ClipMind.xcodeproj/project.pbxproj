@@ -76,6 +76,7 @@
 		688F6EE2D610010D12C9CDD7 /* BlacklistService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E136E2DCA7C228E478AE00C7 /* BlacklistService.swift */; };
 		68EF95C36F7FA4E7F4CF5BCC /* LogCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B1B8368514454F691F2FB00 /* LogCategory.swift */; };
 		6902C6AB53A854784CF22D3E /* ConflictResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31BD76147E6EF90E457FE10 /* ConflictResolverTests.swift */; };
+		69DB25386BBD8615D74C4A52 /* ToastCoordinatorErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4738C443B171252DE354C113 /* ToastCoordinatorErrorTests.swift */; };
 		6B1C0377A6D9A923D76BDA16 /* TimerSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD28AB3B342257906D997403 /* TimerSource.swift */; };
 		6B4DA729B0992FDF452BCBE2 /* GlobalHotkeyServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657EB5BE4550908F8970D0D6 /* GlobalHotkeyServiceTests.swift */; };
 		6B8144846C62F5FB3E0EBDEB /* SensitiveMatchResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CEB124A50A01EAEBD4B1F56 /* SensitiveMatchResultTests.swift */; };
@@ -236,6 +237,7 @@
 		4583B73F02FA8F021E13CC43 /* PermissionRequestUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequestUITests.swift; sourceTree = "<group>"; };
 		45E2993745F698F83EA4474D /* CaptureEventFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureEventFixtures.swift; sourceTree = "<group>"; };
 		46B535E9A1383D11BF04E00E /* CleanupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanupService.swift; sourceTree = "<group>"; };
+		4738C443B171252DE354C113 /* ToastCoordinatorErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastCoordinatorErrorTests.swift; sourceTree = "<group>"; };
 		476EDCC5B06E8BFF193C7245 /* llm_mock_responses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = llm_mock_responses.json; sourceTree = "<group>"; };
 		48A8080FEF0A7A06292BBF1F /* GlobalHotkeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyService.swift; sourceTree = "<group>"; };
 		4B0E3624AC863E01F2DA4346 /* PasteboardWatcherEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardWatcherEventTests.swift; sourceTree = "<group>"; };
@@ -513,6 +515,7 @@
 			isa = PBXGroup;
 			children = (
 				4C06644430540D4210794AAD /* TimerSourceTests.swift */,
+				4738C443B171252DE354C113 /* ToastCoordinatorErrorTests.swift */,
 				BDD2DD6B75312F259ABF5815 /* ToastCoordinatorTests.swift */,
 				502B7DB8C5CEDB10A75F3213 /* ToastViewTests.swift */,
 				C1FB0574C9E1D1892BE637DD /* ToastWindowManagerTests.swift */,
@@ -1190,6 +1193,7 @@
 				1A063E6113F494171C6B30F0 /* SummarizeTests.swift in Sources */,
 				7CBD26620156652A43AAAEE3 /* TestDatabaseHelper.swift in Sources */,
 				B5E3A2486C046034773A990A /* TimerSourceTests.swift in Sources */,
+				69DB25386BBD8615D74C4A52 /* ToastCoordinatorErrorTests.swift in Sources */,
 				01FDD867CF4F1D83D91CC231 /* ToastCoordinatorFixtures.swift in Sources */,
 				841F2D5DB4497FE098865920 /* ToastCoordinatorTests.swift in Sources */,
 				2B1C78FFF5FEB62B9AE02251 /* ToastViewTests.swift in Sources */,
