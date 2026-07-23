@@ -92,7 +92,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         handleToastUITestTriggerIfNeeded()
     }
 
-    /// F2.1.1 UITEST 入口：通过 `--UITEST_TOAST_TRIGGER <fileName>` 模拟保存成功通知。
+    /// F2.1.1 UITEST 入口：委托给 `ToastUITestLauncher` 根据 `--UITEST_TOAST_*` 启动参数
+    /// 派发模拟通知（单次、多次、跳过、失败场景）。
     ///
     /// 仅在 XCUITest 环境使用，生产环境不触发。
     /// ToastCoordinator 在 `setupCaptureService` 中完成装配并订阅通知，该方法在
@@ -100,27 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 确保 App 启动流程结束、主窗口就绪后再呈现 Toast，避免与启动动画冲突。
     private func handleToastUITestTriggerIfNeeded()
     {
-        let args = CommandLine.arguments
-        guard let triggerIndex = args.firstIndex(of: "--UITEST_TOAST_TRIGGER") else
-        {
-            return
-        }
-        let fileName = (triggerIndex + 1 < args.count)
-            ? args[triggerIndex + 1]
-            : "test.md"
-        LogCategory.app.logger.info("UITEST 触发 Toast: fileName=\(fileName, privacy: .public)")
-        DispatchQueue.main.async
-        {
-            NotificationCenter.default.post(
-                name: AutoSaveService.savedNotification,
-                object: nil,
-                userInfo: [
-                    "eventId": "uitest-toast-trigger",
-                    "fileName": fileName,
-                    "skipped": false
-                ]
-            )
-        }
+        ToastUITestLauncher.launchIfNeeded()
     }
 
     /// 应用通用启动参数重置（非 UITEST 专用）
