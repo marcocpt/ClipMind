@@ -122,6 +122,12 @@ struct QuickPasteView: View
         _viewModel = StateObject(wrappedValue: QuickPasteViewModel(clips: clips))
     }
 
+    /// 外部注入 viewModel 的初始化器（供 AppDelegate 注入带 PasteCoordinator 回调的 viewModel）。
+    init(viewModel: QuickPasteViewModel)
+    {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
     var body: some View
     {
         VStack(spacing: 0)

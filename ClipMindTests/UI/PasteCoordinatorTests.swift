@@ -1,3 +1,4 @@
+import AppKit
 @testable import ClipMind
 import Foundation
 import XCTest
@@ -290,6 +291,30 @@ final class PasteCoordinatorTests: XCTestCase
         {
             showCalled = false
             callOrder = 0
+        }
+    }
+
+    // MARK: - 集成测试：QuickPastePanelController 遵循 PanelClosing
+
+    func testQuickPastePanelController_ConformsToPanelClosing()
+    {
+        let locator = ScreenCenterLocatorForIntegration()
+        let controller = QuickPastePanelController(screenLocator: locator)
+        XCTAssertTrue(controller is PanelClosing, "QuickPastePanelController 应遵循 PanelClosing 协议")
+        _ = controller
+    }
+
+    // MARK: - 测试辅助
+
+    private final class ScreenCenterLocatorForIntegration: PanelScreenLocating
+    {
+        func locatePosition(lastClosedPosition: NSPoint?) -> NSPoint
+        {
+            let screenFrame = NSScreen.main?.frame ?? .zero
+            return NSPoint(
+                x: screenFrame.midX - QuickPastePanelController.panelSize.width / 2.0,
+                y: screenFrame.midY - QuickPastePanelController.panelSize.height / 2.0
+            )
         }
     }
 }

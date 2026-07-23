@@ -18,7 +18,7 @@ protocol PanelScreenLocating: AnyObject
 /// 状态机：Closed → Showing → Closed（Phase 1）；Phase 2/3 扩展 Pasting 状态。
 ///
 /// 设计文档第 3.1 节、第 5.1 节。
-final class QuickPastePanelController
+final class QuickPastePanelController: PanelClosing
 {
     /// 面板固定尺寸（与菜单栏 popover 视觉一致）。
     static let panelSize = NSSize(width: 360, height: 480)
@@ -56,7 +56,8 @@ final class QuickPastePanelController
     // MARK: - 显示与关闭
 
     /// 显示面板（若已显示则忽略，保证状态机单一性）。
-    func showPanel()
+    /// - Parameter contentController: 面板内容视图控制器（nil 时使用已设置的 contentView 或空内容）
+    func showPanel(contentController: NSViewController? = nil)
     {
         guard !isPanelVisible else
         {
@@ -66,6 +67,11 @@ final class QuickPastePanelController
 
         let panel = makePanel()
         self.panel = panel
+
+        if let contentController = contentController
+        {
+            panel.contentViewController = contentController
+        }
 
         let position = screenLocator.locatePosition(lastClosedPosition: lastClosedPosition)
         panel.setFrameOrigin(position)
@@ -105,6 +111,13 @@ final class QuickPastePanelController
         self.panel = nil
         isPanelVisible = false
         LogCategory.ui.info("QuickPaste panel closed, position recorded")
+    }
+
+    /// 设置面板内容视图控制器（供 AppDelegate 注入 QuickPasteView 的 NSHostingController）。
+    /// - Parameter controller: 内容视图控制器
+    func setContentView(_ controller: NSViewController)
+    {
+        panel?.contentViewController = controller
     }
 
     /// 仅供测试注入的粘贴回调（Phase 2/3 接入真实 PasteCoordinator 后移除）。

@@ -37,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var autoSaveService: AutoSaveService?
     private var selfWriteSuppressor: SelfWriteSuppressor?
     private var quickPastePanelController: QuickPastePanelController?
+    private var pasteCoordinator: PasteCoordinator?
 
     /// F2.1 自动保存配置键列表（供 `--UITEST_RESET_AUTOSAVE_SETTINGS` 重置与单元测试共用）。
     /// 与 `AutoSaveSettingsStore` 使用的键保持一致。
@@ -140,6 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// 根据引导状态配置激活策略和服务
+    @MainActor
     private func configureActivationPolicy() {
         let completed = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
         LogCategory.app.info(
@@ -298,31 +300,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyService = GlobalHotkeyService(hotkey: settings.hotkey)
     }
 
-    /// 初始化快速粘贴面板控制器（F1.9）
-    private func setupQuickPastePanelController() {
-        let locator = ScreenCenterPanelLocator()
-        quickPastePanelController = QuickPastePanelController(screenLocator: locator)
-
-        // 设置面板内容视图（Phase 1 使用空 clips 骨架，Phase 2/3 接入真实数据源）
-        let quickPasteView = QuickPasteView(clips: [])
-        let hostingController = NSHostingController(rootView: quickPasteView)
-        quickPastePanelController?.setContentView(hostingController.view)
-
-        // UI 测试启动参数：直接显示面板
-        if CommandLine.arguments.contains("--UITEST_QUICK_PASTE_PANEL") {
-            // 预置图片+文件路径数据（用于 AC-F1.9-11 UI 测试）
-            if CommandLine.arguments.contains("--UITEST_PREPOPULATE_IMAGE_AND_FILEPATH") {
-                prepopulateImageAndFilePathForTesting()
-            }
-            quickPastePanelController?.showPanel()
-        }
-    }
-
-    /// F1.9：接收全局快捷键通知，呼出快速粘贴面板。
-    @objc private func handleOpenQuickPaste() {
-        quickPastePanelController?.showPanel()
-    }
-
     private func showPopoverContentInWindow() {
         NSApp.setActivationPolicy(.regular)
         let window = NSWindow(
@@ -392,8 +369,98 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+// MARK: - 快速粘贴面板装配（F1.9 Phase 3）
+
 private extension AppDelegate
 {
+    /// 初始化快速粘贴面板控制器与粘贴流程协调器（F1.9）。
+    @MainActor
+    func setupQuickPastePanelController()
+    {
+        let locator = ScreenCenterPanelLocator()
+        let panelController = QuickPastePanelController(screenLocator: locator)
+        quickPastePanelController = panelController
+
+        // 创建降级浮层控制器
+        let overlayLocator = ScreenCenterOverlayLocator()
+        let overlayController = PasteOverlayController(
+            consumerWatcher: ClipboardConsumerWatcher(),
+            timerScheduler: OverlayTimer(),
+            settings: QuickPasteSettings(),
+            screenLocator: overlayLocator
+        )
+
+        // 创建粘贴流程协调器（Phase 3 使用系统权限检测器，Phase 4 替换为 AccessibilityService）
+        let coordinator = PasteCoordinator(
+            permissionChecker: SystemPastePermissionChecker(),
+            clipboardWriter: ClipboardWriter(),
+            panelCloser: panelController,
+            overlayShower: overlayController
+        )
+        pasteCoordinator = coordinator
+
+        // UI 测试启动参数：直接显示面板
+        if CommandLine.arguments.contains("--UITEST_QUICK_PASTE_PANEL")
+        {
+            if CommandLine.arguments.contains("--UITEST_PREPOPULATE_IMAGE_AND_FILEPATH")
+            {
+                prepopulateImageAndFilePathForTesting()
+            }
+            let contentController = makeQuickPasteContentController(coordinator: coordinator)
+            panelController.showPanel(contentController: contentController)
+        }
+    }
+
+    /// 创建快速粘贴面板内容视图控制器。
+    @MainActor
+    private func makeQuickPasteContentController(coordinator: PasteCoordinator) -> NSViewController
+    {
+        let clips = loadClipsForQuickPaste()
+        let viewModel = QuickPasteViewModel(clips: clips)
+        viewModel.onPasteTriggered = { clip in
+            coordinator.handlePaste(clip: clip)
+        }
+        viewModel.onEscPressed = { [weak self] in
+            self?.quickPastePanelController?.handleEscKey()
+        }
+        let view = QuickPasteView(viewModel: viewModel)
+        return NSHostingController(rootView: view)
+    }
+
+    /// 加载剪贴项列表（快速粘贴面板数据源）。
+    private func loadClipsForQuickPaste() -> [ClipItem]
+    {
+        do {
+            let store = try EncryptedStore()
+            return Array(try store.loadAll().prefix(50))
+        } catch {
+            LogCategory.storage.error("加载快速粘贴面板数据失败: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    /// F1.9：接收全局快捷键通知，呼出快速粘贴面板。
+    @MainActor
+    @objc func handleOpenQuickPaste()
+    {
+        guard let coordinator = pasteCoordinator else { return }
+        let contentController = makeQuickPasteContentController(coordinator: coordinator)
+        quickPastePanelController?.showPanel(contentController: contentController)
+    }
+
+    /// 屏幕中央浮层定位器（降级浮层使用）。
+    private final class ScreenCenterOverlayLocator: OverlayScreenLocating
+    {
+        func locatePosition() -> NSPoint
+        {
+            let screenFrame = NSScreen.main?.frame ?? .zero
+            return NSPoint(
+                x: screenFrame.midX - 110,
+                y: screenFrame.midY - 30
+            )
+        }
+    }
+
     /// UI 测试专用：预置图片+文件路径数据到 EncryptedStore。
     func prepopulateImageAndFilePathForTesting()
     {
