@@ -98,6 +98,26 @@ final class QuickPasteViewModel: ObservableObject
         }
     }
 
+    /// 双击处理（按 clip 查找）：文本类型触发粘贴回调，图片/文件路径类型显示提示。
+    ///
+    /// 使用 clip 而非 index，避免搜索过滤后 filteredClips 的 index 与 clips 的 index 不匹配
+    /// 导致访问错误的 clip。
+    /// - Parameter clip: 被双击的 ClipItem
+    func handleDoubleClick(clip: ClipItem)
+    {
+        switch clip.content
+        {
+        case .text:
+            shouldShowTextOnlyHint = false
+            onPasteTriggered?(clip)
+            // test hook：记录触发的 clip.id，供 UI 测试验证回调被调用
+            lastTriggeredClipIdForTesting = clip.id.uuidString
+        case .image, .filePath:
+            shouldShowTextOnlyHint = true
+            LogCategory.ui.info("QuickPaste double-click on non-text row, showing hint")
+        }
+    }
+
     func handleEscKey()
     {
         onEscPressed?()
@@ -207,7 +227,7 @@ struct QuickPasteView: View
                                 clip: clip,
                                 isSelected: viewModel.isSelected(index: index),
                                 onSingleClick: { viewModel.selectIndex(index) },
-                                onDoubleClick: { viewModel.handleDoubleClick(index: index) }
+                                onDoubleClick: { viewModel.handleDoubleClick(clip: clip) }
                             )
                             .accessibilityIdentifier(
                                 "quickPasteRow_\(index)"

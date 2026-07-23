@@ -41,13 +41,13 @@ struct ClipRowView: View
         .overlay(borderOverlay)
         .cornerRadius(12)
         .contentShape(Rectangle())
-        .onTapGesture(count: 1)
-        {
-            onSingleClick?()
-        }
         .onTapGesture(count: 2)
         {
             onDoubleClick?()
+        }
+        .onTapGesture(count: 1)
+        {
+            onSingleClick?()
         }
     }
 

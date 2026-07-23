@@ -170,6 +170,72 @@ final class QuickPasteViewTests: XCTestCase
         XCTAssertFalse(viewModel.shouldShowTextOnlyHint, "选中其他行后提示应消失")
     }
 
+    // MARK: - TC-F1.9-5-01 双击文本行触发粘贴流程（按 clip 而非 index，修复搜索过滤后索引不匹配）
+
+    /// Bug 修复：搜索过滤后 filteredClips 的 index 与 viewModel.clips 的 index 不一致，
+    /// 导致 handleDoubleClick(index:) 访问错误的 clip。
+    /// 新 API handleDoubleClick(clip:) 直接按 clip 查找，消除索引依赖。
+    @MainActor
+    func testHandleDoubleClick_ByClip_PastesCorrectClip_EvenWhenFiltered()
+    {
+        // 场景：clips = [imageClip, textClip]
+        // 搜索 "目标" 后 filteredClips = [textClip]，filteredClips 的 index=0
+        // 旧 API handleDoubleClick(index: 0) 会访问 clips[0] = imageClip（错误，显示提示不粘贴）
+        // 新 API handleDoubleClick(clip: textClip) 应直接粘贴 textClip
+        let imageClip = ClipItem.makeImage(
+            Data([0x89, 0x50, 0x4E, 0x47]),
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let textClip = ClipItem.makeText(
+            "目标文本",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let viewModel = QuickPasteViewModel(clips: [imageClip, textClip])
+
+        var pastedClip: ClipItem?
+        viewModel.onPasteTriggered = { clip in pastedClip = clip }
+
+        // 模拟 View 传入被双击的 clip 本身（而非 filteredClips 的 index）
+        viewModel.handleDoubleClick(clip: textClip)
+
+        XCTAssertNotNil(pastedClip, "双击文本 clip 应触发粘贴回调")
+        XCTAssertEqual(pastedClip?.id, textClip.id, "应粘贴正确的 clip（textClip）而非 clips[0]（imageClip）")
+        XCTAssertFalse(viewModel.shouldShowTextOnlyHint, "文本 clip 不应显示'仅支持文本粘贴'提示")
+    }
+
+    // MARK: - TC-F1.9-5-01 双击图片 clip 显示提示不粘贴（按 clip 而非 index）
+
+    @MainActor
+    func testHandleDoubleClick_ByImageClip_DoesNotPaste_AndShowsHint()
+    {
+        let imageClip = ClipItem.makeImage(
+            Data([0x89, 0x50, 0x4E, 0x47]),
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let textClip = ClipItem.makeText(
+            "其他文本",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let viewModel = QuickPasteViewModel(clips: [textClip, imageClip])
+
+        var pasteCalled = false
+        viewModel.onPasteTriggered = { _ in pasteCalled = true }
+
+        // 双击 imageClip（在 clips[1]，确保不是通过 index=0 访问到）
+        viewModel.handleDoubleClick(clip: imageClip)
+
+        XCTAssertFalse(pasteCalled, "双击图片 clip 不应触发粘贴")
+        XCTAssertTrue(viewModel.shouldShowTextOnlyHint, "应显示'仅支持文本粘贴'提示")
+    }
+
     // MARK: - 集成测试：双击文本行触发 onPasteTriggered（TC-F1.9-5-01 集成层）
 
     @MainActor
