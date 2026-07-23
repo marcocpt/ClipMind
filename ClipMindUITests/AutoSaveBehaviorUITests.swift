@@ -70,11 +70,12 @@ final class AutoSaveBehaviorUITests: XCTestCase
         // 关闭设置窗口（Cmd+W）
         app.typeKey("w", modifierFlags: .command)
 
-        // App 不应崩溃
-        XCTAssertTrue(app.waitForExistence(timeout: 3), "App 不应崩溃")
+        // App 不应崩溃：Cmd+W 关闭设置窗口后主窗口可能在后台，waitForExistence 不可靠，
+        // 改用 app.state 检查进程是否仍在运行
+        XCTAssertNotEqual(app.state, .notRunning, "App 不应崩溃")
 
         // 验证错误弹窗的确定按钮出现（弹窗存在的可靠标志）
-        let okButton = app.buttons["确定"]
+        let okButton = app.buttons["确定"].firstMatch
         XCTAssertTrue(
             okButton.waitForExistence(timeout: 10),
             "保存目录异常时应显示错误弹窗"

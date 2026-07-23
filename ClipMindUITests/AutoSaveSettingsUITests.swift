@@ -195,7 +195,7 @@ final class AutoSaveSettingsUITests: XCTestCase
         sensitiveToggle.click()
 
         // 验证二次确认弹窗出现
-        let cancelButton = app.buttons["取消"]
+        let cancelButton = app.buttons["取消"].firstMatch
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "二次确认弹窗应出现")
 
         // 点击取消，开关应恢复为开启
