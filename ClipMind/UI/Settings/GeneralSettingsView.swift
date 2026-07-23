@@ -16,6 +16,7 @@ struct GeneralSettingsView: View {
         Form {
             launchAtLoginSection
             hotkeySection
+            quickPasteSection
             sampleDataSection
         }
         .padding()
@@ -46,6 +47,43 @@ struct GeneralSettingsView: View {
             Text("用于唤起 ClipMind 剪贴板历史窗口。")
                 .font(.caption)
                 .foregroundColor(.secondary)
+        }
+    }
+
+    // MARK: - 快速粘贴（F1.9 新增）
+
+    @State private var overlayTimeoutSeconds: Double = QuickPasteSettings.overlayDurationDefault
+    private let quickPasteSettings = QuickPasteSettings()
+
+    private var quickPasteSection: some View
+    {
+        Section("快速粘贴")
+        {
+            HStack
+            {
+                Text("浮层超时兜底时长")
+                Spacer()
+                Stepper(
+                    value: $overlayTimeoutSeconds,
+                    in: QuickPasteSettings.overlayDurationRange
+                )
+                {
+                    Text("\(Int(overlayTimeoutSeconds)) 秒")
+                        .monospacedDigit()
+                }
+                .accessibilityIdentifier("overlayTimeoutStepper")
+            }
+
+            Text("无辅助功能权限时，降级浮层提示的超时兜底时长（1-30 秒）。超时后浮层自动消失。")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .onAppear
+        {
+            overlayTimeoutSeconds = quickPasteSettings.loadOverlayDuration()
+        }
+        .onChange(of: overlayTimeoutSeconds) { newValue in
+            quickPasteSettings.saveOverlayDuration(newValue)
         }
     }
 
