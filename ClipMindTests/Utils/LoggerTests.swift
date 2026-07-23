@@ -15,19 +15,20 @@ final class LoggerTests: XCTestCase {
         XCTAssertEqual(LogCategory.privacy.rawValue, "Privacy")
         XCTAssertEqual(LogCategory.ui.rawValue, "UI")
         XCTAssertEqual(LogCategory.app.rawValue, "App")
+        XCTAssertEqual(LogCategory.toast.rawValue, "Toast")
     }
 
     // MARK: - LogCategory.allCases
 
     func testLogCategoryAllCases() throws {
-        XCTAssertEqual(LogCategory.allCases.count, 8, "LogCategory 应有 8 个 case")
+        XCTAssertEqual(LogCategory.allCases.count, 9, "LogCategory 应有 9 个 case")
         // 验证每个 case 都存在
         let expectedCategories: Set<String> = [
             "Capture", "Classify", "Search", "LLM",
-            "Storage", "Privacy", "UI", "App"
+            "Storage", "Privacy", "UI", "App", "Toast"
         ]
         let actualCategories = Set(LogCategory.allCases.map(\.rawValue))
-        XCTAssertEqual(actualCategories, expectedCategories, "应包含全部 8 个分类")
+        XCTAssertEqual(actualCategories, expectedCategories, "应包含全部 9 个分类")
     }
 
     // MARK: - LogCategory.logger
