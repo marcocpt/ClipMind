@@ -17,6 +17,9 @@ final class QuickPasteViewModel: ObservableObject
     /// 仅在测试启动参数下通过 QuickPasteView 的测试元素暴露，不影响生产行为。
     @Published var lastTriggeredClipIdForTesting: String?
 
+    /// 是否显示"仅支持文本粘贴"提示（双击图片/文件路径行时为 true）。
+    @Published var shouldShowTextOnlyHint = false
+
     /// Esc 键回调（由控制器关闭面板）。
     var onEscPressed: (() -> Void)?
 
@@ -46,6 +49,7 @@ final class QuickPasteViewModel: ObservableObject
     {
         guard clips.indices.contains(index) else { return }
         selectedIndex = index
+        shouldShowTextOnlyHint = false
         onSingleClick?(index)
     }
 
@@ -72,6 +76,26 @@ final class QuickPasteViewModel: ObservableObject
         onPasteTriggered?(clip)
         // test hook：记录触发的 clip.id，供 UI 测试验证回调被调用（Phase 2 任务 5）
         lastTriggeredClipIdForTesting = clip.id.uuidString
+    }
+
+    /// 双击处理：文本类型触发粘贴回调，图片/文件路径类型显示提示。
+    /// - Parameter index: 被双击的行索引
+    func handleDoubleClick(index: Int)
+    {
+        guard clips.indices.contains(index) else { return }
+        let clip = clips[index]
+
+        switch clip.content
+        {
+        case .text:
+            shouldShowTextOnlyHint = false
+            onPasteTriggered?(clip)
+            // test hook：记录触发的 clip.id，供 UI 测试验证回调被调用（Phase 2 任务 5）
+            lastTriggeredClipIdForTesting = clip.id.uuidString
+        case .image, .filePath:
+            shouldShowTextOnlyHint = true
+            LogCategory.ui.info("QuickPaste double-click on non-text row, showing hint")
+        }
     }
 
     func handleEscKey()
