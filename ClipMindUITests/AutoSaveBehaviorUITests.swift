@@ -8,6 +8,29 @@ final class AutoSaveBehaviorUITests: XCTestCase
         continueAfterFailure = false
     }
 
+    /// 通过 accessibility identifier 查找元素。
+    ///
+    /// SwiftUI Toggle 在 macOS XCUITest 中可能映射为 switch、checkbox 或 otherElements，
+    /// 使用 descendants(.any) 兜底（参考 PrivacyUITests/SettingsUITests 模式）。
+    private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement
+    {
+        app.descendants(matching: .any)[identifier].firstMatch
+    }
+
+    /// 获取 Toggle 的布尔值（macOS 上 Toggle.value 可能为 Int 1/0 或 String "0"/"1"）。
+    private func toggleValue(_ toggle: XCUIElement) -> Int
+    {
+        if let intValue = toggle.value as? Int
+        {
+            return intValue
+        }
+        if let stringValue = toggle.value as? String
+        {
+            return Int(stringValue) ?? 0
+        }
+        return 0
+    }
+
     // MARK: - AC-09：保存目录异常时弹窗提示不崩溃
 
     /// 验证保存目录配置为不存在路径时，App 不崩溃且显示错误弹窗。
@@ -28,9 +51,9 @@ final class AutoSaveBehaviorUITests: XCTestCase
         settingsButton.click()
 
         // 开启总开关
-        let enabledToggle = app.switches["autoSaveEnabledToggle"]
+        let enabledToggle = element("autoSaveEnabledToggle", in: app)
         XCTAssertTrue(enabledToggle.waitForExistence(timeout: 5))
-        if enabledToggle.value as? String == "0"
+        if toggleValue(enabledToggle) == 0
         {
             enabledToggle.click()
         }
@@ -79,11 +102,11 @@ final class AutoSaveBehaviorUITests: XCTestCase
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
         settingsButton.click()
 
-        let enabledToggle = app.switches["autoSaveEnabledToggle"]
+        let enabledToggle = element("autoSaveEnabledToggle", in: app)
         XCTAssertTrue(enabledToggle.waitForExistence(timeout: 5))
         XCTAssertEqual(
-            enabledToggle.value as? String,
-            "0",
+            toggleValue(enabledToggle),
+            0,
             "D11：总开关默认应关闭"
         )
 

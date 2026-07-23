@@ -29,14 +29,14 @@ final class AppDelegateAutoSaveAssemblyTests: XCTestCase
         }
     }
 
-    // MARK: - TC-UT-71：autoSaveSettingsKeys 包含全部 8 个配置项
+    // MARK: - TC-UT-71：autoSaveSettingsKeys 包含全部 9 个配置项
 
     @MainActor
-    func testAutoSaveSettingsKeysContainsAllEight() throws
+    func testAutoSaveSettingsKeysContainsAllNine() throws
     {
         // 实现前 AppDelegate.autoSaveSettingsKeys 不存在 → 编译失败（TDD red）
         let keys = AppDelegate.autoSaveSettingsKeys
-        XCTAssertEqual(keys.count, 8, "应有 8 个 F2.1 配置键")
+        XCTAssertEqual(keys.count, 9, "应有 9 个 F2.1 配置键")
         XCTAssertTrue(keys.contains("F2.1.autoSave.isEnabled"), "应包含总开关键")
         XCTAssertTrue(keys.contains("F2.1.autoSave.saveDirectory"), "应包含保存目录键")
         XCTAssertTrue(keys.contains("F2.1.autoSave.whitelistBundleIds"), "应包含白名单键")
@@ -45,5 +45,6 @@ final class AppDelegateAutoSaveAssemblyTests: XCTestCase
         XCTAssertTrue(keys.contains("F2.1.autoSave.fileNameLength"), "应包含文件名长度键")
         XCTAssertTrue(keys.contains("F2.1.autoSave.sensitiveFilterEnabled"), "应包含敏感过滤键")
         XCTAssertTrue(keys.contains("F2.1.autoSave.pathFormat"), "应包含路径格式键")
+        XCTAssertTrue(keys.contains("F2.1.autoSave.showFilePathInHistory"), "应包含文件路径进历史键")
     }
 }
