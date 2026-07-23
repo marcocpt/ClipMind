@@ -225,89 +225,79 @@
             color: #424245;
         }
 
-        /* ========== 视觉细节标注区（静态示例 Toast + 虚线引出尺寸） ========== */
+        /* ========== 视觉细节标注区（左右分栏 + 引线指向 Toast 对应部位） ==========
+         * 修复说明：原方案使用绝对定位 + 硬编码坐标，导致标注漂浮且虚线不可见，
+         * 无法指向 Toast 对应部位。改为 flex 左右分栏：Toast 在左，标注列表在右，
+         * 每个标注项用 ::before 伪元素画水平虚线引线，::after 画箭头指向 Toast。 */
         .annotation-area {
             position: relative;
             background: linear-gradient(135deg, #e8e8ec 0%, #d8d8dc 100%);
             border-radius: 6px;
-            padding: 80px 24px 60px;
-            min-height: 220px;
+            padding: 24px;
+            min-height: 200px;
             overflow: visible;
+            display: flex;
+            align-items: flex-start;
+            gap: 48px;
         }
 
-        /* 静态示例 Toast（不参与动画，仅用于标注尺寸） */
+        /* 静态示例 Toast（左侧，不参与动画，仅用于标注尺寸） */
         .annotation-toast {
             position: relative;
-            margin: 0 auto;
+            flex-shrink: 0;
+            margin-top: 24px; /* 模拟距顶部 24px（AC-09） */
             background: rgba(28, 28, 30, 0.92);
             border-radius: 10px;
             padding: 10px 16px;
             display: flex;
             align-items: center;
             gap: 8px;
-            max-width: 360px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            width: fit-content;
         }
 
-        /* 标注虚线（绝对定位） */
-        .annotation-line {
-            position: absolute;
-            border: 0 dashed #d70015;
-            font-size: 10px;
+        /* 标注列表（右侧，与 Toast 顶部对齐） */
+        .annotation-list {
+            position: relative;
+            flex: 1;
+            padding-top: 24px; /* 与 Toast 顶部对齐 */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 单个标注项：左侧留空间画引线 */
+        .annotation-item {
+            position: relative;
+            padding: 2px 0 2px 36px;
+            font-size: 11px;
             color: #d70015;
             background: rgba(255, 255, 255, 0.9);
-            padding: 1px 4px;
             border-radius: 2px;
             white-space: nowrap;
         }
 
-        /* 距顶部 24px 标注（垂直虚线，从容器顶部到 Toast 顶部） */
-        .annotation-top {
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            height: 80px;
-            border-left-width: 1px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .annotation-top .label {
+        /* 引线：从标注左侧画水平虚线指向 Toast */
+        .annotation-item::before {
+            content: '';
             position: absolute;
-            left: 50%;
-            transform: translateX(8px);
-            background: #ffffff;
-            padding: 2px 6px;
-            border: 1px solid #d70015;
-            border-radius: 2px;
-            font-size: 10px;
-            color: #d70015;
+            left: 0;
+            top: 50%;
+            width: 30px;
+            border-top: 1px dashed #d70015;
         }
 
-        /* 圆角 10px 标注 */
-        .annotation-radius {
-            top: 70px;
-            right: 30%;
-        }
-
-        /* 图标 20px 标注 */
-        .annotation-icon {
-            top: 100px;
-            left: 30%;
-        }
-
-        /* 文字 14px 标注 */
-        .annotation-text {
-            top: 140px;
-            right: 20%;
-        }
-
-        /* 内边距 16px/10px 标注 */
-        .annotation-padding {
-            bottom: 30px;
-            left: 20%;
+        /* 引线箭头：指向 Toast 方向（左侧三角） */
+        .annotation-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 3px solid transparent;
+            border-bottom: 3px solid transparent;
+            border-right: 5px solid #d70015;
         }
 
         /* 标注图例 */
@@ -447,30 +437,30 @@
         <div class="section-desc">Toast 浮层的关键尺寸标注（虚线引出）。以下为静态示例，不参与动画，仅用于展示视觉参数。</div>
 
         <div class="annotation-area">
-            <!-- 距顶部 24px 标注：垂直虚线 -->
-            <div class="annotation-top">
-                <div class="label">距顶部 24px（AC-09 允许 16-32pt 范围，24px 为默认值，可在实现规划层调整）</div>
+            <!-- 左侧：静态示例 Toast（可访问性属性为示例：实际 SwiftUI 实现时落地为 .accessibilityIdentifier()） -->
+            <div class="annotation-toast" aria-label="保存成功 Toast 示例">
+                <!-- 图标：内联 SVG 自包含绿色圆形 + 白色对勾，不依赖 .toast-icon 全局样式 -->
+                <svg width="20" height="20" viewBox="0 0 20 20" role="img" aria-label="保存成功图标" aria-hidden="true">
+                    <circle cx="10" cy="10" r="10" fill="#34c759"/>
+                    <path d="M5 10 L8.5 13.5 L15 7" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <!-- 文件名 -->
+                <span class="toast-text" role="text" aria-label="文件名 hello-world.md">hello-world.md</span>
             </div>
 
-            <!-- 静态示例 Toast（可访问性属性为示例：实际 SwiftUI 实现时落地为 .accessibilityIdentifier()） -->
-            <div class="annotation-toast" style="margin-top: 60px;" aria-label="保存成功 Toast 示例">
-                <div class="toast-icon" role="img" aria-label="保存成功图标">
-                    <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                        <path d="M2 7L5.5 10.5L12 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                <div class="toast-text" role="text" aria-label="文件名 hello-world.md">hello-world.md</div>
+            <!-- 右侧：标注列表（引线指向 Toast 对应部位） -->
+            <div class="annotation-list">
+                <div class="annotation-item">距顶部 24px（AC-09 允许 16-32pt 范围，24px 为默认值）</div>
+                <div class="annotation-item">圆角 10px</div>
+                <div class="annotation-item">图标 20px（绿色圆形 + 白色对勾）</div>
+                <div class="annotation-item">文字 14px（白色，系统字体）</div>
+                <div class="annotation-item">内边距 16px / 10px（水平 / 垂直）</div>
+                <div class="annotation-item">最大宽度 360px（文件名过长省略号）</div>
+                <div class="annotation-item">阴影 0 4px 12px rgba(0, 0, 0, 0.3)</div>
             </div>
-
-            <!-- 各项尺寸标注 -->
-            <div class="annotation-line annotation-radius">← 圆角 10px</div>
-            <div class="annotation-line annotation-icon">← 图标 20px（绿色圆形 + 白色对勾）</div>
-            <div class="annotation-line annotation-text">← 文字 14px（白色，系统字体）</div>
-            <div class="annotation-line annotation-padding">← 内边距 16px / 10px（水平 / 垂直）</div>
-
-            <div class="annotation-legend">
-                其他参数：背景 <code>rgba(28, 28, 30, 0.92)</code>（半透明深色） · 阴影 <code>0 4px 12px rgba(0, 0, 0, 0.3)</code> · 最大宽度 360px · 文件名过长省略号
-            </div>
+        </div>
+        <div class="annotation-legend">
+            标注说明：红色虚线箭头指向 Toast 浮层对应部位。以下为静态示例，不参与动画，仅用于展示视觉参数。
         </div>
     </div>
 
