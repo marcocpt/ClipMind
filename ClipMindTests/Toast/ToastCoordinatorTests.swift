@@ -210,6 +210,130 @@ final class ToastCoordinatorTests: XCTestCase
 
         XCTAssertEqual(coordinator.currentState, .hidden, "查询失败应保守不显示")
     }
+
+    // MARK: - TC-UT-03 出现中 → 替换中
+
+    func testAppearingToReplacingOnNewNotification()
+    {
+        let first = ToastCoordinatorFixtures.makeSavedNotification(fileName: "a.md")
+        coordinator.handleSavedNotification(first)
+        XCTAssertEqual(coordinator.currentState, .appearing)
+
+        // 进入动画进行中收到新通知
+        let second = ToastCoordinatorFixtures.makeSavedNotification(fileName: "b.md")
+        coordinator.handleSavedNotification(second)
+
+        XCTAssertEqual(coordinator.currentState, .replacing, "出现中收到新通知应转为替换中")
+        XCTAssertTrue(windowManager.closeImmediatelyCalled, "应立即关闭旧窗口")
+    }
+
+    // MARK: - TC-UT-04 已显示 → 替换中
+
+    func testDisplayedToReplacingOnNewNotification()
+    {
+        let first = ToastCoordinatorFixtures.makeSavedNotification(fileName: "a.md")
+        coordinator.handleSavedNotification(first)
+        windowManager.simulateDidAppear()
+        XCTAssertEqual(coordinator.currentState, .displayed)
+
+        // 2 秒计时未结束收到新通知
+        timerSource.advance(by: 1.0)
+        let second = ToastCoordinatorFixtures.makeSavedNotification(fileName: "b.md")
+        coordinator.handleSavedNotification(second)
+
+        XCTAssertEqual(coordinator.currentState, .replacing, "已显示收到新通知应转为替换中")
+        XCTAssertTrue(windowManager.closeImmediatelyCalled, "应立即关闭旧窗口")
+    }
+
+    // MARK: - TC-UT-06 替换中 → 出现中（新 Toast）
+
+    func testReplacingToAppearingOnCloseImmediately()
+    {
+        let first = ToastCoordinatorFixtures.makeSavedNotification(fileName: "a.md")
+        coordinator.handleSavedNotification(first)
+        windowManager.simulateDidAppear()
+
+        let second = ToastCoordinatorFixtures.makeSavedNotification(fileName: "b.md")
+        coordinator.handleSavedNotification(second)
+        XCTAssertEqual(coordinator.currentState, .replacing)
+
+        // 模拟旧窗口立即关闭完成
+        windowManager.simulateDidCloseImmediately()
+
+        XCTAssertEqual(coordinator.currentState, .appearing, "替换中关闭完成应转为出现中（新 Toast）")
+        XCTAssertEqual(windowManager.lastShownFileName, "b.md", "应触发新 Toast 显示 b.md")
+    }
+
+    // MARK: - TC-UT-07 替换中收到新通知（合并为最新）
+
+    func testReplacingToReplacingOnNewNotification()
+    {
+        let first = ToastCoordinatorFixtures.makeSavedNotification(fileName: "a.md")
+        coordinator.handleSavedNotification(first)
+        windowManager.simulateDidAppear()
+
+        let second = ToastCoordinatorFixtures.makeSavedNotification(fileName: "b.md")
+        coordinator.handleSavedNotification(second)
+        XCTAssertEqual(coordinator.currentState, .replacing)
+
+        // 替换中再收到新通知 c.md
+        let third = ToastCoordinatorFixtures.makeSavedNotification(fileName: "c.md")
+        coordinator.handleSavedNotification(third)
+
+        XCTAssertEqual(coordinator.currentState, .replacing, "替换中收到新通知应保持替换中")
+        // 最新通知胜出，待替换完成后显示 c.md
+        windowManager.simulateDidCloseImmediately()
+        XCTAssertEqual(windowManager.lastShownFileName, "c.md", "应显示最新文件名 c.md")
+    }
+
+    // MARK: - TC-UT-08 消失中 → 替换中
+
+    func testDisappearingToReplacingOnNewNotification()
+    {
+        let first = ToastCoordinatorFixtures.makeSavedNotification(fileName: "a.md")
+        coordinator.handleSavedNotification(first)
+        windowManager.simulateDidAppear()
+        timerSource.advance(by: 2.0)
+        XCTAssertEqual(coordinator.currentState, .disappearing)
+
+        // 退出动画进行中收到新通知
+        let second = ToastCoordinatorFixtures.makeSavedNotification(fileName: "b.md")
+        coordinator.handleSavedNotification(second)
+
+        XCTAssertEqual(coordinator.currentState, .replacing, "消失中收到新通知应转为替换中")
+        XCTAssertTrue(windowManager.closeImmediatelyCalled, "应立即关闭旧窗口（取消退出动画）")
+    }
+
+    // MARK: - TC-UT-10 替换模式 2 秒计时重置（FR-007）
+
+    func testTimerResetsOnReplace()
+    {
+        // 第一次触发 a.md
+        let first = ToastCoordinatorFixtures.makeSavedNotification(fileName: "a.md")
+        coordinator.handleSavedNotification(first)
+        windowManager.simulateDidAppear()
+        XCTAssertEqual(coordinator.currentState, .displayed)
+
+        // 推进 1 秒（剩余 1 秒）
+        timerSource.advance(by: 1.0)
+
+        // 触发替换 b.md
+        let second = ToastCoordinatorFixtures.makeSavedNotification(fileName: "b.md")
+        coordinator.handleSavedNotification(second)
+        windowManager.simulateDidCloseImmediately()
+        XCTAssertEqual(coordinator.currentState, .appearing)
+
+        windowManager.simulateDidAppear()
+        XCTAssertEqual(coordinator.currentState, .displayed)
+
+        // 推进 1 秒（如果旧计时器未取消，会触发消失，这是 bug）
+        timerSource.advance(by: 1.0)
+        XCTAssertEqual(coordinator.currentState, .displayed, "新 Toast 2 秒计时不应在 1 秒后触发")
+
+        // 再推进 1 秒，新计时器到期，应触发消失
+        timerSource.advance(by: 1.0)
+        XCTAssertEqual(coordinator.currentState, .disappearing, "新 Toast 2 秒后应触发消失")
+    }
 }
 
 /// 测试专用窗口承载模块，记录调用并支持手动触发回调。

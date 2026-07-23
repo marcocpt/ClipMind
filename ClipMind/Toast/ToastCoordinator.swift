@@ -155,19 +155,30 @@ public final class ToastCoordinator
 
     private func triggerToast(fileName: String)
     {
-        // Phase 0：仅在 hidden 与 disappearing 状态触发新 Toast
-        // Phase 1：补充 appearing / displayed / replacing 状态下的替换逻辑
         switch currentState
         {
         case .hidden:
             startAppearing(fileName: fileName)
-        case .disappearing:
-            // 退出动画进行中收到新通知 → 替换（Phase 1 完整实现，Phase 0 简化为等动画完成后再触发）
-            logger.info("Toast deferred during disappearing: fileName=\(fileName, privacy: .public)")
-        case .appearing, .displayed, .replacing:
-            // Phase 1 任务 8 实现替换中状态
-            logger.info("Toast replace pending (Phase 1): fileName=\(fileName, privacy: .public)")
+        case .appearing, .displayed, .disappearing, .replacing:
+            startReplacing(fileName: fileName)
         }
+    }
+
+    /// 启动替换流程：取消旧计时器 → 立即关闭旧窗口 → 等待关闭完成 → 触发新 Toast 进入。
+    private func startReplacing(fileName: String)
+    {
+        currentState = .replacing
+        pendingFileName = fileName
+        let oldFileName = currentFileName
+        logger.info("Toast replace: old=\(oldFileName ?? "nil", privacy: .public)")
+        logger.info("Toast replace: new=\(fileName, privacy: .public)")
+
+        // R-03：取消旧计时器，保证同时只有一个有效计时器
+        currentTimerHandle?.cancel()
+        currentTimerHandle = nil
+
+        // D2 + R-02：立即关闭旧窗口（无退出动画），等待 onDidCloseImmediately 回调后触发新进入
+        windowManager.closeImmediately()
     }
 
     private func startAppearing(fileName: String)
@@ -220,7 +231,16 @@ public final class ToastCoordinator
 
     private func handleDidCloseImmediately()
     {
-        // Phase 1 替换模式专用：旧窗口立即关闭完成后，触发新 Toast 进入
-        // Phase 0：仅作为回调点，不实现替换逻辑
+        // 替换模式专用：旧窗口立即关闭完成后，触发新 Toast 进入
+        guard currentState == .replacing else { return }
+        guard let newFileName = pendingFileName else
+        {
+            // 防御：无待显示文件名，回到隐藏
+            currentState = .hidden
+            currentFileName = nil
+            return
+        }
+        pendingFileName = nil
+        startAppearing(fileName: newFileName)
     }
 }
