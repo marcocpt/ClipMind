@@ -369,7 +369,9 @@
             color: #8e8e93;
         }
 
-        /* ========== 响应式：在窄屏下保持 Toast 顶部居中 ========== */
+        /* ========== 响应式：在窄屏下保持 Toast 顶部居中 ==========
+         * 响应式仅服务于 HTML 预览（浏览器窗口缩放），macOS 原生 Toast 透明窗口尺寸固定，
+         * 无需考虑响应式（实际 SwiftUI 实现不参考此段 CSS）。 */
         @media (max-width: 480px) {
             body {
                 padding: 12px;
@@ -387,12 +389,13 @@
     <!-- 页面头部：显示标题与版本信息（对齐 docs.md：HTML 页面头部显示最后更新与版本信息） -->
     <div class="page-header">
         <h1>F2.1.1 保存成功 Toast 提示 - 视觉原型</h1>
-        <div class="meta">最后更新：2026-07-24 | 版本：v1.0（基于需求文档 v1.0 + 设计文档 v1.1）</div>
+        <div class="meta">最后更新：2026-07-24 | 版本：v1.1（基于需求文档 v1.0 + 设计文档 v1.1）</div>
     </div>
 
     <!-- ========== Toast 容器：模拟屏幕级透明窗口（D1 决策，FR-011 不依赖窗口焦点） ========== -->
     <!-- pointer-events:none 保证不拦截源 App 的点击，对应"不抢焦点" -->
-    <div class="toast-container" id="toastContainer">
+    <!-- 可访问性属性为示例：实际 SwiftUI 实现时由实现规划层落地为 .accessibilityIdentifier("toast-container") -->
+    <div class="toast-container" id="toastContainer" role="status" aria-live="polite" aria-label="保存成功 Toast 容器">
         <!-- 动态创建的 Toast 元素插入这里 -->
     </div>
 
@@ -431,6 +434,7 @@
         <!-- 事件日志：让交互可观测，对应 AC-08 进入动画启动后立即可见 -->
         <div style="margin-top: 20px;">
             <div class="section-desc" style="margin-bottom: 8px;">事件日志（实时记录 Toast 状态变更，便于验证替换模式与计时器重置）：</div>
+            <div class="section-desc" style="margin-bottom: 8px; font-style: italic; color: #8e8e93;">此面板仅为演示辅助，不属于 Toast 视觉规范，实际实现不包含此面板。</div>
             <div class="event-log" id="eventLog">
                 <div class="log-line"><span class="log-time">[--:--:--]</span> 等待用户操作...</div>
             </div>
@@ -445,17 +449,17 @@
         <div class="annotation-area">
             <!-- 距顶部 24px 标注：垂直虚线 -->
             <div class="annotation-top">
-                <div class="label">距顶部 24px（AC-09：16-32pt 范围）</div>
+                <div class="label">距顶部 24px（AC-09 允许 16-32pt 范围，24px 为默认值，可在实现规划层调整）</div>
             </div>
 
-            <!-- 静态示例 Toast -->
-            <div class="annotation-toast" style="margin-top: 60px;">
-                <div class="toast-icon">
-                    <svg viewBox="0 0 14 14" fill="none">
+            <!-- 静态示例 Toast（可访问性属性为示例：实际 SwiftUI 实现时落地为 .accessibilityIdentifier()） -->
+            <div class="annotation-toast" style="margin-top: 60px;" aria-label="保存成功 Toast 示例">
+                <div class="toast-icon" role="img" aria-label="保存成功图标">
+                    <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
                         <path d="M2 7L5.5 10.5L12 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <div class="toast-text">hello-world.md</div>
+                <div class="toast-text" role="text" aria-label="文件名 hello-world.md">hello-world.md</div>
             </div>
 
             <!-- 各项尺寸标注 -->
@@ -520,22 +524,65 @@
                 <div class="spec-id">AC-09</div>
                 <div class="spec-content">位置验证：Toast 水平居中，垂直位于屏幕顶部 16-32pt 范围内（本原型取 24px）</div>
             </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-01</div>
+                <div class="spec-content">Toast 出现：保存成功后 Toast 立即出现在屏幕顶部居中。验证方式：XCUITest 触发保存后断言 <code>toast-container</code> 存在。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-02</div>
+                <div class="spec-content">2 秒消失：Toast 显示 2 秒后自动消失（含退出动画）。验证方式：XCUITest 等待 2 秒后断言 <code>toast-container</code> 不存在。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-03</div>
+                <div class="spec-content">文件名显示：Toast 显示实际保存的文件名（含扩展名）。验证方式：XCUITest 断言 <code>toast-filename-text</code> 文本与预期文件名一致。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-04</div>
+                <div class="spec-content">替换模式：新 Toast 出现时立即关闭旧 Toast（无退出动画），2 秒计时重新计算。验证方式：XCUITest 快速连续触发后断言仅存在一个 <code>toast-container</code>。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-11</div>
+                <div class="spec-content">Toast 不依赖窗口焦点：Toast 作为屏幕级透明窗口浮层，不依赖 ClipMind 主窗口或菜单栏弹窗的焦点状态；用户在源 App（浏览器、IDE）前台复制时，Toast 仍能显示在屏幕顶部。验证方式：手动验收截图（源 App 前台 + Toast 可见）+ XCUITest 在源 App 处于前台时触发保存后断言 <code>toast-container</code> 存在。HTML 原型限制：HTML 无法真正模拟源 App 前台，实际行为由 macOS 原生透明窗口保证（对应设计文档 D1 决策）。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-06/07/10</div>
+                <div class="spec-content">AC-06（F2.1 总开关关闭）、AC-07（失败场景，错误弹窗存在 + Toast 不存在）、AC-10（App Sandbox 合规）属于系统级行为，由 XCUITest 与运行录屏验证，不在视觉原型演示范围。</div>
+            </div>
         </div>
     </div>
 
-    <!-- ========== 状态机可视化：对应设计文档 §5.1 ========== -->
+    <!-- ========== 状态机可视化：引用设计文档 §5.1（避免信息重复） ========== -->
     <div class="section">
-        <div class="section-title">Toast 协调模块状态机（对应设计文档 §5.1）</div>
-        <div class="section-desc">5 状态显式状态机（D2 决策）。所有状态转换显式定义，禁用隐式状态切换。</div>
+        <div class="section-title">Toast 协调模块状态机（详见设计文档 §5.1）</div>
+        <div class="section-desc">5 状态显式状态机（D2 决策）。完整状态转换图与触发条件详见设计文档 §5.1，本原型仅列出 5 个状态名以供对照，不复述完整转换逻辑。</div>
 
-        <div class="state-machine"><span class="state-name">隐藏</span> <span class="state-arrow">── 收到保存完成通知（跳过标记非真 且 F2.1 总开关启用） ──→</span> <span class="state-name">出现中</span>
-<span class="state-name">出现中</span> <span class="state-arrow">── 进入动画完成 ──→</span> <span class="state-name">已显示</span>
-<span class="state-name">已显示</span> <span class="state-arrow">── 2 秒计时结束 ──→</span> <span class="state-name">消失中</span>
-<span class="state-name">消失中</span> <span class="state-arrow">── 退出动画完成 ──→</span> <span class="state-name">隐藏</span>
+        <div class="state-machine"><span class="state-name">隐藏</span> <span class="state-arrow">·</span> <span class="state-name">出现中</span> <span class="state-arrow">·</span> <span class="state-name">已显示</span> <span class="state-arrow">·</span> <span class="state-name">替换中</span> <span class="state-arrow">·</span> <span class="state-name">消失中</span>
+<span class="state-arrow">// 5 个状态名（D2 决策），完整转换关系与替换模式（FR-007）详见设计文档 §5.1</span></div>
+    </div>
 
-<span class="state-arrow">// 替换模式（FR-007）：以下任一状态收到新通知均进入"替换中"状态</span>
-<span class="state-name">出现中 / 已显示 / 消失中</span> <span class="state-arrow">── 收到新通知 ──→</span> <span class="state-name">替换中</span> <span class="state-arrow">── 旧 Toast 立即关闭（无退出动画），新 Toast 触发进入 ──→</span> <span class="state-name">出现中</span>
-<span class="state-arrow">// 2 秒计时从新 Toast 出现时刻重新计算</span></div>
+    <!-- ========== Accessibility Identifier 命名约定（XCUITest 与错误弹窗区分） ========== -->
+    <div class="section">
+        <div class="section-title">Accessibility Identifier 命名约定</div>
+        <div class="section-desc">关键 UI 元素的 accessibility identifier 命名约定，供 XCUITest 断言使用。HTML 原型以 <code>aria-label</code> / <code>role</code> 属性作为示例，实际 SwiftUI 实现时由实现规划层落地为 <code>.accessibilityIdentifier()</code>。</div>
+
+        <div class="spec-list">
+            <div class="spec-item">
+                <div class="spec-id">toast-container</div>
+                <div class="spec-content">Toast 容器。XCUITest 断言 Toast 存在 / 不存在（对应 AC-01、AC-02、AC-04、AC-11）。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">toast-filename-text</div>
+                <div class="spec-content">文件名文字。XCUITest 断言文件名文本与预期一致（对应 AC-03）。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">toast-success-icon</div>
+                <div class="spec-content">成功图标（绿色圆形 + 白色对勾）。XCUITest 断言图标可见（对应 FR-002）。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">前缀区分</div>
+                <div class="spec-content">Toast 容器 identifier 前缀：<code>toast-</code>。F2.1 错误弹窗 identifier 前缀：<code>error-</code>（由 F2.1 既有实现定义，本特性不修改）。XCUITest 通过 identifier 前缀区分两者，避免 AC-07（错误弹窗存在 + Toast 不存在）误判。</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -618,12 +665,12 @@
             const toast = document.createElement('div');
             toast.className = 'toast'; // 初始状态：opacity:0, translateY(-100%)
             toast.innerHTML = `
-                <div class="toast-icon">
-                    <svg viewBox="0 0 14 14" fill="none">
+                <div class="toast-icon" role="img" aria-label="保存成功图标">
+                    <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
                         <path d="M2 7L5.5 10.5L12 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <div class="toast-text">${escapeHtml(filename)}</div>
+                <div class="toast-text" role="text" aria-label="文件名 ${escapeAttr(filename)}">${escapeHtml(filename)}</div>
             `;
             return toast;
         }
@@ -682,6 +729,15 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        /**
+         * 转义属性值，防止文件名中的特殊字符破坏 aria-label 属性
+         * @param {string} text
+         * @returns {string}
+         */
+        function escapeAttr(text) {
+            return escapeHtml(text).replace(/"/g, '&quot;');
+        }
     </script>
 
     <!--
@@ -689,6 +745,7 @@
     | 版本 | 日期 | 变更 |
     |------|------|------|
     | v1.0 | 2026-07-24 | 初始版本，基于需求文档 v1.0 + 设计文档 v1.1；包含 Toast 浮层主视觉（macOS 深色风格）、进入/退出动画（0.2s 滑入滑出 + 淡入淡出）、替换模式演示、4 个交互按钮、FR/AC 状态说明面板、视觉细节标注（距顶部 24px / 圆角 10px / 图标 20px / 文字 14px / 内边距 16px/10px）、状态机可视化 |
+    | v1.1 | 2026-07-24 | 根据 3 子代理审查修复 9 项：新增 Accessibility Identifier 命名约定区块（toast-container / toast-filename-text / toast-success-icon + 前缀区分 toast- 与 error-）；Toast 容器/文件名/图标添加 aria-label、role 等可访问性属性示例；状态说明面板补齐 AC-01/02/03/04/11 映射与 AC-06/07/10 系统级行为说明；事件日志面板添加演示辅助说明；状态机可视化改为引用设计文档 §5.1（保留 5 状态名）；距顶部 24px 标注补充可调整性说明；响应式 CSS 添加仅服务 HTML 预览注释 |
     -->
 </body>
 </html>
