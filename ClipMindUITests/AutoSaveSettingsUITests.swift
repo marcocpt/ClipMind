@@ -194,12 +194,13 @@ final class AutoSaveSettingsUITests: XCTestCase
         XCTAssertEqual(toggleValue(sensitiveToggle), 1, "敏感过滤应默认开启")
         sensitiveToggle.click()
 
-        // 验证二次确认弹窗出现（使用 dialogs 限定查询范围，避免匹配 Touch Bar 元素）
-        let alertDialog = app.dialogs.firstMatch
-        XCTAssertTrue(alertDialog.waitForExistence(timeout: 3), "二次确认弹窗应出现")
+        // 验证二次确认弹窗出现（macOS SwiftUI .alert 以 sheet 形式呈现，
+        // 参考 FirstLaunchUITests/SampleDataUITests 的查询模式）
+        let alertSheet = app.sheets.firstMatch
+        XCTAssertTrue(alertSheet.waitForExistence(timeout: 3), "二次确认弹窗应出现")
 
         // 点击取消，开关应恢复为开启
-        let cancelButton = alertDialog.buttons["取消"]
+        let cancelButton = alertSheet.buttons["取消"]
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "取消按钮应存在")
         cancelButton.click()
         let sensitiveToggleAfter = element("sensitiveFilterToggle", in: app)
