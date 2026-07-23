@@ -197,37 +197,37 @@ struct QuickPasteView: View
                     {
                         ForEach(Array(filteredClips.enumerated()), id: \.element.id)
                         { index, clip in
-                            ClipRowView(clip: clip)
-                                .background(
-                                    viewModel.isSelected(index: index)
-                                        ? Color.accentColor.opacity(0.2)
-                                        : Color.clear
-                                )
-                                .overlay(
-                                    viewModel.isSelected(index: index)
-                                        ? RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color.accentColor, lineWidth: 2)
-                                        : nil
-                                )
-                                .accessibilityIdentifier(rowIdentifier(index: index))
-                                .onTapGesture(count: 1)
-                                {
-                                    viewModel.selectIndex(index)
-                                }
+                            ClipRowView(
+                                clip: clip,
+                                isSelected: viewModel.isSelected(index: index),
+                                onSingleClick: { viewModel.selectIndex(index) },
+                                onDoubleClick: { viewModel.handleDoubleClick(index: index) }
+                            )
+                            .accessibilityIdentifier(
+                                "quickPasteRow_\(index)"
+                                + "\(viewModel.isSelected(index: index) ? "_selected" : "")"
+                            )
+                            .accessibilityValue(clip.id.uuidString)
+                        }
+
+                        if viewModel.shouldShowTextOnlyHint
+                        {
+                            Text("仅支持文本粘贴")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                                .padding(.vertical, 8)
+                                .frame(maxWidth: .infinity)
+                                .accessibilityIdentifier("textOnlyHint")
                         }
                     }
                 }
+                // 测试用元素：暴露 onPasteTriggered 触发的 clip.id（验证回调被调用，不影响视觉）
+                Text(viewModel.lastTriggeredClipIdForTesting ?? "")
+                    .accessibilityIdentifier("quickPasteTestTriggeredClipId")
+                    .frame(width: 0, height: 0)
+                    .opacity(0)
             }
         }
-    }
-
-    // MARK: - 行标识符
-
-    /// 生成列表行的 accessibilityIdentifier（选中行追加 `_selected` 后缀，供 UI 测试定位）。
-    private func rowIdentifier(index: Int) -> String
-    {
-        let suffix = viewModel.isSelected(index: index) ? "_selected" : ""
-        return "quickPasteRow_\(index)\(suffix)"
     }
 
     // MARK: - 键盘事件监听

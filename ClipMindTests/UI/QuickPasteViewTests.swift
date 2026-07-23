@@ -170,6 +170,51 @@ final class QuickPasteViewTests: XCTestCase
         XCTAssertFalse(viewModel.shouldShowTextOnlyHint, "选中其他行后提示应消失")
     }
 
+    // MARK: - 集成测试：双击文本行触发 onPasteTriggered（TC-F1.9-5-01 集成层）
+
+    @MainActor
+    func testDoubleClick_OnTextRow_TriggersPasteViaViewModel()
+    {
+        let clips = QuickPasteViewTests.makeTextClips(count: 2)
+        let viewModel = QuickPasteViewModel(clips: clips)
+        var pasteCount = 0
+        viewModel.onPasteTriggered = { _ in pasteCount += 1 }
+
+        // 模拟双击第一行
+        viewModel.handleDoubleClick(index: 0)
+        // 模拟双击第二行
+        viewModel.handleDoubleClick(index: 1)
+
+        XCTAssertEqual(pasteCount, 2, "双击两行应触发两次粘贴回调")
+    }
+
+    // MARK: - 集成测试：双击图片行后选中其他行清除提示（TC-F1.9-11-03 集成层）
+
+    @MainActor
+    func testHint_ClearsWhenSelectingOtherRow_AfterImageDoubleClick()
+    {
+        let imageClip = ClipItem.makeImage(
+            Data([0x89]),
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let textClip = ClipItem.makeText(
+            "文本",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let viewModel = QuickPasteViewModel(clips: [imageClip, textClip])
+
+        viewModel.handleDoubleClick(index: 0)
+        XCTAssertTrue(viewModel.shouldShowTextOnlyHint)
+
+        viewModel.selectIndex(1)
+        XCTAssertFalse(viewModel.shouldShowTextOnlyHint)
+        XCTAssertEqual(viewModel.selectedIndex, 1)
+    }
+
     // MARK: - 测试辅助
 
     private static func makeTextClips(count: Int) -> [ClipItem]
