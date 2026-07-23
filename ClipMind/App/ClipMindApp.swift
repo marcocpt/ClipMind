@@ -303,6 +303,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let locator = ScreenCenterPanelLocator()
         quickPastePanelController = QuickPastePanelController(screenLocator: locator)
 
+        // 设置面板内容视图（Phase 1 使用空 clips 骨架，Phase 2/3 接入真实数据源）
+        let quickPasteView = QuickPasteView(clips: [])
+        let hostingController = NSHostingController(rootView: quickPasteView)
+        quickPastePanelController?.setContentView(hostingController.view)
+
         // UI 测试启动参数：直接显示面板
         if CommandLine.arguments.contains("--UITEST_QUICK_PASTE_PANEL") {
             quickPastePanelController?.showPanel()

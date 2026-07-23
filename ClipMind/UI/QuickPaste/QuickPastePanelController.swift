@@ -30,6 +30,7 @@ final class QuickPastePanelController
     private let screenLocator: PanelScreenLocating
     private var panel: NSPanel?
     private var lastClosedPosition: NSPoint?
+    private var contentView: NSView?
 
     /// 面板当前是否可见（状态机：Closed=false, Showing=true）。
     private(set) var isPanelVisible = false
@@ -38,6 +39,13 @@ final class QuickPastePanelController
     {
         self.screenLocator = screenLocator
         loadLastClosedPosition()
+    }
+
+    /// 设置面板内容视图（在 showPanel 之前调用）。
+    /// - Parameter view: 面板的 contentView（通常为 NSHostingController.rootView）
+    func setContentView(_ view: NSView)
+    {
+        contentView = view
     }
 
     deinit
@@ -164,6 +172,10 @@ final class QuickPastePanelController
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.hidesOnDeactivate = false
         // F1.9 失焦关闭由 didResignKeyNotification 处理（任务 5 实现）
+        if let contentView = contentView
+        {
+            panel.contentView = contentView
+        }
         return panel
     }
 
