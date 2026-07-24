@@ -31,6 +31,7 @@
 | 决策 | 原描述 | 新描述 | 原因 |
 |------|--------|--------|------|
 | E4 处理策略 | 屏幕查询失败 → 不触发 Toast，记录日志 | 屏幕不可用 → 降级使用 fallback bounds 继续创建 Toast，记录警告日志 | CI 无头环境 NSScreen.main 为 nil 是已知限制，不应阻断 Toast 显示；仅位置精度断言需真实屏幕 |
+| Toast XCUITest CI 策略 | CI 全量执行 Toast XCUITest | CI 通过 `CLIPMIND_SKIP_PANEL_UITESTS` 环境变量跳过 Toast XCUITest | CI 无头环境 NSPanel 无法稳定进入 Accessibility 窗口层级，本地真实桌面环境继续完整执行 |
 
 ## 验证结果
 
