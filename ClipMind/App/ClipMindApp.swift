@@ -36,6 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkeyService: GlobalHotkeyService?
     private var autoSaveService: AutoSaveService?
     private var selfWriteSuppressor: SelfWriteSuppressor?
+    // F2.1.1 新增：Toast 协调模块
+    private var toastCoordinator: ToastCoordinator?
 
     /// F2.1 自动保存配置键列表（供 `--UITEST_RESET_AUTOSAVE_SETTINGS` 重置与单元测试共用）。
     /// 与 `AutoSaveSettingsStore` 使用的键保持一致。
@@ -86,6 +88,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: AutoSaveService.errorNotification,
             object: nil
         )
+        // F2.1.1 测试入口：通过 --UITEST_TOAST_TRIGGER 模拟保存成功通知
+        handleToastUITestTriggerIfNeeded()
+    }
+
+    /// F2.1.1 UITEST 入口：委托给 `ToastUITestLauncher` 根据 `--UITEST_TOAST_*` 启动参数
+    /// 派发模拟通知（单次、多次、跳过、失败场景）。
+    ///
+    /// 仅在 XCUITest 环境使用，生产环境不触发。
+    /// ToastCoordinator 在 `setupCaptureService` 中完成装配并订阅通知，该方法在
+    /// `applicationDidFinishLaunching` 末尾调用，派发到下一个主线程 runloop 触发，
+    /// 确保 App 启动流程结束、主窗口就绪后再呈现 Toast，避免与启动动画冲突。
+    private func handleToastUITestTriggerIfNeeded()
+    {
+        ToastUITestLauncher.launchIfNeeded()
     }
 
     /// 应用通用启动参数重置（非 UITEST 专用）
@@ -129,6 +145,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         {
             Self.resetAutoSaveSettings(in: UserDefaults.standard)
             LogCategory.app.logger.info("已通过 --UITEST_RESET_AUTOSAVE_SETTINGS 重置 F2.1 配置")
+        }
+        if CommandLine.arguments.contains("--UITEST_ENABLE_AUTOSAVE")
+        {
+            let store = AutoSaveSettingsStore()
+            var settings = store.load()
+            settings.isEnabled = true
+            store.save(settings)
+            LogCategory.app.logger.info("已通过 --UITEST_ENABLE_AUTOSAVE 启用 F2.1 总开关")
         }
     }
 
@@ -239,12 +263,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.saveFilePathToHistory(savedURL, store: store)
         }
 
+        // F2.1.1 装配：Toast 协调模块
+        // - 注入 MainTimerSource 作为生产计时器源（D7）
+        // - 注入 F2.1 总开关查询闭包，读取 AutoSaveSettingsStore 快照（D4）
+        let toastWindowManager = ToastWindowManager()
+        let toastCoordinator = ToastCoordinator(
+            windowManager: toastWindowManager,
+            timerSource: MainTimerSource(),
+            isEnabledProvider: { settingsStore.load().isEnabled }
+        )
+        self.toastCoordinator = toastCoordinator
+
         let watcher = PasteboardWatcher(eventBuilder: eventBuilder, suppressor: suppressor)
         captureService = ClipCaptureService(watcher: watcher, store: store, classifier: classifier)
         captureService?.autoSaveService = autoSave
         captureService?.start()
 
-        LogCategory.app.logger.info("剪贴板捕获服务已启动（含 F2.1 自动保存）")
+        LogCategory.app.logger.info("剪贴板捕获服务已启动（含 F2.1 自动保存 + F2.1.1 Toast）")
     }
 
     /// 将文件路径存入 ClipMind 历史（以 ClipContent.filePath 可拖拽格式）。

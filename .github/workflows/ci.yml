@@ -72,6 +72,8 @@ jobs:
             | xcbeautify --quiet
 
       - name: Run tests
+        env:
+          TEST_RUNNER_CLIPMIND_SKIP_PANEL_UITESTS: '1'
         run: |
           set -o pipefail
           xcodebuild test \

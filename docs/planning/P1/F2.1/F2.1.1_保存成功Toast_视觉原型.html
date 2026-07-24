@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F2.1.1 保存成功 Toast 提示 - 视觉原型</title>
+    <style>
+        /* ========== 全局重置 ========== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ========== 页面背景：模拟 macOS 桌面（浅灰渐变） ========== */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: linear-gradient(135deg, #e8e8ec 0%, #d8d8dc 100%);
+            color: #1d1d1f;
+            font-size: 13px;
+            line-height: 1.5;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        /* ========== 页面头部（最后更新与版本信息，对齐 docs.md 规则） ========== */
+        .page-header {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .page-header .meta {
+            font-size: 11px;
+            color: #6e6e70;
+        }
+
+        /* ========== 章节通用样式 ========== */
+        .section {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #1d1d1f;
+        }
+
+        .section-desc {
+            font-size: 12px;
+            color: #6e6e70;
+            margin-bottom: 16px;
+        }
+
+        /* ========== Toast 容器：模拟屏幕级透明窗口（D1 决策） ========== */
+        /* fixed 定位贴近视口顶部，模拟独立透明窗口；pointer-events:none 保证不抢焦点（对应 FR-011） */
+        .toast-container {
+            position: fixed;
+            top: 24px; /* 距顶部 24px，模拟 macOS 屏幕顶部安全区域内（对应 AC-09：16-32pt 范围） */
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center; /* 水平居中（对应 FR-003） */
+            z-index: 1000;
+            pointer-events: none; /* 不拦截点击，对应 FR-011 不依赖窗口焦点 */
+        }
+
+        /* ========== Toast 浮层本体（macOS 系统深色风格） ========== */
+        .toast {
+            background: rgba(28, 28, 30, 0.92); /* 半透明深色背景，模拟 macOS 系统深色风格 */
+            border-radius: 10px; /* 圆角半径 10px */
+            padding: 10px 16px; /* 垂直 10px / 水平 16px 内边距 */
+            display: flex;
+            align-items: center;
+            gap: 8px; /* 图标与文字间距 */
+            max-width: 360px; /* 最大宽度 360px，文件名过长省略号 */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* 柔和投影 */
+            /* 进入动画初始状态：透明 + 顶部之上（动画通过 .visible / .exiting 类切换） */
+            opacity: 0;
+            transform: translateY(-100%); /* 从顶部之上滑入（对应 FR-005：从顶部滑入） */
+            /* 进入动画：0.2 秒滑入 + 淡入（ease-out 对应 FR-005） */
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        }
+
+        /* 进入动画完成状态：可见 + 到位 */
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 退出动画状态：反向滑出 + 淡出（ease-in 对应 FR-006） */
+        .toast.exiting {
+            opacity: 0;
+            transform: translateY(-100%);
+            transition: opacity 0.2s ease-in, transform 0.2s ease-in;
+        }
+
+        /* ========== Toast 成功图标：绿色圆形 + 白色对勾（对应 FR-002） ========== */
+        .toast-icon {
+            width: 20px; /* 图标直径 20px */
+            height: 20px;
+            background: #34c759; /* macOS 系统绿色 */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .toast-icon svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* ========== Toast 文件名文字（对应 FR-002：显示文件名） ========== */
+        .toast-text {
+            color: #ffffff; /* 白色文字 */
+            font-size: 14px; /* 字体大小 14px */
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; /* 文件名过长省略号 */
+            max-width: 300px;
+        }
+
+        /* ========== 交互按钮区 ========== */
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        .button-card {
+            border: 1px solid #d1d1d1;
+            border-radius: 6px;
+            padding: 14px;
+            background: #fafafa;
+        }
+
+        .button-card button {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #0a84ff;
+            border-radius: 4px;
+            background: #0a84ff;
+            color: #ffffff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .button-card button:hover {
+            background: #0064d4;
+        }
+
+        .button-card button:active {
+            transform: scale(0.98);
+        }
+
+        .button-card .button-desc {
+            font-size: 11px;
+            color: #6e6e70;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* 跳过场景按钮：灰色样式（演示不弹 Toast） */
+        .button-card.skip button {
+            background: #8e8e93;
+            border-color: #8e8e93;
+        }
+
+        .button-card.skip button:hover {
+            background: #6d6d72;
+        }
+
+        /* 跳过场景提示行 */
+        .skip-hint {
+            font-size: 11px;
+            color: #6e6e70;
+            margin-top: 8px;
+            font-style: italic;
+            min-height: 16px;
+        }
+
+        /* ========== 状态说明面板（FR/AC 对应表） ========== */
+        .spec-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .spec-item {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 12px;
+            padding: 8px 12px;
+            background: #f6f6f6;
+            border-left: 3px solid #0a84ff;
+            border-radius: 0 4px 4px 0;
+            font-size: 12px;
+        }
+
+        .spec-item .spec-id {
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .spec-item .spec-content {
+            color: #424245;
+        }
+
+        /* ========== 视觉细节标注区（左右分栏 + 引线指向 Toast 对应部位） ==========
+         * 修复说明：原方案使用绝对定位 + 硬编码坐标，导致标注漂浮且虚线不可见，
+         * 无法指向 Toast 对应部位。改为 flex 左右分栏：Toast 在左，标注列表在右，
+         * 每个标注项用 ::before 伪元素画水平虚线引线，::after 画箭头指向 Toast。 */
+        .annotation-area {
+            position: relative;
+            background: linear-gradient(135deg, #e8e8ec 0%, #d8d8dc 100%);
+            border-radius: 6px;
+            padding: 24px;
+            min-height: 200px;
+            overflow: visible;
+            display: flex;
+            align-items: flex-start;
+            gap: 48px;
+        }
+
+        /* 静态示例 Toast（左侧，不参与动画，仅用于标注尺寸） */
+        .annotation-toast {
+            position: relative;
+            flex-shrink: 0;
+            margin-top: 24px; /* 模拟距顶部 24px（AC-09） */
+            background: rgba(28, 28, 30, 0.92);
+            border-radius: 10px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 标注列表（右侧，与 Toast 顶部对齐） */
+        .annotation-list {
+            position: relative;
+            flex: 1;
+            padding-top: 24px; /* 与 Toast 顶部对齐 */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 单个标注项：左侧留空间画引线 */
+        .annotation-item {
+            position: relative;
+            padding: 2px 0 2px 36px;
+            font-size: 11px;
+            color: #d70015;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 2px;
+            white-space: nowrap;
+        }
+
+        /* 引线：从标注左侧画水平虚线指向 Toast */
+        .annotation-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 30px;
+            border-top: 1px dashed #d70015;
+        }
+
+        /* 引线箭头：指向 Toast 方向（左侧三角） */
+        .annotation-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 3px solid transparent;
+            border-bottom: 3px solid transparent;
+            border-right: 5px solid #d70015;
+        }
+
+        /* 标注图例 */
+        .annotation-legend {
+            margin-top: 16px;
+            font-size: 11px;
+            color: #6e6e70;
+            font-style: italic;
+        }
+
+        /* ========== 状态机可视化（对应设计文档 §5.1） ========== */
+        .state-machine {
+            background: #f6f6f6;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: "SF Mono", Menlo, monospace;
+            font-size: 11px;
+            color: #424245;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .state-machine .state-name {
+            color: #0a84ff;
+            font-weight: 600;
+        }
+
+        .state-machine .state-arrow {
+            color: #6e6e70;
+        }
+
+        /* ========== 事件日志面板（演示交互的可观测性，对应 AC-08） ========== */
+        .event-log {
+            background: #1d1d1f;
+            color: #34c759;
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-family: "SF Mono", Menlo, monospace;
+            font-size: 11px;
+            min-height: 80px;
+            max-height: 160px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .event-log .log-line {
+            margin-bottom: 2px;
+        }
+
+        .event-log .log-time {
+            color: #8e8e93;
+        }
+
+        .event-log .log-replace {
+            color: #ff9f0a;
+        }
+
+        .event-log .log-skip {
+            color: #8e8e93;
+        }
+
+        /* ========== 响应式：在窄屏下保持 Toast 顶部居中 ==========
+         * 响应式仅服务于 HTML 预览（浏览器窗口缩放），macOS 原生 Toast 透明窗口尺寸固定，
+         * 无需考虑响应式（实际 SwiftUI 实现不参考此段 CSS）。 */
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+            .toast {
+                max-width: calc(100vw - 32px);
+            }
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面头部：显示标题与版本信息（对齐 docs.md：HTML 页面头部显示最后更新与版本信息） -->
+    <div class="page-header">
+        <h1>F2.1.1 保存成功 Toast 提示 - 视觉原型</h1>
+        <div class="meta">最后更新：2026-07-24 | 版本：v1.1（基于需求文档 v1.0 + 设计文档 v1.1）</div>
+    </div>
+
+    <!-- ========== Toast 容器：模拟屏幕级透明窗口（D1 决策，FR-011 不依赖窗口焦点） ========== -->
+    <!-- pointer-events:none 保证不拦截源 App 的点击，对应"不抢焦点" -->
+    <!-- 可访问性属性为示例：实际 SwiftUI 实现时由实现规划层落地为 .accessibilityIdentifier("toast-container") -->
+    <div class="toast-container" id="toastContainer" role="status" aria-live="polite" aria-label="保存成功 Toast 容器">
+        <!-- 动态创建的 Toast 元素插入这里 -->
+    </div>
+
+    <!-- ========== 交互演示区 ========== -->
+    <div class="section">
+        <div class="section-title">交互演示</div>
+        <div class="section-desc">点击按钮触发不同场景，观察屏幕顶部 Toast 浮层的行为。Toast 会在屏幕顶部居中显示，2 秒后自动消失。</div>
+
+        <div class="button-grid">
+            <!-- 按钮 A：触发文件名 A -->
+            <div class="button-card">
+                <button onclick="triggerSaveSuccess('hello-world.md')">触发保存成功（文件名 A）</button>
+                <div class="button-desc">显示文件名 <code>hello-world.md</code> 的 Toast，2 秒后自动消失。</div>
+            </div>
+
+            <!-- 按钮 B：触发文件名 B -->
+            <div class="button-card">
+                <button onclick="triggerSaveSuccess('clipmind-notes.md')">触发保存成功（文件名 B）</button>
+                <div class="button-desc">显示文件名 <code>clipmind-notes.md</code> 的 Toast，用于测试不同文件名切换。</div>
+            </div>
+
+            <!-- 快速连续触发：演示替换模式 -->
+            <div class="button-card">
+                <button onclick="triggerRapidReplace()">快速连续触发</button>
+                <div class="button-desc">间隔 500ms 触发 3 次不同文件名（<code>a.md</code> → <code>b.md</code> → <code>c.md</code>），演示替换模式：旧 Toast 立即关闭，新 Toast 立即显示。</div>
+            </div>
+
+            <!-- 跳过场景：不显示 Toast -->
+            <div class="button-card skip">
+                <button onclick="triggerSkipScenario()">触发跳过场景</button>
+                <div class="button-desc">模拟跳过场景（长度不足、敏感过滤等），按需求 FR-009 不显示 Toast。</div>
+                <div class="skip-hint" id="skipHint"></div>
+            </div>
+        </div>
+
+        <!-- 事件日志：让交互可观测，对应 AC-08 进入动画启动后立即可见 -->
+        <div style="margin-top: 20px;">
+            <div class="section-desc" style="margin-bottom: 8px;">事件日志（实时记录 Toast 状态变更，便于验证替换模式与计时器重置）：</div>
+            <div class="section-desc" style="margin-bottom: 8px; font-style: italic; color: #8e8e93;">此面板仅为演示辅助，不属于 Toast 视觉规范，实际实现不包含此面板。</div>
+            <div class="event-log" id="eventLog">
+                <div class="log-line"><span class="log-time">[--:--:--]</span> 等待用户操作...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 视觉细节标注区：静态示例 Toast + 关键尺寸标注 ========== -->
+    <div class="section">
+        <div class="section-title">视觉细节标注</div>
+        <div class="section-desc">Toast 浮层的关键尺寸标注（虚线引出）。以下为静态示例，不参与动画，仅用于展示视觉参数。</div>
+
+        <div class="annotation-area">
+            <!-- 左侧：静态示例 Toast（可访问性属性为示例：实际 SwiftUI 实现时落地为 .accessibilityIdentifier()） -->
+            <div class="annotation-toast" aria-label="保存成功 Toast 示例">
+                <!-- 图标：内联 SVG 自包含绿色圆形 + 白色对勾，不依赖 .toast-icon 全局样式 -->
+                <svg width="20" height="20" viewBox="0 0 20 20" role="img" aria-label="保存成功图标" aria-hidden="true">
+                    <circle cx="10" cy="10" r="10" fill="#34c759"/>
+                    <path d="M5 10 L8.5 13.5 L15 7" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <!-- 文件名 -->
+                <span class="toast-text" role="text" aria-label="文件名 hello-world.md">hello-world.md</span>
+            </div>
+
+            <!-- 右侧：标注列表（引线指向 Toast 对应部位） -->
+            <div class="annotation-list">
+                <div class="annotation-item">距顶部 24px（AC-09 允许 16-32pt 范围，24px 为默认值）</div>
+                <div class="annotation-item">圆角 10px</div>
+                <div class="annotation-item">图标 20px（绿色圆形 + 白色对勾）</div>
+                <div class="annotation-item">文字 14px（白色，系统字体）</div>
+                <div class="annotation-item">内边距 16px / 10px（水平 / 垂直）</div>
+                <div class="annotation-item">最大宽度 360px（文件名过长省略号）</div>
+                <div class="annotation-item">阴影 0 4px 12px rgba(0, 0, 0, 0.3)</div>
+            </div>
+        </div>
+        <div class="annotation-legend">
+            标注说明：红色虚线箭头指向 Toast 浮层对应部位。以下为静态示例，不参与动画，仅用于展示视觉参数。
+        </div>
+    </div>
+
+    <!-- ========== 状态说明面板：FR / AC 对应表 ========== -->
+    <div class="section">
+        <div class="section-title">状态说明面板（需求与验收映射）</div>
+        <div class="section-desc">列出本视觉原型覆盖的功能需求（FR）与验收标准（AC），便于对照交互行为。</div>
+
+        <div class="spec-list">
+            <div class="spec-item">
+                <div class="spec-id">FR-002</div>
+                <div class="spec-content">显示内容：成功图标（绿色圆形 + 白色对勾）+ 实际保存的文件名（含扩展名）</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">FR-003</div>
+                <div class="spec-content">显示位置：主屏幕顶部居中，水平居中，垂直位于屏幕顶部安全区域内</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">FR-004</div>
+                <div class="spec-content">显示时长：2 秒后自动消失，消失过程带退出动画</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">FR-005</div>
+                <div class="spec-content">进入动画：从顶部滑入（translateY -100% → 0）+ 淡入（opacity 0 → 1），时长 0.2 秒，ease-out 缓动</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">FR-006</div>
+                <div class="spec-content">退出动画：反向滑出（translateY 0 → -100%）+ 淡出（opacity 1 → 0），时长 0.2 秒，ease-in 缓动</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">FR-007</div>
+                <div class="spec-content">替换模式：新 Toast 出现时立即关闭旧 Toast（无退出动画），新 Toast 触发进入动画，2 秒计时从新 Toast 出现时刻重新计算</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">FR-009</div>
+                <div class="spec-content">跳过场景（长度不足、敏感过滤、黑名单、变更计数过期）不显示 Toast</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">FR-010</div>
+                <div class="spec-content">失败场景不显示 Toast，仍走 F2.1 既有错误弹窗机制</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">FR-011</div>
+                <div class="spec-content">Toast 不依赖 ClipMind 主窗口或菜单栏弹窗的焦点状态，作为屏幕级浮层显示</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-08</div>
+                <div class="spec-content">动画验证：进入动画启动后 Toast 容器立即可见（窗口先创建后启动动画，动画不阻塞显示）</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-09</div>
+                <div class="spec-content">位置验证：Toast 水平居中，垂直位于屏幕顶部 16-32pt 范围内（本原型取 24px）</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-01</div>
+                <div class="spec-content">Toast 出现：保存成功后 Toast 立即出现在屏幕顶部居中。验证方式：XCUITest 触发保存后断言 <code>toast-container</code> 存在。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-02</div>
+                <div class="spec-content">2 秒消失：Toast 显示 2 秒后自动消失（含退出动画）。验证方式：XCUITest 等待 2 秒后断言 <code>toast-container</code> 不存在。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-03</div>
+                <div class="spec-content">文件名显示：Toast 显示实际保存的文件名（含扩展名）。验证方式：XCUITest 断言 <code>toast-filename-text</code> 文本与预期文件名一致。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-04</div>
+                <div class="spec-content">替换模式：新 Toast 出现时立即关闭旧 Toast（无退出动画），2 秒计时重新计算。验证方式：XCUITest 快速连续触发后断言仅存在一个 <code>toast-container</code>。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-11</div>
+                <div class="spec-content">Toast 不依赖窗口焦点：Toast 作为屏幕级透明窗口浮层，不依赖 ClipMind 主窗口或菜单栏弹窗的焦点状态；用户在源 App（浏览器、IDE）前台复制时，Toast 仍能显示在屏幕顶部。验证方式：手动验收截图（源 App 前台 + Toast 可见）+ XCUITest 在源 App 处于前台时触发保存后断言 <code>toast-container</code> 存在。HTML 原型限制：HTML 无法真正模拟源 App 前台，实际行为由 macOS 原生透明窗口保证（对应设计文档 D1 决策）。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">AC-06/07/10</div>
+                <div class="spec-content">AC-06（F2.1 总开关关闭）、AC-07（失败场景，错误弹窗存在 + Toast 不存在）、AC-10（App Sandbox 合规）属于系统级行为，由 XCUITest 与运行录屏验证，不在视觉原型演示范围。</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 状态机可视化：引用设计文档 §5.1（避免信息重复） ========== -->
+    <div class="section">
+        <div class="section-title">Toast 协调模块状态机（详见设计文档 §5.1）</div>
+        <div class="section-desc">5 状态显式状态机（D2 决策）。完整状态转换图与触发条件详见设计文档 §5.1，本原型仅列出 5 个状态名以供对照，不复述完整转换逻辑。</div>
+
+        <div class="state-machine"><span class="state-name">隐藏</span> <span class="state-arrow">·</span> <span class="state-name">出现中</span> <span class="state-arrow">·</span> <span class="state-name">已显示</span> <span class="state-arrow">·</span> <span class="state-name">替换中</span> <span class="state-arrow">·</span> <span class="state-name">消失中</span>
+<span class="state-arrow">// 5 个状态名（D2 决策），完整转换关系与替换模式（FR-007）详见设计文档 §5.1</span></div>
+    </div>
+
+    <!-- ========== Accessibility Identifier 命名约定（XCUITest 与错误弹窗区分） ========== -->
+    <div class="section">
+        <div class="section-title">Accessibility Identifier 命名约定</div>
+        <div class="section-desc">关键 UI 元素的 accessibility identifier 命名约定，供 XCUITest 断言使用。HTML 原型以 <code>aria-label</code> / <code>role</code> 属性作为示例，实际 SwiftUI 实现时由实现规划层落地为 <code>.accessibilityIdentifier()</code>。</div>
+
+        <div class="spec-list">
+            <div class="spec-item">
+                <div class="spec-id">toast-container</div>
+                <div class="spec-content">Toast 容器。XCUITest 断言 Toast 存在 / 不存在（对应 AC-01、AC-02、AC-04、AC-11）。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">toast-filename-text</div>
+                <div class="spec-content">文件名文字。XCUITest 断言文件名文本与预期一致（对应 AC-03）。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">toast-success-icon</div>
+                <div class="spec-content">成功图标（绿色圆形 + 白色对勾）。XCUITest 断言图标可见（对应 FR-002）。</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-id">前缀区分</div>
+                <div class="spec-content">Toast 容器 identifier 前缀：<code>toast-</code>。F2.1 错误弹窗 identifier 前缀：<code>error-</code>（由 F2.1 既有实现定义，本特性不修改）。XCUITest 通过 identifier 前缀区分两者，避免 AC-07（错误弹窗存在 + Toast 不存在）误判。</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ========================================================
+         * F2.1.1 保存成功 Toast - 视觉原型交互逻辑
+         * 模拟 Toast 协调模块的状态机（隐藏 → 出现中 → 已显示 → 替换中 → 消失中）
+         * ======================================================== */
+
+        // 当前 Toast 元素引用（同时只允许一个 Toast 存在，对应 D2 状态机 + R-03 计时器单实例）
+        let currentToast = null;
+        // 2 秒计时器句柄（对应 FR-004）
+        let hideTimer = null;
+        // 退出动画结束后的清理计时器
+        let exitCleanupTimer = null;
+
+        /**
+         * 触发保存成功场景：显示 Toast
+         * @param {string} filename - 实际保存的文件名
+         */
+        function triggerSaveSuccess(filename) {
+            logEvent(`保存成功：${filename}`, 'normal');
+
+            // 替换模式（FR-007）：立即关闭旧 Toast（无退出动画），新 Toast 触发进入动画
+            // 2 秒计时从新 Toast 出现时刻重新计算
+            if (currentToast) {
+                logEvent(`替换模式：立即关闭旧 Toast（${currentToast.querySelector('.toast-text').textContent}），无退出动画`, 'replace');
+                clearTimeout(hideTimer);
+                clearTimeout(exitCleanupTimer);
+                currentToast.remove(); // 立即移除旧 Toast，不触发退出动画
+                currentToast = null;
+            }
+
+            // 创建新 Toast 元素
+            const toast = createToastElement(filename);
+            document.getElementById('toastContainer').appendChild(toast);
+            currentToast = toast;
+
+            // 触发进入动画（FR-005）：先以初始状态渲染一帧，再切换到 .visible 触发 transition
+            // 使用双 requestAnimationFrame 确保浏览器先应用初始样式，再播放动画
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    toast.classList.add('visible');
+                    logEvent(`进入动画启动（0.2s 滑入 + 淡入）`, 'normal');
+                });
+            });
+
+            // 启动 2 秒计时（FR-004），到期后触发退出动画（FR-006）
+            hideTimer = setTimeout(() => {
+                hideToast();
+            }, 2000);
+        }
+
+        /**
+         * 隐藏当前 Toast：触发退出动画，动画结束后移除元素
+         */
+        function hideToast() {
+            if (!currentToast) return;
+
+            const toast = currentToast;
+            const filename = toast.querySelector('.toast-text').textContent;
+            currentToast = null;
+
+            // 切换到 .exiting 类触发退出动画（FR-006：反向滑出 + 淡出，0.2 秒，ease-in）
+            toast.classList.remove('visible');
+            toast.classList.add('exiting');
+            logEvent(`退出动画启动（0.2s 滑出 + 淡出）：${filename}`, 'normal');
+
+            // 退出动画结束后移除元素（对应 NFR-003：消失后立即释放资源）
+            exitCleanupTimer = setTimeout(() => {
+                toast.remove();
+            }, 200);
+        }
+
+        /**
+         * 创建 Toast DOM 元素
+         * @param {string} filename - 文件名
+         * @returns {HTMLElement}
+         */
+        function createToastElement(filename) {
+            const toast = document.createElement('div');
+            toast.className = 'toast'; // 初始状态：opacity:0, translateY(-100%)
+            toast.innerHTML = `
+                <div class="toast-icon" role="img" aria-label="保存成功图标">
+                    <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M2 7L5.5 10.5L12 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="toast-text" role="text" aria-label="文件名 ${escapeAttr(filename)}">${escapeHtml(filename)}</div>
+            `;
+            return toast;
+        }
+
+        /**
+         * 快速连续触发：模拟替换模式
+         * 间隔 500ms 触发 3 次不同文件名，验证旧 Toast 立即关闭、新 Toast 立即显示
+         */
+        function triggerRapidReplace() {
+            logEvent('开始快速连续触发（3 次，间隔 500ms）', 'replace');
+            // 第一次触发
+            triggerSaveSuccess('a.md');
+            // 500ms 后触发第二次（替换 a.md）
+            setTimeout(() => triggerSaveSuccess('b.md'), 500);
+            // 1000ms 后触发第三次（替换 b.md）
+            setTimeout(() => triggerSaveSuccess('c.md'), 1000);
+        }
+
+        /**
+         * 触发跳过场景：不显示 Toast（对应 FR-009）
+         * 跳过场景包括：长度不足、敏感过滤、黑名单 App、剪贴板变更计数过期等
+         */
+        function triggerSkipScenario() {
+            logEvent('跳过场景：内容长度 < 阈值，按 FR-009 不显示 Toast', 'skip');
+            const hint = document.getElementById('skipHint');
+            hint.textContent = '✓ 已触发跳过场景，未显示 Toast（符合 FR-009）';
+            // 3 秒后清空提示
+            setTimeout(() => {
+                hint.textContent = '';
+            }, 3000);
+        }
+
+        /**
+         * 向事件日志追加一行
+         * @param {string} message - 日志消息
+         * @param {'normal'|'replace'|'skip'} type - 日志类型（用于着色）
+         */
+        function logEvent(message, type = 'normal') {
+            const log = document.getElementById('eventLog');
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${escapeHtml(message)}</span>`;
+            log.appendChild(line);
+            // 自动滚动到底部
+            log.scrollTop = log.scrollHeight;
+        }
+
+        /**
+         * HTML 转义，防止文件名中的特殊字符破坏 DOM
+         * @param {string} text
+         * @returns {string}
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /**
+         * 转义属性值，防止文件名中的特殊字符破坏 aria-label 属性
+         * @param {string} text
+         * @returns {string}
+         */
+        function escapeAttr(text) {
+            return escapeHtml(text).replace(/"/g, '&quot;');
+        }
+    </script>
+
+    <!--
+    版本记录：
+    | 版本 | 日期 | 变更 |
+    |------|------|------|
+    | v1.0 | 2026-07-24 | 初始版本，基于需求文档 v1.0 + 设计文档 v1.1；包含 Toast 浮层主视觉（macOS 深色风格）、进入/退出动画（0.2s 滑入滑出 + 淡入淡出）、替换模式演示、4 个交互按钮、FR/AC 状态说明面板、视觉细节标注（距顶部 24px / 圆角 10px / 图标 20px / 文字 14px / 内边距 16px/10px）、状态机可视化 |
+    | v1.1 | 2026-07-24 | 根据 3 子代理审查修复 9 项：新增 Accessibility Identifier 命名约定区块（toast-container / toast-filename-text / toast-success-icon + 前缀区分 toast- 与 error-）；Toast 容器/文件名/图标添加 aria-label、role 等可访问性属性示例；状态说明面板补齐 AC-01/02/03/04/11 映射与 AC-06/07/10 系统级行为说明；事件日志面板添加演示辅助说明；状态机可视化改为引用设计文档 §5.1（保留 5 状态名）；距顶部 24px 标注补充可调整性说明；响应式 CSS 添加仅服务 HTML 预览注释 |
+    -->
+</body>
+</html>
