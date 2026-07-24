@@ -4,6 +4,8 @@ import SwiftUI
 /// 面板定位协议（依赖注入，便于测试 mock 不同定位策略）。
 ///
 /// Phase 1 只有屏幕中央/上次位置策略；Phase 4 会新增 caret 定位策略。
+/// 标记为 @MainActor 与实现类保持一致，消除 Swift 6 actor 隔离警告。
+@MainActor
 protocol PanelScreenLocating: AnyObject
 {
     /// 计算面板显示位置。
