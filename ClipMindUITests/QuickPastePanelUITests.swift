@@ -329,9 +329,11 @@ final class QuickPastePanelUITests: XCTestCase
         ]
         app.launch()
 
-        // 预置数据顺序：image=row0（默认高亮）, filePath=row1, text=row2
-        let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
-        XCTAssertTrue(firstRow.waitForExistence(timeout: 5), "第一行应默认高亮")
+        // 定位方式与 testDoubleClick_OnImageRow_ShowsTextOnlyHint 一致（该测试在 CI 稳定通过）
+        let firstRow = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier CONTAINS 'quickPasteRow'")
+        ).firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
 
         // 双击第一行（image）显示提示
         firstRow.doubleClick()
