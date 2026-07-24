@@ -1,0 +1,225 @@
+import AppKit
+import SwiftUI
+
+/// 面板定位协议（依赖注入，便于测试 mock 不同定位策略）。
+///
+/// Phase 1 只有屏幕中央/上次位置策略；Phase 4 会新增 caret 定位策略。
+/// 标记为 @MainActor 与实现类保持一致，消除 Swift 6 actor 隔离警告。
+@MainActor
+protocol PanelScreenLocating: AnyObject
+{
+    /// 计算面板显示位置。
+    /// - Parameter lastClosedPosition: 上次关闭时记录的位置（nil 表示无记忆）
+    /// - Returns: 面板左下角坐标（NSPanel 使用左下角原点）
+    func locatePosition(lastClosedPosition: NSPoint?) -> NSPoint
+}
+
+/// 快速粘贴面板控制器。
+///
+/// 管理 NSPanel 的创建、定位、显示、关闭、键盘焦点、失焦监听、位置记忆。
+/// 状态机：Closed → Showing → Closed（Phase 1）；Phase 2/3 扩展 Pasting 状态。
+///
+/// 设计文档第 3.1 节、第 5.1 节。
+@MainActor
+final class QuickPastePanelController: PanelClosing
+{
+    /// 面板固定尺寸（与菜单栏 popover 视觉一致）。
+    static let panelSize = NSSize(width: 360, height: 480)
+
+    /// 面板位置记忆的 UserDefaults 键。
+    private static let lastClosedPositionXKey = "F1.9.quickPaste.lastClosedPositionX"
+    private static let lastClosedPositionYKey = "F1.9.quickPaste.lastClosedPositionY"
+
+    private let screenLocator: PanelScreenLocating
+    private var panel: NSPanel?
+    private var lastClosedPosition: NSPoint?
+    private var contentView: NSView?
+
+    /// 面板当前是否可见（状态机：Closed=false, Showing=true）。
+    private(set) var isPanelVisible = false
+
+    init(screenLocator: PanelScreenLocating)
+    {
+        self.screenLocator = screenLocator
+        loadLastClosedPosition()
+    }
+
+    /// 设置面板内容视图（在 showPanel 之前调用）。
+    /// - Parameter view: 面板的 contentView（通常为 NSHostingController.rootView）
+    func setContentView(_ view: NSView)
+    {
+        contentView = view
+    }
+
+    // deinit 不调用 closePanelInternal()：deinit 是 nonisolated，无法访问 @MainActor 属性。
+    // panel 由 ARC 自动释放；resignObserver 用 [weak self] 注册，controller 释放后 block
+    // 中的 self 为 nil，不会触发 handleDidResignKey。外部应在销毁前显式调用 closePanel()。
+
+    // MARK: - 显示与关闭
+
+    /// 显示面板（若已显示则忽略，保证状态机单一性）。
+    /// - Parameter contentController: 面板内容视图控制器（nil 时使用已设置的 contentView 或空内容）
+    func showPanel(contentController: NSViewController? = nil)
+    {
+        guard !isPanelVisible else
+        {
+            LogCategory.ui.info("QuickPaste panel already visible, ignore show request")
+            return
+        }
+
+        let panel = makePanel()
+        self.panel = panel
+
+        if let contentController = contentController
+        {
+            panel.contentViewController = contentController
+        }
+
+        let position = screenLocator.locatePosition(lastClosedPosition: lastClosedPosition)
+        panel.setFrameOrigin(position)
+        panel.makeKeyAndOrderFront(nil)
+        resignObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleDidResignKey()
+        }
+        isPanelVisible = true
+        LogCategory.ui.info("QuickPaste panel shown at position")
+    }
+
+    /// 关闭面板（若已关闭则忽略，保证状态机单一性）。
+    /// 关闭时记录面板位置（供下次无权限定位使用）。
+    func closePanel()
+    {
+        closePanelInternal()
+    }
+
+    private func closePanelInternal()
+    {
+        guard isPanelVisible, let panel = panel else { return }
+
+        let frame = panel.frame
+        recordLastClosedPosition(NSPoint(x: frame.origin.x, y: frame.origin.y))
+
+        if let observer = resignObserver
+        {
+            NotificationCenter.default.removeObserver(observer)
+            resignObserver = nil
+        }
+
+        panel.orderOut(nil)
+        self.panel = nil
+        isPanelVisible = false
+        LogCategory.ui.info("QuickPaste panel closed, position recorded")
+    }
+
+    /// 设置面板内容视图控制器（供 AppDelegate 注入 QuickPasteView 的 NSHostingController）。
+    /// - Parameter controller: 内容视图控制器
+    func setContentView(_ controller: NSViewController)
+    {
+        panel?.contentViewController = controller
+    }
+
+    /// 仅供测试注入的粘贴回调（Phase 2/3 接入真实 PasteCoordinator 后移除）。
+    var onPasteTriggeredForTesting: ((ClipItem) -> Void)?
+
+    /// 失焦通知观察者。
+    private var resignObserver: NSObjectProtocol?
+
+    /// Esc 键处理（由 QuickPasteView 的 NSEvent 监听器调用，任务 6 接入）。
+    func handleEscKey()
+    {
+        guard isPanelVisible else { return }
+        LogCategory.ui.info("QuickPaste panel closed by Esc key")
+        closePanelInternal()
+    }
+
+    /// 失焦处理（由 NSPanel.didResignKeyNotification 触发）。
+    @objc func handleDidResignKey()
+    {
+        guard isPanelVisible else { return }
+        LogCategory.ui.info("QuickPaste panel closed by resign key")
+        closePanelInternal()
+    }
+
+    /// 仅供测试触发 Esc 关闭。
+    func handleEscKeyForTesting()
+    {
+        handleEscKey()
+    }
+
+    /// 仅供测试触发失焦关闭。
+    func handleDidResignKeyForTesting()
+    {
+        handleDidResignKey()
+    }
+
+    // MARK: - 测试辅助
+
+    /// 仅供单元测试读取面板当前 frame（生产代码不使用）。
+    var panelFrameForTesting: NSRect
+    {
+        panel?.frame ?? .zero
+    }
+
+    /// 仅供单元测试注入上次关闭位置（模拟位置记忆场景）。
+    func setLastClosedPositionForTesting(_ position: NSPoint)
+    {
+        lastClosedPosition = position
+    }
+
+    // MARK: - 私有
+
+    private func makePanel() -> NSPanel
+    {
+        // UI 测试模式下使用普通窗口样式（移除 .nonactivatingPanel），
+        // 使 XCUITest 双击手势能正确触发。生产环境保留 .nonactivatingPanel
+        // 不抢夺前台应用焦点。
+        let isUITesting = CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW")
+        var styleMask: NSWindow.StyleMask = [.titled, .fullSizeContentView]
+        if !isUITesting
+        {
+            styleMask.insert(.nonactivatingPanel)
+        }
+
+        let panel = NSPanel(
+            contentRect: NSRect(origin: .zero, size: Self.panelSize),
+            styleMask: styleMask,
+            backing: .buffered,
+            defer: false
+        )
+        panel.titleVisibility = .hidden
+        panel.titlebarAppearsTransparent = true
+        panel.isFloatingPanel = true
+        panel.level = .floating
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.hidesOnDeactivate = false
+        // F1.9 失焦关闭由 didResignKeyNotification 处理（任务 5 实现）
+        if let contentView = contentView
+        {
+            panel.contentView = contentView
+        }
+        return panel
+    }
+
+    private func loadLastClosedPosition()
+    {
+        let defaults = UserDefaults.standard
+        guard defaults.object(forKey: Self.lastClosedPositionXKey) != nil,
+              defaults.object(forKey: Self.lastClosedPositionYKey) != nil
+        else { return }
+        let positionX = defaults.double(forKey: Self.lastClosedPositionXKey)
+        let positionY = defaults.double(forKey: Self.lastClosedPositionYKey)
+        lastClosedPosition = NSPoint(x: positionX, y: positionY)
+    }
+
+    private func recordLastClosedPosition(_ position: NSPoint)
+    {
+        lastClosedPosition = position
+        let defaults = UserDefaults.standard
+        defaults.set(position.x, forKey: Self.lastClosedPositionXKey)
+        defaults.set(position.y, forKey: Self.lastClosedPositionYKey)
+    }
+}

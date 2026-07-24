@@ -19,10 +19,17 @@ settings:
   configs:
     Debug:
       ONLY_ACTIVE_ARCH: YES
+    DebugDev:
+      ONLY_ACTIVE_ARCH: YES
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: CLIPMIND_DEV
 packages:
   SQLite.swift:
     url: https://github.com/stephencelis/SQLite.swift.git
     exactVersion: "0.15.0"
+configs:
+  Debug: debug
+  Release: release
+  DebugDev: debug
 targets:
   ClipMind:
     type: application
@@ -81,3 +88,18 @@ schemes:
       config: Debug
     archive:
       config: Release
+  ClipMind-Dev:
+    build:
+      targets:
+        ClipMind: all
+        ClipMindTests: [test]
+        ClipMindUITests: [test]
+    test:
+      targets:
+        - ClipMindTests
+        - ClipMindUITests
+      gatherCoverageData: true
+      config: DebugDev
+    run:
+      config: DebugDev
+    # archive: ClipMind-Dev 仅用于本地验证，不归档发布构建，archive 步骤跳过（AGENTS.md 第 10 节）

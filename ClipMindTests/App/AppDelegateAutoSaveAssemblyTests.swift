@@ -13,7 +13,7 @@ final class AppDelegateAutoSaveAssemblyTests: XCTestCase
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
 
-        // 预置全部 8 个 F2.1 配置键
+        // 预置全部 9 个 F2.1 配置键
         let keys = AppDelegate.autoSaveSettingsKeys
         for key in keys
         {
@@ -45,6 +45,6 @@ final class AppDelegateAutoSaveAssemblyTests: XCTestCase
         XCTAssertTrue(keys.contains("F2.1.autoSave.fileNameLength"), "应包含文件名长度键")
         XCTAssertTrue(keys.contains("F2.1.autoSave.sensitiveFilterEnabled"), "应包含敏感过滤键")
         XCTAssertTrue(keys.contains("F2.1.autoSave.pathFormat"), "应包含路径格式键")
-        XCTAssertTrue(keys.contains("F2.1.autoSave.showFilePathInHistory"), "应包含文件路径进历史键")
+        XCTAssertTrue(keys.contains("F2.1.autoSave.showFilePathInHistory"), "应包含显示文件路径键")
     }
 }

@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+  F1.9 快捷粘贴面板 - 视觉原型
+  版本：v1.0 | 最后更新：2026-07-23
+  关联需求文档：F1.9_快捷粘贴面板_需求文档.md v1.1
+  关联设计文档：F1.9_快捷粘贴面板_设计文档.md v1.1
+  覆盖 AC：AC-F1.9-1 ~ AC-F1.9-12（UI 相关）
+  说明：本原型为静态视觉示意，用 macOS 原生浅色风格展示快速粘贴面板、降级浮层、
+        图片/文件路径提示、设置项配置等关键场景，不包含真实交互逻辑。
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1.9 快捷粘贴面板 - 视觉原型</title>
+    <style>
+        /* macOS 原生浅色风格（与 F2.1 视觉原型风格一致） */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #ececec;
+            color: #1d1d1f;
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 24px;
+        }
+
+        /* 顶部标题区 */
+        .page-header {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            border: 1px solid #d1d1d1;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .page-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .page-header .meta {
+            font-size: 11px;
+            color: #6e6e70;
+        }
+
+        .page-header .meta span {
+            margin-right: 16px;
+        }
+
+        /* 场景容器 */
+        .scene {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            border: 1px solid #d1d1d1;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .scene-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1d1d1f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scene-title .ac-tag {
+            font-size: 10px;
+            background: #0a84ff;
+            color: #ffffff;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .scene-desc {
+            font-size: 12px;
+            color: #6e6e70;
+            margin-bottom: 16px;
+        }
+
+        /* 场景展示区（模拟桌面背景） */
+        .stage {
+            background: #f5f5f7;
+            border: 1px solid #e1e1e3;
+            border-radius: 6px;
+            padding: 32px;
+            min-height: 320px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 模拟前台应用窗口 */
+        .mock-app {
+            background: #ffffff;
+            border: 1px solid #d1d1d1;
+            border-radius: 8px;
+            padding: 24px;
+            min-height: 240px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        .mock-app-title {
+            font-size: 12px;
+            color: #6e6e70;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .mock-app-content {
+            font-size: 13px;
+            color: #1d1d1f;
+            line-height: 1.8;
+        }
+
+        /* 模拟 caret 光标 */
+        .caret {
+            display: inline-block;
+            width: 1px;
+            height: 16px;
+            background: #0a84ff;
+            vertical-align: text-bottom;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* 快速粘贴面板（核心组件，与菜单栏 popover 视觉一致，360x480） */
+        .quick-panel {
+            position: absolute;
+            width: 360px;
+            height: 480px;
+            background: #ffffff;
+            border: 1px solid #d1d1d1;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 面板定位标识（caret 附近） */
+        .quick-panel.caret-pos {
+            top: 80px;
+            left: 280px;
+        }
+
+        /* 面板定位标识（屏幕中央） */
+        .quick-panel.center-pos {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* 面板定位引导线（caret 附近场景） */
+        .pos-guide {
+            position: absolute;
+            font-size: 10px;
+            color: #0a84ff;
+            background: rgba(10, 132, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px dashed #0a84ff;
+        }
+
+        /* 搜索框 */
+        .panel-search {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-search-icon {
+            color: #8a8a99;
+            font-size: 13px;
+        }
+
+        .panel-search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 13px;
+            color: #1d1d1f;
+            background: transparent;
+        }
+
+        .panel-search-input::placeholder {
+            color: #8a8a99;
+        }
+
+        /* 列表区 */
+        .panel-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+
+        .clip-row {
+            padding: 12px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .clip-row:hover {
+            background: #f0f0f2;
+        }
+
+        /* 高亮选中状态（单击/方向键导航） */
+        .clip-row.highlighted {
+            background: #d4e8ff;
+            border-left: 3px solid #0a84ff;
+            padding-left: 9px;
+        }
+
+        /* 默认高亮第一行（面板出现时） */
+        .clip-row.default-highlight {
+            background: #d4e8ff;
+            border-left: 3px solid #0a84ff;
+            padding-left: 9px;
+        }
+
+        .clip-row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .type-tag {
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .type-tag.text {
+            background: #e8f4fd;
+            color: #0a84ff;
+        }
+
+        .type-tag.image {
+            background: #fef3e8;
+            color: #fb923c;
+        }
+
+        .type-tag.filepath {
+            background: #e8f9ef;
+            color: #34c759;
+        }
+
+        .clip-content {
+            font-size: 13px;
+            color: #1d1d1f;
+            line-height: 1.4;
+            margin-bottom: 6px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .clip-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+            color: #8a8a99;
+        }
+
+        /* 行内提示（图片/文件路径双击） */
+        .clip-row-tip {
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+            padding: 6px 12px;
+            margin: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #856404;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .clip-row-tip-icon {
+            font-weight: bold;
+        }
+
+        /* 底部按钮区 */
+        .panel-footer {
+            padding: 8px 12px;
+            border-top: 1px solid #e8e8e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-footer-btn {
+            font-size: 12px;
+            color: #0a84ff;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .panel-footer-hint {
+            font-size: 10px;
+            color: #8a8a99;
+        }
+
+        /* 降级浮层提示（无权限路径） */
+        .overlay-tip {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(30, 30, 35, 0.92);
+            color: #ffffff;
+            padding: 16px 24px;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(20px);
+        }
+
+        .overlay-tip-icon {
+            font-size: 18px;
+        }
+
+        .overlay-tip-kbd {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 12px;
+            font-family: -apple-system, "SF Mono", monospace;
+        }
+
+        /* 浮层超时倒计时（视觉示意） */
+        .overlay-countdown {
+            position: absolute;
+            bottom: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #6e6e70;
+            background: #ffffff;
+            padding: 2px 8px;
+            border-radius: 3px;
+            border: 1px solid #d1d1d1;
+            white-space: nowrap;
+        }
+
+        /* 键盘按键示意 */
+        .kbd {
+            display: inline-block;
+            background: #ffffff;
+            border: 1px solid #c7c7c7;
+            border-bottom: 2px solid #c7c7c7;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 11px;
+            font-family: -apple-system, "SF Mono", monospace;
+            color: #1d1d1f;
+            margin: 0 2px;
+        }
+
+        /* 场景标注（箭头+说明） */
+        .annotation {
+            position: absolute;
+            font-size: 11px;
+            color: #0a84ff;
+            background: rgba(10, 132, 255, 0.08);
+            border: 1px solid #0a84ff;
+            border-radius: 4px;
+            padding: 4px 8px;
+            max-width: 180px;
+            line-height: 1.4;
+        }
+
+        .annotation::before {
+            content: "";
+            position: absolute;
+            border: 6px solid transparent;
+        }
+
+        .annotation.arrow-left::before {
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-right-color: #0a84ff;
+        }
+
+        .annotation.arrow-right::before {
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-left-color: #0a84ff;
+        }
+
+        .annotation.arrow-top::before {
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-color: #0a84ff;
+        }
+
+        /* 设置面板（浮层超时兜底时长配置） */
+        .settings-panel {
+            background: #f6f6f6;
+            border: 1px solid #d1d1d1;
+            border-radius: 8px;
+            padding: 20px 24px;
+            max-width: 560px;
+        }
+
+        .settings-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e1e1e3;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+
+        .settings-label {
+            width: 180px;
+            font-size: 13px;
+            color: #1d1d1f;
+        }
+
+        .settings-control {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-input-number {
+            width: 80px;
+            height: 22px;
+            padding: 4px 8px;
+            border: 1px solid #c7c7c7;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #ffffff;
+            text-align: right;
+        }
+
+        .settings-input-number:focus {
+            outline: none;
+            border-color: #0a84ff;
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+        }
+
+        .settings-unit {
+            font-size: 12px;
+            color: #6e6e70;
+        }
+
+        .settings-range {
+            font-size: 11px;
+            color: #8a8a99;
+            margin-left: 8px;
+        }
+
+        /* 场景并排展示 */
+        .stage-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stage-item {
+            flex: 1;
+            min-width: 360px;
+        }
+
+        .stage-item-label {
+            font-size: 11px;
+            color: #6e6e70;
+            margin-bottom: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* 图例 */
+        .legend {
+            background: #f6f6f6;
+            border: 1px solid #e1e1e3;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            font-size: 11px;
+            color: #6e6e70;
+            line-height: 1.8;
+        }
+
+        .legend strong {
+            color: #1d1d1f;
+        }
+
+        .legend .kbd {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 顶部标题区 -->
+<div class="page-header">
+    <h1>F1.9 快捷粘贴面板 - 视觉原型</h1>
+    <div class="meta">
+        <span>功能编号：F1.9</span>
+        <span>优先级：P0</span>
+        <span>版本：v1.0</span>
+        <span>最后更新：2026-07-23</span>
+        <span>覆盖 AC：AC-F1.9-1 ~ AC-F1.9-12</span>
+    </div>
+</div>
+
+<!-- 场景 1：全局快捷键呼出快速粘贴面板（有权限路径，caret 附近定位） -->
+<div class="scene">
+    <div class="scene-title">
+        场景 1：全局快捷键呼出快速粘贴面板（有权限路径）
+        <span class="ac-tag">AC-F1.9-1 / AC-F1.9-2</span>
+    </div>
+    <div class="scene-desc">
+        用户在备忘录中点击光标定位 caret，按下全局快捷键，快速粘贴面板出现在 caret 附近（不遮挡 caret），主窗口不被唤起。面板默认高亮第一行（最近复制项）。
+    </div>
+    <div class="stage">
+        <div class="mock-app">
+            <div class="mock-app-title">备忘录（前台应用，已获得辅助功能权限）</div>
+            <div class="mock-app-content">
+                会议纪要 2026-07-23<br>
+                参会人：张三、李四、王五<br>
+                讨论事项：F1.9 快捷粘贴面板设计评审<span class="caret"></span><br>
+                结论：通过 3 子代理审查，进入实现阶段
+            </div>
+        </div>
+
+        <!-- 快速粘贴面板（定位在 caret 附近） -->
+        <div class="quick-panel caret-pos">
+            <div class="panel-search">
+                <span class="panel-search-icon">🔍</span>
+                <input type="text" class="panel-search-input" placeholder="搜索剪贴内容..." aria-label="搜索框">
+            </div>
+            <div class="panel-list">
+                <div class="clip-row default-highlight">
+                    <div class="clip-row-header">
+                        <span class="type-tag text">文本</span>
+                    </div>
+                    <div class="clip-content">会议纪要 2026-07-23</div>
+                    <div class="clip-meta">
+                        <span>备忘录</span>
+                        <span>刚刚</span>
+                    </div>
+                </div>
+                <div class="clip-row">
+                    <div class="clip-row-header">
+                        <span class="type-tag text">文本</span>
+                    </div>
+                    <div class="clip-content">import SwiftUI\nstruct ContentView: View { ... }</div>
+                    <div class="clip-meta">
+                        <span>Xcode</span>
+                        <span>2 分钟前</span>
+                    </div>
+                </div>
+                <div class="clip-row">
+                    <div class="clip-row-header">
+                        <span class="type-tag text">文本</span>
+                    </div>
+                    <div class="clip-content">尊敬的客户，您的工单已受理，预计 24 小时内回复...</div>
+                    <div class="clip-meta">
+                        <span>企业微信</span>
+                        <span>5 分钟前</span>
+                    </div>
+                </div>
+                <div class="clip-row">
+                    <div class="clip-row-header">
+                        <span class="type-tag text">文本</span>
+                    </div>
+                    <div class="clip-content">https://github.com/ClipMind/ClipMind</div>
+                    <div class="clip-meta">
+                        <span>Safari</span>
+                        <span>10 分钟前</span>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <button class="panel-footer-btn">查看全部</button>
+                <span class="panel-footer-hint">双击粘贴 · 回车粘贴 · Esc 关闭</span>
+            </div>
+        </div>
+
+        <!-- 定位引导标注 -->
+        <div class="pos-guide" style="top: 110px; left: 220px;">caret 位置</div>
+        <div class="annotation arrow-left" style="top: 140px; left: 660px; max-width: 140px;">
+            面板出现在 caret 附近<br>（距离不超过 50px，不遮挡 caret）
+        </div>
+    </div>
+    <div class="legend">
+        <strong>视觉要点：</strong>
+        ① 独立窗口（非菜单栏 popover），可自由定位；
+        ② 有辅助功能权限时定位到 caret 附近；
+        ③ 面板尺寸 360×480（与菜单栏 popover 视觉一致）；
+        ④ 默认高亮第一行（最近复制项），蓝色边框 + 浅蓝背景；
+        ⑤ 第一行高亮态满足 NFR-005 可访问性（不仅依赖颜色，辅以左边框形状差异）。
+    </div>
+</div>
+
+<!-- 场景 2：无权限路径，面板显示在屏幕中央 -->
+<div class="scene">
+    <div class="scene-title">
+        场景 2：无辅助功能权限时面板显示在屏幕中央
+        <span class="ac-tag">AC-F1.9-3</span>
+    </div>
+    <div class="scene-desc">
+        应用未获得辅助功能权限时，快速粘贴面板出现在屏幕中央（或上次关闭时记录的位置，若仍在可视范围内）。
+    </div>
+    <div class="stage">
+        <div class="mock-app">
+            <div class="mock-app-title">终端（前台应用，未获得辅助功能权限）</div>
+            <div class="mock-app-content">
+                $ git status<br>
+                On branch feature/F1.9-quick-paste-panel<br>
+                nothing to commit, working tree clean<br>
+                $ <span class="caret"></span>
+            </div>
+        </div>
+
+        <!-- 快速粘贴面板（定位在屏幕中央） -->
+        <div class="quick-panel center-pos">
+            <div class="panel-search">
+                <span class="panel-search-icon">🔍</span>
+                <input type="text" class="panel-search-input" placeholder="搜索剪贴内容..." aria-label="搜索框">
+            </div>
+            <div class="panel-list">
+                <div class="clip-row default-highlight">
+                    <div class="clip-row-header">
+                        <span class="type-tag text">文本</span>
+                    </div>
+                    <div class="clip-content">git push origin feature/F1.9-quick-paste-panel</div>
+                    <div class="clip-meta">
+                        <span>终端</span>
+                        <span>刚刚</span>
+                    </div>
+                </div>
+                <div class="clip-row">
+                    <div class="clip-row-header">
+                        <span class="type-tag text">文本</span>
+                    </div>
+                    <div class="clip-content">xcodebuild test -project ClipMind.xcodeproj</div>
+                    <div class="clip-meta">
+                        <span>终端</span>
+                        <span>1 分钟前</span>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <button class="panel-footer-btn">查看全部</button>
+                <span class="panel-footer-hint">双击粘贴 · 回车粘贴 · Esc 关闭</span>
+            </div>
+        </div>
+
+        <div class="annotation arrow-top" style="top: 8px; left: 50%; transform: translateX(-50%);">
+            屏幕中央定位（无权限路径）
+        </div>
+    </div>
+    <div class="legend">
+        <strong>视觉要点：</strong>
+        ① 无辅助功能权限时降级到屏幕中央定位；
+        ② 若上次关闭位置仍在屏幕可视范围内，优先使用上次位置（视觉与屏幕中央一致，仅定位坐标不同）；
+        ③ 面板视觉与有权限路径完全一致（仅定位不同）。
+    </div>
+</div>
+
+<!-- 场景 3：列表行单击高亮、方向键导航 -->
+<div class="scene">
+    <div class="scene-title">
+        场景 3：列表行单击高亮选中、方向键上下移动选中
+        <span class="ac-tag">AC-F1.9-4</span>
+    </div>
+    <div class="scene-desc">
+        面板出现时默认高亮第一行；用户单击第二行高亮第二行；按方向键下移到第三行；按方向键上移回第二行。同一时刻最多一行高亮（单选模式）。
+    </div>
+    <div class="stage">
+        <div class="stage-row">
+            <!-- 子场景 3a：默认高亮第一行 -->
+            <div class="stage-item">
+                <div class="stage-item-label">3a. 面板出现，默认高亮第一行</div>
+                <div class="quick-panel" style="position: relative; width: 100%; height: 360px;">
+                    <div class="panel-list">
+                        <div class="clip-row highlighted">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">会议纪要 2026-07-23</div>
+                            <div class="clip-meta"><span>备忘录</span><span>刚刚</span></div>
+                        </div>
+                        <div class="clip-row">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">import SwiftUI</div>
+                            <div class="clip-meta"><span>Xcode</span><span>2 分钟前</span></div>
+                        </div>
+                        <div class="clip-row">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">尊敬的客户，您的工单已受理...</div>
+                            <div class="clip-meta"><span>企业微信</span><span>5 分钟前</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 子场景 3b：单击第二行 -->
+            <div class="stage-item">
+                <div class="stage-item-label">3b. 单击第二行 → 第二行高亮</div>
+                <div class="quick-panel" style="position: relative; width: 100%; height: 360px;">
+                    <div class="panel-list">
+                        <div class="clip-row">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">会议纪要 2026-07-23</div>
+                            <div class="clip-meta"><span>备忘录</span><span>刚刚</span></div>
+                        </div>
+                        <div class="clip-row highlighted">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">import SwiftUI</div>
+                            <div class="clip-meta"><span>Xcode</span><span>2 分钟前</span></div>
+                        </div>
+                        <div class="clip-row">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">尊敬的客户，您的工单已受理...</div>
+                            <div class="clip-meta"><span>企业微信</span><span>5 分钟前</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 子场景 3c：方向键下移到第三行 -->
+            <div class="stage-item">
+                <div class="stage-item-label">3c. 按 <span class="kbd">↓</span> → 第三行高亮</div>
+                <div class="quick-panel" style="position: relative; width: 100%; height: 360px;">
+                    <div class="panel-list">
+                        <div class="clip-row">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">会议纪要 2026-07-23</div>
+                            <div class="clip-meta"><span>备忘录</span><span>刚刚</span></div>
+                        </div>
+                        <div class="clip-row">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">import SwiftUI</div>
+                            <div class="clip-meta"><span>Xcode</span><span>2 分钟前</span></div>
+                        </div>
+                        <div class="clip-row highlighted">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">尊敬的客户，您的工单已受理...</div>
+                            <div class="clip-meta"><span>企业微信</span><span>5 分钟前</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="legend">
+        <strong>视觉要点：</strong>
+        ① 高亮态：浅蓝背景 <code>#d4e8ff</code> + 左侧 3px 蓝色边框 <code>#0a84ff</code>；
+        ② 单选模式：同一时刻最多一行高亮，其他行取消高亮；
+        ③ 方向键 <span class="kbd">↑</span><span class="kbd">↓</span> 移动高亮，第一行按 <span class="kbd">↑</span> 不动，最后一行按 <span class="kbd">↓</span> 不动；
+        ④ 高亮差异不仅依赖颜色（辅以左边框形状），满足 NFR-005 色盲用户可识别。
+    </div>
+</div>
+
+<!-- 场景 4：有权限路径双击/回车自动粘贴 -->
+<div class="scene">
+    <div class="scene-title">
+        场景 4：有权限时双击/回车自动粘贴到前台应用
+        <span class="ac-tag">AC-F1.9-5 / AC-F1.9-6 / AC-F1.9-10</span>
+    </div>
+    <div class="scene-desc">
+        有辅助功能权限时，双击或回车触发粘贴流程：写入剪贴板 → 关闭快速粘贴面板 → 模拟系统粘贴按键 → 前台应用 caret 位置插入文本。面板先关闭再模拟粘贴，避免面板抢焦点。
+    </div>
+    <div class="stage">
+        <div class="stage-row">
+            <!-- 子场景 4a：双击前 -->
+            <div class="stage-item">
+                <div class="stage-item-label">4a. 双击前：第一行高亮，caret 在备忘录</div>
+                <div class="quick-panel" style="position: relative; width: 100%; height: 280px;">
+                    <div class="panel-list">
+                        <div class="clip-row highlighted">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">会议纪要 2026-07-23</div>
+                            <div class="clip-meta"><span>备忘录</span><span>刚刚</span></div>
+                        </div>
+                        <div class="clip-row">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">import SwiftUI</div>
+                            <div class="clip-meta"><span>Xcode</span><span>2 分钟前</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 子场景 4b：双击后（面板关闭，文本插入 caret） -->
+            <div class="stage-item">
+                <div class="stage-item-label">4b. 双击后：面板关闭，文本已插入 caret 位置</div>
+                <div class="mock-app" style="min-height: 280px;">
+                    <div class="mock-app-title">备忘录（前台应用）</div>
+                    <div class="mock-app-content">
+                        会议纪要 2026-07-23<br>
+                        参会人：张三、李四、王五<br>
+                        讨论事项：F1.9 快捷粘贴面板设计评审会议纪要 2026-07-23<span class="caret"></span><br>
+                        结论：通过 3 子代理审查
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="legend">
+        <strong>视觉要点：</strong>
+        ① 双击 = 回车，触发相同粘贴流程；
+        ② 有权限路径无浮层提示（用户感知"双击即粘贴"，无中间步骤）；
+        ③ 面板先关闭再模拟粘贴按键（避免面板抢焦点拦截按键）；
+        ④ 粘贴完成后无任何 UI 残留（面板消失、无浮层）。
+    </div>
+</div>
+
+<!-- 场景 5：无权限路径降级浮层提示 -->
+<div class="scene">
+    <div class="scene-title">
+        场景 5：无权限时降级浮层提示"已复制，按 Cmd+V 粘贴"
+        <span class="ac-tag">AC-F1.9-7</span>
+    </div>
+    <div class="scene-desc">
+        无辅助功能权限时，双击/回车触发降级流程：写入剪贴板 → 关闭快速粘贴面板 → 显示浮层提示。浮层在剪贴板被消费后消失，或超时兜底消失（默认 5 秒）。浮层不抢夺前台应用焦点。
+    </div>
+    <div class="stage">
+        <div class="mock-app" style="min-height: 280px;">
+            <div class="mock-app-title">终端（前台应用，未获得辅助功能权限）</div>
+            <div class="mock-app-content">
+                $ git push origin feature/F1.9-quick-paste-panel<span class="caret"></span><br>
+            </div>
+        </div>
+
+        <!-- 降级浮层提示 -->
+        <div class="overlay-tip">
+            <span class="overlay-tip-icon">📋</span>
+            <span>已复制，按</span>
+            <span class="overlay-tip-kbd">⌘</span>
+            <span class="overlay-tip-kbd">V</span>
+            <span>粘贴</span>
+        </div>
+        <div class="overlay-countdown">超时兜底：5 秒后消失（可配置）</div>
+    </div>
+    <div class="legend">
+        <strong>视觉要点：</strong>
+        ① 浮层文案固定为"已复制，按 ⌘V 粘贴"，<strong>不显示剪贴板原文</strong>（NFR-003 安全性）；
+        ② 浮层定位在屏幕中央（或上次关闭位置）；
+        ③ 浮层深色半透明背景 <code>rgba(30,30,35,0.92)</code> + 毛玻璃模糊，与系统通知风格一致；
+        ④ 浮层不抢夺前台应用焦点（保持在前台应用之上但不激活）；
+        ⑤ 消失条件：剪贴板被消费（变化计数变化）<strong>或</strong>超时兜底（默认 5 秒，可配置 1~30 秒）；
+        ⑥ 两条消失路径互斥，先触发者生效。
+    </div>
+</div>
+
+<!-- 场景 6：图片/文件路径类型双击提示 -->
+<div class="scene">
+    <div class="scene-title">
+        场景 6：图片/文件路径类型双击提示"仅支持文本粘贴"
+        <span class="ac-tag">AC-F1.9-11</span>
+    </div>
+    <div class="scene-desc">
+        双击图片类型行或文件路径类型行时，显示"仅支持文本粘贴"行内提示，不写入剪贴板、不关闭面板，用户可继续操作其他行。
+    </div>
+    <div class="stage">
+        <div class="quick-panel" style="position: relative; width: 100%; height: 420px;">
+            <div class="panel-list">
+                <div class="clip-row">
+                    <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                    <div class="clip-content">会议纪要 2026-07-23</div>
+                    <div class="clip-meta"><span>备忘录</span><span>刚刚</span></div>
+                </div>
+                <div class="clip-row highlighted">
+                    <div class="clip-row-header"><span class="type-tag image">图片</span></div>
+                    <div class="clip-content">[图片] 截图_2026-07-23.png</div>
+                    <div class="clip-meta"><span>截图工具</span><span>3 分钟前</span></div>
+                </div>
+                <!-- 行内提示 -->
+                <div class="clip-row-tip">
+                    <span class="clip-row-tip-icon">⚠</span>
+                    <span>仅支持文本粘贴</span>
+                </div>
+                <div class="clip-row">
+                    <div class="clip-row-header"><span class="type-tag filepath">文件路径</span></div>
+                    <div class="clip-content">/Users/dengdeng/Working/Competition/ClipMind/README.md</div>
+                    <div class="clip-meta"><span>访达</span><span>8 分钟前</span></div>
+                </div>
+                <div class="clip-row">
+                    <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                    <div class="clip-content">尊敬的客户，您的工单已受理...</div>
+                    <div class="clip-meta"><span>企业微信</span><span>10 分钟前</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="legend">
+        <strong>视觉要点：</strong>
+        ① 图片类型行类型标签为橙色 <code>#fb923c</code>，文件路径类型行类型标签为绿色 <code>#34c759</code>，文本类型为蓝色 <code>#0a84ff</code>；
+        ② 双击图片/文件路径行后，行下方显示黄色行内提示条 <code>#fff3cd</code> 背景 + <code>#ffc107</code> 左边框；
+        ③ 提示文案固定为"仅支持文本粘贴"，非阻塞（用户可继续操作其他行）；
+        ④ <strong>不写入剪贴板、不关闭面板</strong>（与文本类型双击行为不同）；
+        ⑤ 提示在用户下次操作（单击/双击/方向键/Esc）时自动消失。
+    </div>
+</div>
+
+<!-- 场景 7：Esc 键关闭、失焦自动关闭 -->
+<div class="scene">
+    <div class="scene-title">
+        场景 7：Esc 键关闭、失焦自动关闭（不粘贴）
+        <span class="ac-tag">AC-F1.9-8 / AC-F1.9-9</span>
+    </div>
+    <div class="scene-desc">
+        按 Esc 键立即关闭面板（不写入剪贴板、不触发粘贴）；面板失去键盘焦点时自动关闭（点击其他应用、桌面、切换空间）。关闭时记录面板位置供下次无权限定位使用。
+    </div>
+    <div class="stage">
+        <div class="stage-row">
+            <div class="stage-item">
+                <div class="stage-item-label">7a. 按 <span class="kbd">Esc</span> 关闭面板</div>
+                <div class="quick-panel" style="position: relative; width: 100%; height: 240px; opacity: 0.4;">
+                    <div class="panel-list">
+                        <div class="clip-row highlighted">
+                            <div class="clip-row-header"><span class="type-tag text">文本</span></div>
+                            <div class="clip-content">会议纪要 2026-07-23</div>
+                            <div class="clip-meta"><span>备忘录</span><span>刚刚</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 8px; font-size: 11px; color: #8a8a99;">
+                    面板淡出消失（剪贴板不变，不粘贴）
+                </div>
+            </div>
+
+            <div class="stage-item">
+                <div class="stage-item-label">7b. 点击其他应用 → 面板失焦自动关闭</div>
+                <div class="mock-app" style="min-height: 240px;">
+                    <div class="mock-app-title">用户点击了其他应用窗口</div>
+                    <div class="mock-app-content" style="color: #8a8a99;">
+                        面板失去键盘焦点<br>
+                        → 自动关闭面板<br>
+                        → 记录面板位置（供下次无权限定位）<br>
+                        → 不触发粘贴流程
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="legend">
+        <strong>视觉要点：</strong>
+        ① Esc 关闭与失焦关闭都不写入剪贴板、不触发粘贴；
+        ② 三种关闭路径（Esc / 失焦 / 粘贴后）互不冲突，由控制器单一状态机管理（见设计文档 5.1）；
+        ③ 关闭时记录面板位置，下次无权限路径优先使用该位置（若仍在屏幕可视范围内）。
+    </div>
+</div>
+
+<!-- 场景 8：辅助功能权限被撤销时自动降级 -->
+<div class="scene">
+    <div class="scene-title">
+        场景 8：辅助功能权限被撤销时自动降级
+        <span class="ac-tag">AC-F1.9-12</span>
+    </div>
+    <div class="scene-desc">
+        用户曾获得辅助功能权限，在系统设置中撤销后，下次触发粘贴流程（双击或回车）自动走无权限降级路径，不尝试模拟粘贴按键。每次粘贴流程重新检测权限状态（不缓存）。
+    </div>
+    <div class="stage">
+        <div class="stage-row">
+            <div class="stage-item">
+                <div class="stage-item-label">8a. 权限已授予 → 有权限路径（自动粘贴）</div>
+                <div class="mock-app" style="min-height: 200px;">
+                    <div class="mock-app-title">备忘录（权限已授予）</div>
+                    <div class="mock-app-content">
+                        双击 → 写入剪贴板 → 关闭面板 → 模拟粘贴按键<br>
+                        → caret 位置插入文本（无浮层提示）
+                    </div>
+                </div>
+            </div>
+
+            <div class="stage-item">
+                <div class="stage-item-label">8b. 权限被撤销 → 自动降级（无权限路径）</div>
+                <div class="mock-app" style="min-height: 200px;">
+                    <div class="mock-app-title">备忘录（权限被撤销）</div>
+                    <div class="mock-app-content">
+                        双击 → 写入剪贴板 → 关闭面板 → 显示降级浮层<br>
+                        → 用户手动按 <span class="kbd">⌘</span><span class="kbd">V</span> 粘贴
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="legend">
+        <strong>视觉要点：</strong>
+        ① 权限状态运行时检测，<strong>不缓存</strong>，每次粘贴流程重新检测；
+        ② 权限被撤销后，下次双击/回车自动从"有权限路径"切换到"无权限降级路径"；
+        ③ 两条路径的面板视觉一致，仅粘贴流程的后续 UI 不同（有权限无浮层，无权限有浮层）。
+    </div>
+</div>
+
+<!-- 场景 9：设置面板 - 浮层超时兜底时长配置 -->
+<div class="scene">
+    <div class="scene-title">
+        场景 9：设置面板 - 浮层超时兜底时长配置
+        <span class="ac-tag">AC-F1.9-7 / FR-014</span>
+    </div>
+    <div class="scene-desc">
+        新增设置项"浮层超时兜底时长"，默认值 5 秒，用户可在设置面板调整（范围 1~30 秒）。设置变更立即生效，无需重启应用。降级浮层控制器在显示浮层时读取该字段作为超时计时器时长。
+    </div>
+    <div class="stage">
+        <div class="settings-panel">
+            <div class="settings-section-title">快捷粘贴面板</div>
+            <div class="settings-row">
+                <div class="settings-label">浮层超时兜底时长</div>
+                <div class="settings-control">
+                    <input type="number" class="settings-input-number" value="5" min="1" max="30" step="1" aria-label="浮层超时兜底时长（秒）">
+                    <span class="settings-unit">秒</span>
+                    <span class="settings-range">范围 1~30 秒（默认 5 秒）</span>
+                </div>
+            </div>
+            <div class="settings-row">
+                <div class="settings-label">全局快捷键</div>
+                <div class="settings-control">
+                    <span style="font-size: 12px; color: #1d1d1f;">
+                        <span class="kbd">⌘</span><span class="kbd">⇧</span><span class="kbd">V</span>
+                    </span>
+                    <span style="font-size: 11px; color: #8a8a99; margin-left: 8px;">（沿用现有快捷键配置，触发行为改为呼出快速粘贴面板）</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="legend">
+        <strong>视觉要点：</strong>
+        ① 新增设置项位于"快捷粘贴面板"分区下（与现有快捷键配置并列）；
+        ② 数字输入框，范围 1~30 秒，默认 5 秒；
+        ③ 输入框失焦或关闭设置窗口时自动应用（符合用户偏好：无需点击"应用"按钮）；
+        ④ 全局快捷键配置 UI 不变（仅触发行为改变，从"唤起主窗口"改为"呼出快速粘贴面板"）；
+        ⑤ 设置变更立即生效：降级浮层控制器下次显示浮层时读取最新值。
+    </div>
+</div>
+
+<!-- 全局图例 -->
+<div class="scene">
+    <div class="scene-title">全局图例与说明</div>
+    <div class="legend" style="line-height: 2;">
+        <p><strong>配色规范：</strong></p>
+        <p>• 面板背景 <code>#ffffff</code> · 边框 <code>#d1d1d1</code> · 阴影 <code>0 8px 32px rgba(0,0,0,0.18)</code></p>
+        <p>• 高亮背景 <code>#d4e8ff</code> · 高亮左边框 <code>#0a84ff</code>（3px）</p>
+        <p>• 类型标签：文本蓝 <code>#0a84ff</code> · 图片橙 <code>#fb923c</code> · 文件路径绿 <code>#34c759</code></p>
+        <p>• 提示条背景 <code>#fff3cd</code> · 提示左边框 <code>#ffc107</code></p>
+        <p>• 降级浮层背景 <code>rgba(30,30,35,0.92)</code> + 毛玻璃模糊</p>
+        <p>• 文字主色 <code>#1d1d1f</code> · 次要 <code>#6e6e70</code> · 弱化 <code>#8a8a99</code></p>
+        <br>
+        <p><strong>尺寸规范：</strong></p>
+        <p>• 快速粘贴面板：360×480（与菜单栏 popover 视觉一致，固定尺寸不支持自定义）</p>
+        <p>• 降级浮层：自适应内容（约 280×52），屏幕中央定位</p>
+        <p>• 设置面板：max-width 560px（与现有设置面板视觉一致）</p>
+        <p>• 列表行内边距 12px · 行间距 0（边框分隔）· 类型标签字号 10px</p>
+        <br>
+        <p><strong>交互键盘：</strong></p>
+        <p>• <span class="kbd">⌘</span><span class="kbd">⇧</span><span class="kbd">V</span> 全局快捷键呼出面板（默认值，用户可配置）</p>
+        <p>• <span class="kbd">↑</span><span class="kbd">↓</span> 方向键上下移动高亮</p>
+        <p>• <span class="kbd">↩</span> 回车键触发粘贴（等同双击）</p>
+        <p>• <span class="kbd">Esc</span> 关闭面板（不粘贴）</p>
+        <p>• 双击列表行触发粘贴流程</p>
+        <p>• <span class="kbd">⌘</span><span class="kbd">V</span> 降级路径中用户手动粘贴（消费浮层消失条件）</p>
+        <br>
+        <p><strong>可访问性（NFR-005）：</strong></p>
+        <p>• 所有交互元素设置无障碍标签（如"剪贴项列表"、"搜索框"、"已复制提示"）</p>
+        <p>• 高亮差异不仅依赖颜色（辅以左边框形状差异），色盲用户可识别</p>
+        <p>• 键盘导航完整覆盖所有操作（不依赖鼠标）</p>
+        <br>
+        <p><strong>安全性（NFR-003）：</strong></p>
+        <p>• 降级浮层不显示剪贴板原文，仅显示"已复制，按 ⌘V 粘贴"通用文案</p>
+        <p>• 日志不输出剪贴板原文，仅记录元数据（如"已写入剪贴板，长度 256"）</p>
+        <p>• 模拟粘贴按键仅发送系统标准粘贴按键，不发送任意按键序列</p>
+    </div>
+</div>
+
+</body>
+</html>
