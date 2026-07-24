@@ -163,7 +163,8 @@ final class PasteOverlayController: OverlayShowing
         }
 
         LogCategory.ui.info("Paste overlay shown, timeout: \(duration)s")
-        OverlayTestState.shared.isOverlayVisible = true
+        // 通过 UserDefaults 通知 UI 测试浮层已显示（@AppStorage 比 @ObservedObject 在 CI 中更可靠）
+        UserDefaults.standard.set(true, forKey: "UITest_overlayVisible")
     }
 
     func hideOverlay()
@@ -178,7 +179,7 @@ final class PasteOverlayController: OverlayShowing
         panel = nil
         isOverlayVisible = false
         LogCategory.ui.info("Paste overlay hidden")
-        OverlayTestState.shared.isOverlayVisible = false
+        UserDefaults.standard.set(false, forKey: "UITest_overlayVisible")
     }
 
     // MARK: - 测试辅助

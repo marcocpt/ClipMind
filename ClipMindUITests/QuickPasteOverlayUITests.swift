@@ -33,6 +33,8 @@ final class QuickPasteOverlayUITests: XCTestCase
         }
         // 清除浮层超时配置（避免上次配置干扰测试）
         UserDefaults.standard.removeObject(forKey: "F1.9.quickPaste.overlayDuration")
+        // 清除浮层可见性 test hook 状态
+        UserDefaults.standard.removeObject(forKey: "UITest_overlayVisible")
     }
 
     /// 等待浮层可见性 test hook 达到指定状态。
