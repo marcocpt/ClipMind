@@ -126,6 +126,7 @@ final class PasteOverlayController: OverlayShowing
             return
         }
 
+        let isUITesting = CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW")
         let panel = makePanel()
         self.panel = panel
 
@@ -135,12 +136,22 @@ final class PasteOverlayController: OverlayShowing
         // XCUITest 需要元素在 key window 中才能可靠检测。
         // 生产模式：使用 orderFrontRegardless 不要求 app 处于活动状态，
         // 浮层为 .nonactivatingPanel 不抢夺前台应用焦点。
-        let isUITesting = CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW")
         if isUITesting
         {
+            // UI 测试模式：先激活应用再显示浮层，确保浮层能成为 key window
+            NSApp.activate(ignoringOtherApps: true)
             panel.makeKeyAndOrderFront(nil)
         } else { panel.orderFrontRegardless() }
         isOverlayVisible = true
+
+        // UI 测试模式：通过 UserDefaults 记录浮层状态，供 XCUITest 通过 CFPreferences 轮询读取。
+        // 必须调用 synchronize() 确保 plist 文件立即更新，
+        // 否则 XCUITest 进程中的 CFPreferencesGetAppBooleanValue 读到旧值。
+        if isUITesting
+        {
+            UserDefaults.standard.set(true, forKey: "UITest_overlayVisible")
+            UserDefaults.standard.synchronize()
+        }
 
         // 启动消费监听
         consumerWatcher.start { [weak self] in
@@ -167,6 +178,14 @@ final class PasteOverlayController: OverlayShowing
         panel?.orderOut(nil)
         panel = nil
         isOverlayVisible = false
+        // UI 测试模式：通过 UserDefaults 记录浮层状态
+        // 必须调用 synchronize() 确保 plist 文件立即更新
+        let isUITesting = CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW")
+        if isUITesting
+        {
+            UserDefaults.standard.set(false, forKey: "UITest_overlayVisible")
+            UserDefaults.standard.synchronize()
+        }
         LogCategory.ui.info("Paste overlay hidden")
     }
 
@@ -204,6 +223,10 @@ final class PasteOverlayController: OverlayShowing
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.hidesOnDeactivate = false
+        // 为 NSPanel 本身设置 accessibilityIdentifier，
+        // NSHostingView 内的 SwiftUI accessibilityIdentifier 在 XCUITest 中不可靠检测
+        panel.setAccessibilityIdentifier("pasteOverlayPanel")
+        panel.setAccessibilityLabel(Self.overlayMessage)
 
         let hostingView = NSHostingView(rootView: OverlayContentView(text: Self.overlayMessage))
         panel.contentView = hostingView

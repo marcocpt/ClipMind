@@ -159,6 +159,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if completed {
             if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW") {
                 NSApp.setActivationPolicy(.regular)
+                NSApp.activate(ignoringOtherApps: true)
             } else {
                 NSApp.setActivationPolicy(.accessory)
             }

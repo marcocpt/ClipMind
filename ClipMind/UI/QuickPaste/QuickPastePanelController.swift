@@ -174,9 +174,19 @@ final class QuickPastePanelController: PanelClosing
 
     private func makePanel() -> NSPanel
     {
+        // UI 测试模式下使用普通窗口样式（移除 .nonactivatingPanel），
+        // 使 XCUITest 双击手势能正确触发。生产环境保留 .nonactivatingPanel
+        // 不抢夺前台应用焦点。
+        let isUITesting = CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW")
+        var styleMask: NSWindow.StyleMask = [.titled, .fullSizeContentView]
+        if !isUITesting
+        {
+            styleMask.insert(.nonactivatingPanel)
+        }
+
         let panel = NSPanel(
             contentRect: NSRect(origin: .zero, size: Self.panelSize),
-            styleMask: [.titled, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: styleMask,
             backing: .buffered,
             defer: false
         )

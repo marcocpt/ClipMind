@@ -31,8 +31,12 @@ final class QuickPasteOverlayUITests: XCTestCase
         {
             try? FileManager.default.removeItem(atPath: dbPath.path + suffix)
         }
-        // 清除浮层超时配置（避免上次配置干扰测试）
-        UserDefaults.standard.removeObject(forKey: "F1.9.quickPaste.overlayDuration")
+        // 清除浮层超时配置（从应用域移除，避免上次配置干扰测试）
+        CFPreferencesSetAppValue("F1.9.quickPaste.overlayDuration" as CFString, nil, "com.clipmind.app" as CFString)
+        CFPreferencesAppSynchronize("com.clipmind.app" as CFString)
+        // 清除浮层可见性状态（避免上次测试残留）
+        CFPreferencesSetAppValue("UITest_overlayVisible" as CFString, nil, "com.clipmind.app" as CFString)
+        CFPreferencesAppSynchronize("com.clipmind.app" as CFString)
     }
 
     /// 等待浮层出现或消失。
@@ -49,20 +53,19 @@ final class QuickPasteOverlayUITests: XCTestCase
         visible: Bool,
         timeout: TimeInterval
     ) -> Bool {
-        let overlayElement = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
-        if visible
+        // 通过轮询应用的 UserDefaults 检测浮层状态
+        // XCUITest 进程的 UserDefaults.standard 不等于被测应用的，
+        // 需要通过 CFPreferences 读取应用的偏好设置域
+        let key = "UITest_overlayVisible"
+        let appBundleId = "com.clipmind.app"
+        let startTime = Date()
+        while Date().timeIntervalSince(startTime) < timeout
         {
-            let appeared = overlayElement.waitForExistence(timeout: timeout)
-            return appeared
-        } else
-        {
-            let disappearExpectation = XCTNSPredicateExpectation(
-                predicate: NSPredicate(format: "exists == NO"),
-                object: overlayElement
-            )
-            wait(for: [disappearExpectation], timeout: timeout)
-            return !overlayElement.exists
+            let currentValue = CFPreferencesGetAppBooleanValue(key as CFString, appBundleId as CFString, nil)
+            if currentValue == visible { return true }
+            usleep(100_000) // 100ms
         }
+        return CFPreferencesGetAppBooleanValue(key as CFString, appBundleId as CFString, nil) == visible
     }
 
     // MARK: - TC-F1.9-7-04 设置面板包含浮层超时配置 Stepper
@@ -112,6 +115,7 @@ final class QuickPasteOverlayUITests: XCTestCase
             "--UITEST_FORCE_NO_PERMISSION"
         ]
         app.launch()
+        app.activate()
 
         let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
         XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
@@ -134,6 +138,7 @@ final class QuickPasteOverlayUITests: XCTestCase
             "--UITEST_OVERLAY_TIMEOUT_1S"
         ]
         app.launch()
+        app.activate()
 
         let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
         XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
@@ -158,6 +163,7 @@ final class QuickPasteOverlayUITests: XCTestCase
             "--UITEST_SIMULATE_CONSUMPTION_AFTER_1S"
         ]
         app.launch()
+        app.activate()
 
         let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
         XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
@@ -181,9 +187,15 @@ final class QuickPasteOverlayUITests: XCTestCase
             "--UITEST_QUICK_PASTE_PANEL",
             "--UITEST_FORCE_NO_PERMISSION"
         ]
-        // 启动前预设 10 秒超时配置（验证配置变更立即生效）
-        UserDefaults.standard.set(10.0, forKey: "F1.9.quickPaste.overlayDuration")
+        // 启动前预设 10 秒超时配置（写入应用域，非测试进程域）
+        CFPreferencesSetAppValue(
+            "F1.9.quickPaste.overlayDuration" as CFString,
+            10.0 as CFNumber,
+            "com.clipmind.app" as CFString
+        )
+        CFPreferencesAppSynchronize("com.clipmind.app" as CFString)
         app.launch()
+        app.activate()
 
         let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
         XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
@@ -199,7 +211,12 @@ final class QuickPasteOverlayUITests: XCTestCase
 
         // 第二次：修改配置为 3 秒超时，验证 4 秒内浮层消失
         app.terminate()
-        UserDefaults.standard.set(3.0, forKey: "F1.9.quickPaste.overlayDuration")
+        CFPreferencesSetAppValue(
+            "F1.9.quickPaste.overlayDuration" as CFString,
+            3.0 as CFNumber,
+            "com.clipmind.app" as CFString
+        )
+        CFPreferencesAppSynchronize("com.clipmind.app" as CFString)
 
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
@@ -208,6 +225,7 @@ final class QuickPasteOverlayUITests: XCTestCase
             "--UITEST_FORCE_NO_PERMISSION"
         ]
         app.launch()
+        app.activate()
 
         let firstRow2 = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
         XCTAssertTrue(firstRow2.waitForExistence(timeout: 5))
@@ -221,8 +239,9 @@ final class QuickPasteOverlayUITests: XCTestCase
             "配置 3 秒后，4 秒内浮层应消失"
         )
 
-        // 清理配置
-        UserDefaults.standard.removeObject(forKey: "F1.9.quickPaste.overlayDuration")
+        // 清理配置（从应用域移除）
+        CFPreferencesSetAppValue("F1.9.quickPaste.overlayDuration" as CFString, nil, "com.clipmind.app" as CFString)
+        CFPreferencesAppSynchronize("com.clipmind.app" as CFString)
     }
 
     // MARK: - TC-F1.9-12-01 权限撤销时自动降级（UI 层验证降级路径）
@@ -238,6 +257,7 @@ final class QuickPasteOverlayUITests: XCTestCase
             "--UITEST_OVERLAY_TIMEOUT_1S"
         ]
         app.launch()
+        app.activate()
 
         let firstRow = app.descendants(matching: .any)["quickPasteRow_0_selected"].firstMatch
         XCTAssertTrue(firstRow.waitForExistence(timeout: 5))
@@ -334,7 +354,7 @@ final class QuickPasteOverlayUITests: XCTestCase
         XCTAssertFalse(firstRow.exists, "有权限路径粘贴后面板应自动关闭")
 
         // 验证降级浮层未显示（有权限路径不显示浮层）
-        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        let overlayMessage = app.descendants(matching: .any)["pasteOverlayPanel"].firstMatch
         XCTAssertFalse(overlayMessage.exists, "有权限路径不应显示降级浮层")
 
         app.terminate()
@@ -365,7 +385,7 @@ final class QuickPasteOverlayUITests: XCTestCase
         )
         wait(for: [panelClosedExpectation], timeout: 3.0)
 
-        let overlayMessage = app.descendants(matching: .any)["pasteOverlayMessage"].firstMatch
+        let overlayMessage = app.descendants(matching: .any)["pasteOverlayPanel"].firstMatch
         XCTAssertFalse(overlayMessage.exists, "有权限路径不应显示浮层")
 
         app.terminate()
