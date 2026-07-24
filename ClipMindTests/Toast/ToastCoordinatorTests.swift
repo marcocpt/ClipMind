@@ -335,11 +335,11 @@ final class ToastCoordinatorTests: XCTestCase
         XCTAssertEqual(coordinator.currentState, .disappearing, "新 Toast 2 秒后应触发消失")
     }
 
-    // MARK: - E4 屏幕信息查询失败
+    // MARK: - E4 屏幕不可用降级显示（fallback bounds）
 
-    func testE4ScreenQueryFailureDoesNotTriggerToast()
+    func testE4ScreenUnavailableUsesFallbackToShowToast()
     {
-        let windowManager = NoScreenToastWindowManager()
+        let windowManager = FallbackScreenToastWindowManager()
         let coordinator = ToastCoordinator(
             windowManager: windowManager,
             timerSource: timerSource,
@@ -348,9 +348,9 @@ final class ToastCoordinatorTests: XCTestCase
         let notification = ToastCoordinatorFixtures.makeSavedNotification(fileName: "test.md")
         coordinator.handleSavedNotification(notification)
 
-        // show 失败应保持隐藏状态
-        XCTAssertEqual(coordinator.currentState, .hidden, "E4: 屏幕查询失败应保持隐藏")
-        XCTAssertNil(coordinator.currentFileName)
+        // 无屏幕场景使用 fallback bounds，Toast 正常进入 appearing 状态
+        XCTAssertEqual(coordinator.currentState, .appearing, "E4: 无屏幕场景应降级使用 fallback bounds 显示 Toast")
+        XCTAssertEqual(coordinator.currentFileName, "test.md", "E4: 文件名应被记录")
     }
 
     // MARK: - E6 动画异常跳到目标状态

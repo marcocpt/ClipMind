@@ -112,8 +112,17 @@ final class ToastBasicUITests: XCTestCase
         let toastContainer = app.otherElements["toast-container"]
         XCTAssertTrue(toastContainer.waitForExistence(timeout: 3.0), "Toast 应出现")
 
+        // CI 无头环境 NSScreen.main 可能为 nil（fallback bounds 仍能创建 Toast），
+        // 仅跳过依赖真实屏幕几何的位置断言，Toast 出现的断言保留在 CI 自动验证。
+        let hasRealScreen = NSScreen.main != nil || !NSScreen.screens.isEmpty
+        try XCTSkipUnless(
+            hasRealScreen,
+            "精确 Toast 屏幕位置需要真实 NSScreen，CI 无头环境不验证"
+        )
+
         let frame = toastContainer.frame
-        let screenFrame = NSScreen.main!.frame
+        let screen = NSScreen.main ?? NSScreen.screens.first
+        let screenFrame = screen!.frame
         let screenCenterX = screenFrame.midX
         let toastCenterX = frame.midX
         XCTAssertEqual(toastCenterX, screenCenterX, accuracy: 5, "AC-09: Toast 应水平居中")

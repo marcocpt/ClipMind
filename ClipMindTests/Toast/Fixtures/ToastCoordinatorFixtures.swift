@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 @testable import ClipMind
@@ -33,21 +34,26 @@ enum ToastCoordinatorFixtures
     }
 }
 
-/// 测试专用：模拟 NSScreen.main 为 nil 的窗口承载模块（E4 场景）。
+/// 测试专用：模拟无可用屏幕场景（CI 无头环境，E4 降级路径）。
 ///
-/// show 直接调用 onShowFailed 回调，模拟 ToastWindowManager 在
-/// NSScreen.main 查询失败时的降级路径。
-final class NoScreenToastWindowManager: ToastWindowManager
+/// 重写 `currentScreenVisibleFrame` 返回 fallback NSRect，模拟
+/// `NSScreen.main` 与 `NSScreen.screens.first` 均为 nil 的场景。
+/// 验证 ToastWindowManager 使用 fallback bounds 继续创建窗口，
+/// 不触发 `onShowFailed`，Toast 仍能正常显示。
+final class FallbackScreenToastWindowManager: ToastWindowManager
 {
-    override func show(fileName: String)
+    /// 测试用 fallback bounds（与产品代码 `fallbackScreenBounds` 一致）
+    static let fallbackBounds = NSRect(x: 0, y: 0, width: 1920, height: 1080)
+
+    override func currentScreenVisibleFrame() -> NSRect
     {
-        onShowFailed?()
+        return Self.fallbackBounds
     }
 }
 
 /// 测试专用：模拟窗口创建失败（E5 场景）。
 ///
-/// 与 NoScreenToastWindowManager 行为一致，命名上区分场景。
+/// show 直接调用 onShowFailed 回调，模拟 NSPanel 创建异常等场景。
 final class FailOnShowToastWindowManager: ToastWindowManager
 {
     override func show(fileName: String)

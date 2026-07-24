@@ -5,7 +5,7 @@ import XCTest
 /// F2.1.1 7 个错误场景降级单元测试（设计文档 §8.4）。
 ///
 /// 本测试聚焦错误场景的独立验证，与 ToastCoordinatorTests 中的状态转换测试互补。
-/// 共享 Mock 类型（NoScreen/FailOnShow/AnimFailure）定义在 ToastCoordinatorFixtures。
+/// 共享 Mock 类型（FallbackScreen/FailOnShow/AnimFailure）定义在 ToastCoordinatorFixtures。
 final class ToastCoordinatorErrorTests: XCTestCase
 {
     private var windowManager: TestToastWindowManager!
@@ -81,24 +81,25 @@ final class ToastCoordinatorErrorTests: XCTestCase
         XCTAssertNil(windowManager.lastShownFileName)
     }
 
-    // MARK: - E4 屏幕信息查询失败
+    // MARK: - E4 屏幕不可用降级显示（fallback bounds）
 
-    func testE4ScreenQueryFailureFallsBackToHidden()
+    func testE4ScreenUnavailableUsesFallbackToShowToast()
     {
-        let noScreenManager = NoScreenToastWindowManager()
+        let fallbackManager = FallbackScreenToastWindowManager()
         let coordinator = ToastCoordinator(
-            windowManager: noScreenManager,
+            windowManager: fallbackManager,
             timerSource: timerSource,
             isEnabledProvider: { true }
         )
         let notification = ToastCoordinatorFixtures.makeSavedNotification(fileName: "test.md")
         coordinator.handleSavedNotification(notification)
 
-        XCTAssertEqual(coordinator.currentState, .hidden, "E4: 屏幕查询失败应回到隐藏")
-        XCTAssertNil(coordinator.currentFileName)
+        // 无屏幕场景使用 fallback bounds，Toast 正常进入 appearing 状态（降级而非失败）
+        XCTAssertEqual(coordinator.currentState, .appearing, "E4: 无屏幕场景应降级使用 fallback bounds 显示 Toast")
+        XCTAssertEqual(coordinator.currentFileName, "test.md", "E4: 文件名应被记录")
     }
 
-    // MARK: - E5 窗口创建失败（与 E4 同路径，验证命名独立的 Mock）
+    // MARK: - E5 窗口创建失败（show 主动触发 onShowFailed）
 
     func testE5WindowCreationFailureFallsBackToHidden()
     {

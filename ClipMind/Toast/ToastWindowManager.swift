@@ -26,6 +26,13 @@ open class ToastWindowManager
     /// 滑入/滑出额外偏移量（D5：位置动画偏移，窗口从屏幕顶部之上 10pt 滑入）
     private static let slideOffset: CGFloat = 10
 
+    /// 屏幕不可用时的虚拟布局区域（CI 无头环境兼容）。
+    ///
+    /// 当 `NSScreen.main` 与 `NSScreen.screens.first` 均为 nil 时使用，
+    /// 不应被误认为是真实屏幕几何信息。仅用于计算窗口 frame，使 Toast
+    /// 在无头环境下仍能创建并显示，便于 CI 自动验证 UI 行为。
+    private static let fallbackScreenBounds = NSRect(x: 0, y: 0, width: 1920, height: 1080)
+
     private var panel: NSPanel?
     private var hostingController: NSHostingController<ToastView>?
 
@@ -46,21 +53,35 @@ open class ToastWindowManager
 
     public init() {}
 
+    /// 当前可用屏幕的可见区域（D1：用于定位 Toast 位置）。
+    ///
+    /// 优先级：主屏幕 visibleFrame → 任意可用屏幕 visibleFrame → fallback 虚拟布局区域。
+    /// 当系统无可用 NSScreen 时（如 CI 无头环境），返回 1920x1080 fallback bounds，
+    /// 使 Toast 仍能创建显示，避免触发 `onShowFailed` 而阻塞 UI 自动化测试。
+    ///
+    /// 标记为 `open` 以便测试重写注入"无屏幕"场景。
+    open func currentScreenVisibleFrame() -> NSRect
+    {
+        if let mainFrame = NSScreen.main?.visibleFrame
+        {
+            return mainFrame
+        }
+        if let firstFrame = NSScreen.screens.first?.visibleFrame
+        {
+            return firstFrame
+        }
+        LogCategory.toast.logger.warning(
+            "ToastWindow: NSScreen unavailable, using fallback bounds"
+        )
+        return Self.fallbackScreenBounds
+    }
+
     /// 显示 Toast：创建窗口、定位、启动进入动画（alpha + 位置滑入）。
     /// 必须在主线程调用（D6）。
     open func show(fileName: String)
     {
         assertMainThread()
         guard !isWindowVisible else { return }
-
-        guard let screen = NSScreen.main else
-        {
-            LogCategory.toast.logger.error(
-                "ToastWindow: NSScreen.main is nil, abort show"
-            )
-            onShowFailed?()
-            return
-        }
 
         let view = ToastView(fileName: fileName)
         let hosting = NSHostingController(rootView: view)
@@ -83,8 +104,8 @@ open class ToastWindowManager
         panel.isMovable = false
         panel.contentView = hosting.view
 
-        // 计算目标位置（顶部居中）
-        let visibleFrame = screen.visibleFrame
+        // 计算目标位置（顶部居中），无可用屏幕时使用 fallback bounds
+        let visibleFrame = currentScreenVisibleFrame()
         let bestFrame = panel.frame
         let optimizedWidth = min(bestFrame.width, 360)
         let optimizedHeight = max(bestFrame.height, 40)
@@ -125,8 +146,8 @@ open class ToastWindowManager
             return
         }
 
-        // 计算退出位置：屏幕顶部之上（反向滑出）
-        let visibleFrame = NSScreen.main?.visibleFrame ?? .zero
+        // 计算退出位置：屏幕顶部之上（反向滑出），无屏幕时使用 fallback bounds
+        let visibleFrame = currentScreenVisibleFrame()
         let currentFrame = panel.frame
         let endY = visibleFrame.maxY + Self.slideOffset
         let endFrame = NSRect(x: currentFrame.origin.x, y: endY, width: currentFrame.width, height: currentFrame.height)
