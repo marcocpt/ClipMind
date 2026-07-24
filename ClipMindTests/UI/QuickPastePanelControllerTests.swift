@@ -2,6 +2,7 @@ import AppKit
 @testable import ClipMind
 import XCTest
 
+@MainActor
 final class QuickPastePanelControllerTests: XCTestCase
 {
     // MARK: - TC-F1.9-3-01 无权限时面板显示在屏幕中央
@@ -49,6 +50,7 @@ final class QuickPastePanelControllerTests: XCTestCase
     // MARK: - 测试辅助：屏幕中央定位器
 
     /// 屏幕中央定位器（模拟无权限路径的定位逻辑）。
+    @MainActor
     private final class ScreenCenterLocator: PanelScreenLocating
     {
         func locatePosition(lastClosedPosition: NSPoint?) -> NSPoint
@@ -111,6 +113,7 @@ final class QuickPastePanelControllerTests: XCTestCase
     // MARK: - 测试辅助：上次关闭位置定位器
 
     /// 上次关闭位置定位器（无权限路径使用 lastClosedPosition）。
+    @MainActor
     private final class LastClosedPositionLocator: PanelScreenLocating
     {
         func locatePosition(lastClosedPosition: NSPoint?) -> NSPoint

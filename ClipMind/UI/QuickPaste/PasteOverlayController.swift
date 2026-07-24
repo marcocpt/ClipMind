@@ -80,6 +80,11 @@ final class OverlayTimer: OverlayTimerScheduling
 }
 
 /// 浮层显示协议（供 PasteCoordinator 注入，便于测试 mock）。
+///
+/// 标记为 @MainActor 与实现类 PasteOverlayController 保持一致，
+/// 避免 Swift 5 模式下协议方法 actor 隔离不一致导致的运行时调度问题
+/// （Swift 6 模式下不一致会直接报错）。
+@MainActor
 protocol OverlayShowing: AnyObject
 {
     /// 显示降级浮层。

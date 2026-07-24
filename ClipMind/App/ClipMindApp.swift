@@ -102,10 +102,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 在 `applicationWillFinishLaunching` 中调用，早于 SwiftUI 读取 `@AppStorage`，
     /// 确保重置后 SwiftUI 直接渲染正确视图，避免先渲染 MainWindow 再切换的时序问题。
     private func applyOnboardingResetIfNeeded() {
-        guard CommandLine.arguments.contains("--reset-onboarding") else { return }
-        UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+        if CommandLine.arguments.contains("--reset-onboarding") {
+            UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+            LogCategory.app.info("已通过 --reset-onboarding 重置首启引导标志位")
+        }
+        // --UITEST_SHOW_MAIN_WINDOW 必须在 SwiftUI 读取 @AppStorage 之前设置，
+        // 否则 SwiftUI 先渲染 OnboardingView 再切换到 MainWindow，
+        // 导致 MainWindow 中的 @ObservedObject 错过 OverlayTestState 的早期状态变化。
+        if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW") {
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        }
         UserDefaults.standard.synchronize()
-        LogCategory.app.info("已通过 --reset-onboarding 重置首启引导标志位")
     }
 
     /// 应用 UI 测试启动参数覆盖

@@ -24,6 +24,10 @@ final class SystemPastePermissionChecker: PastePermissionChecking
 }
 
 /// 面板关闭协议（抽象 QuickPastePanelController 便于测试 mock）。
+///
+/// 标记为 @MainActor 与实现类 QuickPastePanelController 保持一致，
+/// 避免 Swift 5 模式下协议方法 actor 隔离不一致导致的运行时调度问题。
+@MainActor
 protocol PanelClosing: AnyObject
 {
     /// 关闭快速粘贴面板。
@@ -52,6 +56,7 @@ protocol PanelClosing: AnyObject
 /// - 图片/文件路径类型不写入剪贴板、不关闭面板（FR-012）
 /// - 写入失败时不关闭面板、不显示浮层（错误处理）
 /// - 日志不输出剪贴板原文（NFR-003）
+@MainActor
 final class PasteCoordinator
 {
     private let permissionChecker: PastePermissionChecking

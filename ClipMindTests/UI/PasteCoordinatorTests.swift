@@ -6,6 +6,7 @@ import XCTest
 /// 测试共享调用顺序计数器（供 MockPanelCloser / MockOverlayShower / MockPasteSimulator 共享）。
 private var sharedCallSequence = 0
 
+@MainActor
 final class PasteCoordinatorTests: XCTestCase
 {
     // MARK: - 共享调用顺序计数器（供 MockPanelCloser / MockOverlayShower 共享）
@@ -459,6 +460,7 @@ private final class MockOverlayShower: OverlayShowing
     }
 }
 
+@MainActor
 private final class ScreenCenterLocatorForIntegration: PanelScreenLocating
 {
     func locatePosition(lastClosedPosition: NSPoint?) -> NSPoint

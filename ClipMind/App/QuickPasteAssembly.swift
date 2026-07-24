@@ -161,33 +161,39 @@ extension AppDelegate
 
     /// UI 测试专用：预置图片+文件路径数据到 EncryptedStore。
     ///
-    /// 存储顺序：先存 text 和 filePath（较旧），最后存 image（最新）。
-    /// loadAll 按 timestamp.desc（最新优先）返回，因此 image 为第一行（row 0），
+    /// 存储顺序（按 timestamp 升序）：text（最旧）→ filePath → image（最新）。
+    /// loadAll 按 timestamp.desc 返回，因此 image 为第一行（row 0），
     /// filePath 为第二行（row 1），text 为第三行（row 2）。
     /// UI 测试 testDoubleClick_OnImageRow_ShowsTextOnlyHint 依赖此顺序。
+    ///
+    /// 显式设置 timestamp 偏移（-2s / -1s / 0s），避免同一毫秒内 save
+    /// 导致 SQLite 排序不稳定（timestamp 相同时顺序未定义）。
     func prepopulateImageAndFilePathForTesting()
     {
         do {
             let store = try EncryptedStore()
+            let now = Date()
             let imageClip = ClipItem.makeImage(
                 Data([0x89, 0x50, 0x4E, 0x47]),
                 contentType: .other,
                 sourceApp: "com.test",
-                sourceAppName: "Test"
+                sourceAppName: "Test",
+                timestamp: now
             )
             let filePathClip = ClipItem.makeFilePath(
                 [URL(fileURLWithPath: "/tmp/test.txt")],
                 contentType: .other,
                 sourceApp: "com.test",
-                sourceAppName: "Test"
+                sourceAppName: "Test",
+                timestamp: now.addingTimeInterval(-1)
             )
             let textClip = ClipItem.makeText(
                 "文本内容",
                 contentType: .other,
                 sourceApp: "com.test",
-                sourceAppName: "Test"
+                sourceAppName: "Test",
+                timestamp: now.addingTimeInterval(-2)
             )
-            // 先存 text 和 filePath（较旧），最后存 image（最新 = row 0）
             try store.save(textClip)
             try store.save(filePathClip)
             try store.save(imageClip)

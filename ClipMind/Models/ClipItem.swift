@@ -59,7 +59,8 @@ extension ClipItem {
         contentType: ContentType,
         sourceApp: String,
         sourceAppName: String,
-        isSample: Bool = false
+        isSample: Bool = false,
+        timestamp: Date = Date()
     ) -> ClipItem {
         ClipItem(
             id: UUID(),
@@ -67,7 +68,7 @@ extension ClipItem {
             contentType: contentType,
             sourceApp: sourceApp,
             sourceAppName: sourceAppName,
-            timestamp: Date(),
+            timestamp: timestamp,
             summary: nil,
             translation: nil,
             rewrite: nil,
@@ -82,7 +83,8 @@ extension ClipItem {
         contentType: ContentType,
         sourceApp: String,
         sourceAppName: String,
-        isSample: Bool = false
+        isSample: Bool = false,
+        timestamp: Date = Date()
     ) -> ClipItem {
         ClipItem(
             id: UUID(),
@@ -90,7 +92,7 @@ extension ClipItem {
             contentType: contentType,
             sourceApp: sourceApp,
             sourceAppName: sourceAppName,
-            timestamp: Date(),
+            timestamp: timestamp,
             summary: nil,
             translation: nil,
             rewrite: nil,
@@ -105,7 +107,8 @@ extension ClipItem {
         contentType: ContentType,
         sourceApp: String,
         sourceAppName: String,
-        isSample: Bool = false
+        isSample: Bool = false,
+        timestamp: Date = Date()
     ) -> ClipItem {
         ClipItem(
             id: UUID(),
@@ -113,7 +116,7 @@ extension ClipItem {
             contentType: contentType,
             sourceApp: sourceApp,
             sourceAppName: sourceAppName,
-            timestamp: Date(),
+            timestamp: timestamp,
             summary: nil,
             translation: nil,
             rewrite: nil,

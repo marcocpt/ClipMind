@@ -18,6 +18,7 @@ protocol PanelScreenLocating: AnyObject
 /// 状态机：Closed → Showing → Closed（Phase 1）；Phase 2/3 扩展 Pasting 状态。
 ///
 /// 设计文档第 3.1 节、第 5.1 节。
+@MainActor
 final class QuickPastePanelController: PanelClosing
 {
     /// 面板固定尺寸（与菜单栏 popover 视觉一致）。
@@ -48,10 +49,9 @@ final class QuickPastePanelController: PanelClosing
         contentView = view
     }
 
-    deinit
-    {
-        closePanelInternal()
-    }
+    // deinit 不调用 closePanelInternal()：deinit 是 nonisolated，无法访问 @MainActor 属性。
+    // panel 由 ARC 自动释放；resignObserver 用 [weak self] 注册，controller 释放后 block
+    // 中的 self 为 nil，不会触发 handleDidResignKey。外部应在销毁前显式调用 closePanel()。
 
     // MARK: - 显示与关闭
 
