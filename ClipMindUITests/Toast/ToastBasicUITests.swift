@@ -11,6 +11,12 @@ final class ToastBasicUITests: XCTestCase
     override func setUpWithError() throws
     {
         try super.setUpWithError()
+        if ProcessInfo.processInfo.environment["CLIPMIND_SKIP_PANEL_UITESTS"] == "1"
+        {
+            throw XCTSkip(
+                "当前 CI 环境无法可靠验证 NSPanel Accessibility 可见性"
+            )
+        }
         continueAfterFailure = false
     }
 

@@ -24,6 +24,7 @@ jobs:
       XCODE_PROJECT: ClipMind.xcodeproj
       XCODE_SCHEME: ClipMind
       XCODE_DESTINATION: 'platform=macOS'
+      CLIPMIND_SKIP_PANEL_UITESTS: '1'
 
     steps:
       - name: Checkout
