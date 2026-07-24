@@ -2,20 +2,6 @@ import AppKit
 import Foundation
 import SwiftUI
 
-/// 浮层可见性共享状态（UI 测试 test hook 用）。
-///
-/// NSPanel(.nonactivatingPanel) 在 CI 中无法被 XCUITest 可靠检测，
-/// 通过此 ObservableObject 把浮层可见状态暴露到主窗口的 test hook 元素，供 UI 测试验证。
-/// 生产代码不依赖此状态。使用 Combine（@Published）而非 NotificationCenter，
-/// 避免 Bool 经 [AnyHashable: Any] 桥接为 NSNumber 后 `as? Bool` 失败的陷阱。
-@MainActor
-final class OverlayTestState: ObservableObject
-{
-    static let shared = OverlayTestState()
-
-    @Published var isOverlayVisible = false
-}
-
 /// 浮层定位协议（依赖注入，便于测试 mock）。
 protocol OverlayScreenLocating: AnyObject
 {
@@ -145,10 +131,15 @@ final class PasteOverlayController: OverlayShowing
 
         let position = screenLocator.locatePosition()
         panel.setFrameOrigin(position)
-        // 使用 orderFrontRegardless 而非 makeKeyAndOrderFront：浮层为非激活面板，
-        // 在面板关闭后 app 可能失焦，makeKeyAndOrderFront 可能无法可靠显示浮层。
-        // orderFrontRegardless 不要求 app 处于活动状态，CI 环境更可靠。
-        panel.orderFrontRegardless()
+        // UI 测试模式：使用 makeKeyAndOrderFront 使浮层成为 key window，
+        // XCUITest 需要元素在 key window 中才能可靠检测。
+        // 生产模式：使用 orderFrontRegardless 不要求 app 处于活动状态，
+        // 浮层为 .nonactivatingPanel 不抢夺前台应用焦点。
+        let isUITesting = CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW")
+        if isUITesting
+        {
+            panel.makeKeyAndOrderFront(nil)
+        } else { panel.orderFrontRegardless() }
         isOverlayVisible = true
 
         // 启动消费监听
@@ -163,8 +154,6 @@ final class PasteOverlayController: OverlayShowing
         }
 
         LogCategory.ui.info("Paste overlay shown, timeout: \(duration)s")
-        // 通过 UserDefaults 通知 UI 测试浮层已显示（@AppStorage 比 @ObservedObject 在 CI 中更可靠）
-        UserDefaults.standard.set(true, forKey: "UITest_overlayVisible")
     }
 
     func hideOverlay()
@@ -179,7 +168,6 @@ final class PasteOverlayController: OverlayShowing
         panel = nil
         isOverlayVisible = false
         LogCategory.ui.info("Paste overlay hidden")
-        UserDefaults.standard.set(false, forKey: "UITest_overlayVisible")
     }
 
     // MARK: - 测试辅助
@@ -194,9 +182,19 @@ final class PasteOverlayController: OverlayShowing
 
     private func makePanel() -> NSPanel
     {
+        // UI 测试模式下使用普通窗口样式（移除 .nonactivatingPanel），
+        // 使 XCUITest 能可靠检测浮层元素。生产环境保留 .nonactivatingPanel
+        // 不抢夺前台应用焦点。
+        let isUITesting = CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW")
+        var styleMask: NSWindow.StyleMask = [.titled, .fullSizeContentView]
+        if !isUITesting
+        {
+            styleMask.insert(.nonactivatingPanel)
+        }
+
         let panel = NSPanel(
             contentRect: NSRect(origin: .zero, size: Self.overlaySize),
-            styleMask: [.titled, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: styleMask,
             backing: .buffered,
             defer: false
         )

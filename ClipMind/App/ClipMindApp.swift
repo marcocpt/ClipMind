@@ -108,7 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         // --UITEST_SHOW_MAIN_WINDOW 必须在 SwiftUI 读取 @AppStorage 之前设置，
         // 否则 SwiftUI 先渲染 OnboardingView 再切换到 MainWindow，
-        // 导致 MainWindow 中的 @ObservedObject 错过 OverlayTestState 的早期状态变化。
+        // 否则 SwiftUI 先渲染 OnboardingView 再切换到 MainWindow。
         if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW") {
             UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         }

@@ -7,13 +7,6 @@ struct MainWindow: View {
     @State private var isSearching = false
     @State private var selectedSourceApp: String?
     @StateObject private var clipStore = ClipStore()
-    /// 浮层可见性 test hook（通过 @AppStorage 监听 UserDefaults 变化）。
-    /// NSPanel(.nonactivatingPanel) 在 CI 中无法被 XCUITest 可靠检测，主窗口元素反映状态。
-    /// 使用 @AppStorage 而非 @ObservedObject/OverlayTestState：
-    /// @AppStorage 直接绑定 UserDefaults，变化由系统 KVO 机制驱动，
-    /// 比 Combine objectWillChange 在 CI 环境中更可靠（@StateObject/@ObservedObject
-    /// 的 objectWillChange 在 CI 中可能因 SwiftUI View 重建时序问题丢失订阅）。
-    @AppStorage("UITest_overlayVisible") private var isOverlayVisibleForTest = false
 
     private var allClips: [ClipItem] {
         ClipTestData.isUITesting ? ClipTestData.previewClips : clipStore.clips
@@ -45,14 +38,6 @@ struct MainWindow: View {
                 selectedClip = allClips.first
             }
         }
-        // 浮层可见性 test hook 元素（隐藏，不影响视觉）。
-        // 值为 "1" 表示浮层可见，"0" 表示不可见。供 QuickPasteOverlayUITests 检测。
-        Text(isOverlayVisibleForTest ? "1" : "0")
-            .accessibilityIdentifier("quickPasteTestOverlayVisible")
-            // 使用 1x1 pt + 极低透明度而非 0x0/opacity:0，
-            // 因为 CI 环境中 XCUITest 无法检测 0 尺寸或 0 透明度元素的 label 变化。
-            .frame(width: 1, height: 1)
-            .opacity(0.01)
     }
 
     private var searchPanel: some View {
