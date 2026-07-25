@@ -138,3 +138,33 @@ final class PopoverDoublePasteUITests: XCTestCase
         XCTAssertFalse(searchField.exists, "Esc 键应关闭弹窗")
     }
 }
+
+// MARK: - AC-F1.11-1 边界用例：空列表无高亮
+
+extension PopoverDoublePasteUITests
+{
+    /// 验证菜单栏弹窗打开时列表为空无高亮（边界用例）。
+    /// 不注入 `--UITEST_PREVIEW_DATA`，clips 为空数组，selectedIndex = -1。
+    func test05_EmptyClips_NoHighlight()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_POPOVER_WINDOW"
+        ]
+        app.launch()
+
+        let searchField = app.textFields["popoverSearchField"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5), "弹窗应出现")
+
+        // 空列表不应存在任何 selected 标识符的行
+        XCTAssertFalse(
+            app.descendants(matching: .any)["popoverRow_0_selected"].firstMatch.exists,
+            "空列表不应有高亮行"
+        )
+        XCTAssertFalse(
+            app.descendants(matching: .any)["popoverRow_0"].firstMatch.exists,
+            "空列表不应有任何行"
+        )
+    }
+}
