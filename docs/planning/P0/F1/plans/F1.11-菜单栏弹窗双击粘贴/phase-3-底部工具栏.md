@@ -1,6 +1,6 @@
 # Phase 3：底部工具栏三按钮 + openSettings 通知
 
-> 最后更新：2026-07-25 | 版本：v1.2
+> 最后更新：2026-07-25 | 版本：v1.3
 
 **全局约束（AGENTS.md §8）：** 本 Phase 中所有任务在执行 `git commit` 前必须先运行 `swiftlint lint --strict` 并通过。仅文档、配置等非代码改动可跳过。任务步骤中不再重复说明 Lint 环节，但每个 Commit 步骤默认包含「Lint → Commit」两步。
 
@@ -1186,6 +1186,7 @@ Phase 3 基线达成：
 | v1.0 | 2026-07-25 | Phase 3 初始版本，7 个任务覆盖 `Notification.Name.openSettingsWindow` 新增、`BottomToolbarView` 组件创建、`AppDelegate` 监听通知、`UnifiedPastePanelView` 集成条件渲染、「查看全部 / 配置 / 退出」三按钮端到端验证。关联 AC-F1.11-6、AC-F1.11-7、AC-F1.11-8、AC-F1.11-13。 |
 | v1.1 | 2026-07-25 | 补充任务 3 简化方案与「设置窗口 UITEST 模式说明」。 |
 | v1.2 | 2026-07-25 | Phase 3 实现完成：所有 7 个任务通过 TDD 实现，`BottomToolbarViewTests`（8 条单元测试）与 `PopoverBottomToolbarUITests`（5 条 UI 测试）全部 PASS。新增 `SettingsWindowAssembly.swift` 拆分 AppDelegate 类型体长度（避免 type_body_length 违规）。XCUITest 中通过 `app.activate()` 缓解「Application is not foreground」竞态。 |
+| v1.3 | 2026-07-25 | 任务 8 全量验证完成：`swiftlint lint --strict` 0 违规（205 文件）；`ClipMindTests` 579 条单元测试全部通过；`PopoverBottomToolbarUITests` 5 条 UI 测试全部通过（重跑后稳定）。发现 `test02`/`test04` 在套件首跑存在 flaky 现象，单独运行与重跑均 PASS，根因为 `NSWindow.didBecomeKeyNotification` 监听器与 `window.close()` 的时序竞争，已记录待后续优化。 |
 
 ## 实现记录（v1.2 完成）
 
@@ -1253,3 +1254,93 @@ Phase 3 基线达成：
 - ✅ 「查看全部」按钮发送 `openMainWindow` 通知并关闭弹窗（test02 验证）
 - ✅ 「配置」按钮发送 `openSettingsWindow` 通知并关闭弹窗，`AppDelegate` 收到通知后打开设置窗口（test03 验证）
 - ✅ 「退出」按钮仅关闭弹窗，不发送任何通知，不写入剪贴板（test04/test05 验证）
+
+## 任务 8 实际验证结果（v1.3 补充）
+
+**执行时间**：2026-07-25 17:15 ~ 17:25
+
+### 1. SwiftLint strict 全量检查
+
+```bash
+swiftlint lint --strict
+```
+
+- 结果：`Done linting! Found 0 violations, 0 serious in 205 files.`
+- 退出码：0
+- 状态：✅ 通过
+
+### 2. ClipMindTests 单元测试全量
+
+```bash
+xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind \
+  -destination 'platform=macOS' -configuration Debug \
+  ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
+  CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+  -only-testing:ClipMindTests
+```
+
+- 结果：`Executed 579 tests, with 0 failures (0 unexpected) in 29.419 (29.818) seconds`
+- 状态：✅ 通过（含 `BottomToolbarViewTests` 8 条 Phase 3 新增用例）
+
+### 3. PopoverBottomToolbarUITests Phase 3 UI 测试
+
+```bash
+xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind \
+  -destination 'platform=macOS' -configuration Debug \
+  ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
+  CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+  -only-testing:ClipMindUITests/PopoverBottomToolbarUITests
+```
+
+#### 首跑结果（不稳定）
+
+- `test01_BottomToolbar_ThreeButtonsVisible` ✅ passed (10.798s)
+- `test02_ViewAllButton_ClosesPopoverAndOpensMainWindow` ❌ failed (13.546s)
+- `test03_SettingsButton_ClosesPopoverAndOpensSettingsWindow` ✅ passed (14.641s)
+- `test04_ExitButton_ClosesPopoverOnly` ❌ failed (18.714s)
+- `test05_ExitButton_DoesNotOpenSettingsWindow` ✅ passed (18.614s)
+- 汇总：`Executed 5 tests, with 2 failures`
+
+#### 重跑结果（稳定）
+
+- `test01_BottomToolbar_ThreeButtonsVisible` ✅ passed (7.324s)
+- `test02_ViewAllButton_ClosesPopoverAndOpensMainWindow` ✅ passed (12.460s)
+- `test03_SettingsButton_ClosesPopoverAndOpensSettingsWindow` ✅ passed (13.216s)
+- `test04_ExitButton_ClosesPopoverOnly` ✅ passed (13.550s)
+- `test05_ExitButton_DoesNotOpenSettingsWindow` ✅ passed (11.660s)
+- 汇总：`Executed 5 tests, with 0 failures in 58.210 seconds`，`** TEST SUCCEEDED **`
+
+#### 单独运行 test02 / test04
+
+- `test02` 单独运行：✅ passed (15.182s)
+- `test04` 单独运行：✅ passed (12.078s)，`** TEST SUCCEEDED **`
+
+### 4. Flaky Test 分析
+
+**现象**：`test02` 与 `test04` 在套件首跑时失败（`XCTAssertFalse failed - 搜索框应不存在`），但单独运行与套件重跑均通过。
+
+**根因**：`PopoverPreviewWindowFactory.show` 中注册的 `NSWindow.didBecomeKeyNotification` 监听器与 `viewModel.onEscPressed?()` → `window.close()` 存在时序竞争：
+
+1. 点击「查看全部」/「退出」按钮触发 `onViewAll` / `onExit` 回调
+2. `onViewAll` 同步发送 `openMainWindow` 通知 → `handleOpenMainWindow` 让主窗口成为 key
+3. `didBecomeKeyNotification` 监听器触发：若 popover 仍 `isVisible`，`orderOut` 主窗口并让 popover 重新成为 key
+4. `viewModel.onEscPressed?()` → `window.close()` 关闭 popover
+5. XCUITest 检查 `searchField.waitForExistence(timeout: 2)`
+
+在套件首跑时，步骤 3 的 `makeKeyAndOrderFront` 可能延迟触发 `didBecomeKey`，与步骤 4 的 `close` 产生竞争，导致 accessibility 元素在 2 秒内仍未清理。
+
+**影响**：不影响功能正确性（生产环境下 `StatusItemController` 直接调用 `closePanel()`，无 `didBecomeKeyNotification` 监听器）。仅影响 UITEST 模式下的测试稳定性。
+
+**缓解措施**（已在 v1.2 实施）：三按钮 `click()` 前增加 `app.activate()` 缓解「Application is not foreground」竞态。
+
+**后续优化方向**（不在 Phase 3 范围内）：
+- 在 `PopoverPreviewWindowFactory` 的 `didBecomeKeyNotification` 监听器中，当 popover 已 `close` 后立即移除监听器
+- 或在 `onEscPressed` 回调中先移除监听器再 `close`
+- 或增加 `waitForNonExistence` 的 timeout 到 3 秒
+
+### 5. 任务 8 验证结论
+
+- ✅ SwiftLint strict 0 违规
+- ✅ 单元测试 579 条全部通过（含 Phase 3 新增 8 条）
+- ✅ Phase 3 UI 测试 5 条全部通过（重跑后稳定，flaky 问题已记录）
+- ⚠️ flaky test 问题已记录，待后续优化
