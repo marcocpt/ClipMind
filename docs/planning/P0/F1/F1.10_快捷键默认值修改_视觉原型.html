@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+  F1.10 快捷键默认值修改 - 视觉原型
+  版本：v1.0 | 最后更新：2026-07-25
+  关联需求文档：F1.10_快捷键默认值修改_需求文档.md v1.0
+  关联设计文档：F1.10_快捷键默认值修改_设计文档.md v1.1
+  覆盖 AC：AC-F1.10-7（重置按钮）、AC-F1.10-9（默认显示新默认值）
+  说明：本原型为静态视觉示意，用 macOS 原生浅色风格展示设置页快捷键录制器在不同场景下的显示，
+        重点展示新默认值 ⌘⇧Space 的用户可见形式，以及重置按钮的重置行为。不包含真实交互逻辑。
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1.10 快捷键默认值修改 - 视觉原型</title>
+    <style>
+        /* macOS 原生浅色风格（与 F1.9 视觉原型风格一致） */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #ececec;
+            color: #1d1d1f;
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 24px;
+        }
+
+        /* 顶部标题区 */
+        .page-header {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            border: 1px solid #d1d1d1;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .page-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .page-header .meta {
+            font-size: 11px;
+            color: #6e6e70;
+        }
+
+        .page-header .meta span {
+            margin-right: 16px;
+        }
+
+        /* 场景容器 */
+        .scene {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            border: 1px solid #d1d1d1;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .scene-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1d1d1f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scene-title .ac-tag {
+            font-size: 10px;
+            background: #0a84ff;
+            color: #ffffff;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .scene-title .badge-old {
+            font-size: 10px;
+            background: #ff9500;
+            color: #ffffff;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .scene-title .badge-new {
+            font-size: 10px;
+            background: #30d158;
+            color: #ffffff;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .scene-desc {
+            font-size: 12px;
+            color: #6e6e70;
+            margin-bottom: 16px;
+        }
+
+        /* 场景展示区（模拟设置页窗口） */
+        .stage {
+            background: #f5f5f7;
+            border: 1px solid #e1e1e3;
+            border-radius: 6px;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 模拟设置窗口标题栏 */
+        .settings-window {
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            max-width: 720px;
+            margin: 24px auto;
+        }
+
+        .settings-titlebar {
+            background: #f5f5f7;
+            border-bottom: 1px solid #e1e1e3;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-titlebar .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .settings-titlebar .traffic-light.red { background: #ff5f57; }
+        .settings-titlebar .traffic-light.yellow { background: #febc2e; }
+        .settings-titlebar .traffic-light.green { background: #28c840; }
+
+        .settings-titlebar .title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: 8px;
+            color: #1d1d1f;
+        }
+
+        /* 设置页 Tab 栏 */
+        .settings-tabs {
+            background: #f5f5f7;
+            border-bottom: 1px solid #e1e1e3;
+            padding: 8px 16px 0;
+            display: flex;
+            gap: 4px;
+        }
+
+        .settings-tab {
+            padding: 6px 12px;
+            font-size: 12px;
+            color: #6e6e70;
+            border-radius: 4px 4px 0 0;
+            cursor: default;
+        }
+
+        .settings-tab.active {
+            background: #ffffff;
+            color: #0a84ff;
+            border: 1px solid #e1e1e3;
+            border-bottom: 1px solid #ffffff;
+            position: relative;
+            top: 1px;
+        }
+
+        /* 设置表单 */
+        .settings-form {
+            padding: 16px 20px;
+            background: #ffffff;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .form-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6e6e70;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 0;
+        }
+
+        .form-label {
+            font-size: 13px;
+            color: #1d1d1f;
+            flex-shrink: 0;
+        }
+
+        .form-caption {
+            font-size: 11px;
+            color: #6e6e70;
+            margin-top: 4px;
+            margin-left: 0;
+        }
+
+        /* 快捷键录制器 */
+        .hotkey-recorder {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hotkey-display {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+            height: 28px;
+            padding: 0 12px;
+            background: #ffffff;
+            border: 1px solid #d1d1d1;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: -apple-system, "SF Pro Text", sans-serif;
+            color: #1d1d1f;
+        }
+
+        .hotkey-display.recording {
+            color: #6e6e70;
+            font-style: italic;
+            border-color: #0a84ff;
+            border-width: 2px;
+        }
+
+        .hotkey-display .symbol {
+            font-size: 14px;
+            margin-right: 1px;
+        }
+
+        .hotkey-display .key-name {
+            font-weight: 500;
+        }
+
+        .reset-button {
+            height: 28px;
+            padding: 0 12px;
+            background: #ffffff;
+            border: 1px solid #d1d1d1;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #1d1d1f;
+            cursor: default;
+        }
+
+        .reset-button:active {
+            background: #f0f0f0;
+        }
+
+        /* Toggle 开关 */
+        .toggle {
+            position: relative;
+            width: 36px;
+            height: 22px;
+            background: #30d158;
+            border-radius: 11px;
+            transition: background 0.2s;
+        }
+
+        .toggle.off {
+            background: #e1e1e3;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 16px;
+            width: 18px;
+            height: 18px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: left 0.2s;
+        }
+
+        .toggle.off::after {
+            left: 2px;
+        }
+
+        /* 标注框 */
+        .annotation {
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-top: 12px;
+            font-size: 11px;
+            color: #6e6e70;
+        }
+
+        .annotation strong {
+            color: #1d1d1f;
+        }
+
+        .annotation .highlight {
+            background: #fff3cd;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-family: -apple-system, "SF Pro Text", monospace;
+            font-weight: 500;
+            color: #1d1d1f;
+        }
+
+        /* 对比展示 */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .comparison-label {
+            font-size: 11px;
+            color: #6e6e70;
+            margin-bottom: 6px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .comparison-label.old {
+            color: #ff9500;
+        }
+
+        .comparison-label.new {
+            color: #30d158;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部标题区 -->
+    <div class="page-header">
+        <h1>F1.10 快捷键默认值修改 - 视觉原型</h1>
+        <div class="meta">
+            <span>版本：v1.0</span>
+            <span>最后更新：2026-07-25</span>
+            <span>关联需求文档：F1.10_快捷键默认值修改_需求文档.md v1.0</span>
+            <span>关联设计文档：F1.10_快捷键默认值修改_设计文档.md v1.1</span>
+        </div>
+        <div class="meta" style="margin-top: 4px;">
+            <span>覆盖 AC：AC-F1.10-7（重置按钮重置为新默认值）、AC-F1.10-9（设置页默认显示新默认值）</span>
+        </div>
+    </div>
+
+    <!-- 场景 1：新用户首启后打开设置页 -->
+    <div class="scene">
+        <div class="scene-title">
+            场景 1：新用户首启后打开设置页
+            <span class="ac-tag">AC-F1.10-9</span>
+            <span class="badge-new">新默认值</span>
+        </div>
+        <div class="scene-desc">
+            新安装用户首次启动后，应用设置初始化为新默认值（Cmd+Shift+Space）。打开设置页时，快捷键录制器默认显示 ⌘⇧Space。
+        </div>
+        <div class="stage">
+            <div class="settings-window">
+                <div class="settings-titlebar">
+                    <span class="traffic-light red"></span>
+                    <span class="traffic-light yellow"></span>
+                    <span class="traffic-light green"></span>
+                    <span class="title">ClipMind 设置</span>
+                </div>
+                <div class="settings-tabs">
+                    <div class="settings-tab active">通用</div>
+                    <div class="settings-tab">隐私</div>
+                    <div class="settings-tab">API</div>
+                </div>
+                <div class="settings-form">
+                    <div class="form-section">
+                        <div class="form-section-title">开机启动</div>
+                        <div class="form-row">
+                            <span class="form-label">开机时自动启动 ClipMind</span>
+                            <div class="toggle"></div>
+                        </div>
+                        <div class="form-caption">开启后，系统登录时自动启动 ClipMind。</div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title">快捷键</div>
+                        <div class="form-row">
+                            <span class="form-label">快捷键</span>
+                            <div class="hotkey-recorder">
+                                <div class="hotkey-display">
+                                    <span class="symbol">⌘</span><span class="symbol">⇧</span><span class="key-name">Space</span>
+                                </div>
+                                <div class="reset-button">重置</div>
+                            </div>
+                        </div>
+                        <div class="form-caption">用于唤起 ClipMind 剪贴板历史窗口。</div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title">快速粘贴</div>
+                        <div class="form-row">
+                            <span class="form-label">浮层超时兜底时长</span>
+                            <div class="reset-button">5 秒</div>
+                        </div>
+                        <div class="form-caption">无辅助功能权限时，降级浮层提示的超时兜底时长（1-30 秒）。超时后浮层自动消失。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="annotation">
+            <strong>说明</strong>：新用户首启后，应用设置的快捷键默认值为新默认值（Cmd+Shift+Space）。设置页加载时，快捷键录制器通过快捷键格式化工具的显示方法生成用户可见形式 <span class="highlight">⌘⇧Space</span>（命令符号 + Shift 符号 + 大写 Space 字样）。
+        </div>
+    </div>
+
+    <!-- 场景 2：老用户迁移后打开设置页 -->
+    <div class="scene">
+        <div class="scene-title">
+            场景 2：老用户迁移后打开设置页
+            <span class="ac-tag">AC-F1.10-5</span>
+            <span class="ac-tag">AC-F1.10-9</span>
+            <span class="badge-new">已迁移</span>
+        </div>
+        <div class="scene-desc">
+            老用户升级到本版本后，若持久化的快捷键为旧默认值（Cmd+Shift+V），应用启动时自动迁移为新默认值（Cmd+Shift+Space）。打开设置页时显示迁移后的新默认值。
+        </div>
+        <div class="stage">
+            <div class="settings-window">
+                <div class="settings-titlebar">
+                    <span class="traffic-light red"></span>
+                    <span class="traffic-light yellow"></span>
+                    <span class="traffic-light green"></span>
+                    <span class="title">ClipMind 设置</span>
+                </div>
+                <div class="settings-tabs">
+                    <div class="settings-tab active">通用</div>
+                    <div class="settings-tab">隐私</div>
+                    <div class="settings-tab">API</div>
+                </div>
+                <div class="settings-form">
+                    <div class="form-section">
+                        <div class="form-section-title">快捷键</div>
+                        <div class="form-row">
+                            <span class="form-label">快捷键</span>
+                            <div class="hotkey-recorder">
+                                <div class="hotkey-display">
+                                    <span class="symbol">⌘</span><span class="symbol">⇧</span><span class="key-name">Space</span>
+                                </div>
+                                <div class="reset-button">重置</div>
+                            </div>
+                        </div>
+                        <div class="form-caption">用于唤起 ClipMind 剪贴板历史窗口。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="annotation">
+            <strong>迁移流程</strong>：应用启动 → 应用设置初始化 → 读取持久化快捷键（旧默认值 Cmd+Shift+V）→ 检测到等于旧默认值 → 写入新默认值（Cmd+Shift+Space）→ 记录迁移日志（仅元数据，不记录字面值）→ 设置页显示 <span class="highlight">⌘⇧Space</span>。迁移过程无弹窗，用户无感。
+        </div>
+    </div>
+
+    <!-- 场景 3：老用户保留自定义值 -->
+    <div class="scene">
+        <div class="scene-title">
+            场景 3：老用户保留自定义值
+            <span class="ac-tag">AC-F1.10-6</span>
+            <span class="badge-old">自定义值保留</span>
+        </div>
+        <div class="scene-desc">
+            老用户升级到本版本后，若持久化的快捷键为用户自定义值（非旧默认值，如 Ctrl+Option+A），迁移检查不修改，保留用户自定义值。设置页显示自定义值的用户可见形式。
+        </div>
+        <div class="stage">
+            <div class="settings-window">
+                <div class="settings-titlebar">
+                    <span class="traffic-light red"></span>
+                    <span class="traffic-light yellow"></span>
+                    <span class="traffic-light green"></span>
+                    <span class="title">ClipMind 设置</span>
+                </div>
+                <div class="settings-tabs">
+                    <div class="settings-tab active">通用</div>
+                    <div class="settings-tab">隐私</div>
+                    <div class="settings-tab">API</div>
+                </div>
+                <div class="settings-form">
+                    <div class="form-section">
+                        <div class="form-section-title">快捷键</div>
+                        <div class="form-row">
+                            <span class="form-label">快捷键</span>
+                            <div class="hotkey-recorder">
+                                <div class="hotkey-display">
+                                    <span class="symbol">⌃</span><span class="symbol">⌥</span><span class="key-name">A</span>
+                                </div>
+                                <div class="reset-button">重置</div>
+                            </div>
+                        </div>
+                        <div class="form-caption">用于唤起 ClipMind 剪贴板历史窗口。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="annotation">
+            <strong>说明</strong>：迁移检查仅当快捷键等于旧默认值（Cmd+Shift+V）时迁移。自定义值（如 ⌃⌥A）不等于旧默认值，<strong>不修改</strong>，保留用户主动配置的快捷键。用户可随时点击"重置"按钮切换到新默认值 ⌘⇧Space。
+        </div>
+    </div>
+
+    <!-- 场景 4：重置按钮点击前后对比 -->
+    <div class="scene">
+        <div class="scene-title">
+            场景 4：重置按钮点击前后对比
+            <span class="ac-tag">AC-F1.10-7</span>
+            <span class="badge-new">重置为新默认值</span>
+        </div>
+        <div class="scene-desc">
+            用户点击"重置"按钮后，快捷键值变更为新默认值（Cmd+Shift+Space），立即持久化，设置页显示更新为 ⌘⇧Space。下方展示重置前后的对比。
+        </div>
+        <div class="stage">
+            <div class="comparison">
+                <div>
+                    <div class="comparison-label old">重置前（任意当前值）</div>
+                    <div class="settings-window">
+                        <div class="settings-titlebar">
+                            <span class="traffic-light red"></span>
+                            <span class="traffic-light yellow"></span>
+                            <span class="traffic-light green"></span>
+                            <span class="title">ClipMind 设置</span>
+                        </div>
+                        <div class="settings-form">
+                            <div class="form-section">
+                                <div class="form-section-title">快捷键</div>
+                                <div class="form-row">
+                                    <span class="form-label">快捷键</span>
+                                    <div class="hotkey-recorder">
+                                        <div class="hotkey-display">
+                                            <span class="symbol">⌃</span><span class="symbol">⌥</span><span class="key-name">A</span>
+                                        </div>
+                                        <div class="reset-button">重置</div>
+                                    </div>
+                                </div>
+                                <div class="form-caption">用于唤起 ClipMind 剪贴板历史窗口。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="comparison-label new">重置后（新默认值）</div>
+                    <div class="settings-window">
+                        <div class="settings-titlebar">
+                            <span class="traffic-light red"></span>
+                            <span class="traffic-light yellow"></span>
+                            <span class="traffic-light green"></span>
+                            <span class="title">ClipMind 设置</span>
+                        </div>
+                        <div class="settings-form">
+                            <div class="form-section">
+                                <div class="form-section-title">快捷键</div>
+                                <div class="form-row">
+                                    <span class="form-label">快捷键</span>
+                                    <div class="hotkey-recorder">
+                                        <div class="hotkey-display">
+                                            <span class="symbol">⌘</span><span class="symbol">⇧</span><span class="key-name">Space</span>
+                                        </div>
+                                        <div class="reset-button">重置</div>
+                                    </div>
+                                </div>
+                                <div class="form-caption">用于唤起 ClipMind 剪贴板历史窗口。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="annotation">
+            <strong>重置流程</strong>：用户点击"重置"按钮 → 快捷键录制器引用应用设置中的默认值常量 → 返回新默认值（Cmd+Shift+Space）→ 持久化新默认值 → 调用快捷键格式化工具的显示方法生成 <span class="highlight">⌘⇧Space</span> → 显示更新 → 重新注册全局快捷键（注销旧值、注册新值）。
+        </div>
+    </div>
+
+    <!-- 场景 5：新默认值显示形式对比（旧默认值 vs 新默认值） -->
+    <div class="scene">
+        <div class="scene-title">
+            场景 5：新默认值显示形式对比（回归保护）
+            <span class="ac-tag">AC-F1.10-2</span>
+            <span class="ac-tag">AC-F1.10-10</span>
+        </div>
+        <div class="scene-desc">
+            快捷键格式化工具对新默认值显示为 ⌘⇧Space（大写 Space 字样），对旧默认值仍显示为 ⌘⇧V（回归保护，确保已持久化旧默认值的老用户在迁移前的解析路径正确）。
+        </div>
+        <div class="stage">
+            <div class="comparison">
+                <div>
+                    <div class="comparison-label old">旧默认值（Cmd+Shift+V）</div>
+                    <div class="settings-window">
+                        <div class="settings-form">
+                            <div class="form-section">
+                                <div class="form-section-title">快捷键</div>
+                                <div class="form-row">
+                                    <span class="form-label">显示形式</span>
+                                    <div class="hotkey-recorder">
+                                        <div class="hotkey-display">
+                                            <span class="symbol">⌘</span><span class="symbol">⇧</span><span class="key-name">V</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-caption">旧默认值，仍可被解析、反向构造与显示（回归保护）。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="comparison-label new">新默认值（Cmd+Shift+Space）</div>
+                    <div class="settings-window">
+                        <div class="settings-form">
+                            <div class="form-section">
+                                <div class="form-section-title">快捷键</div>
+                                <div class="form-row">
+                                    <span class="form-label">显示形式</span>
+                                    <div class="hotkey-recorder">
+                                        <div class="hotkey-display">
+                                            <span class="symbol">⌘</span><span class="symbol">⇧</span><span class="key-name">Space</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-caption">新默认值，空格键显示为"Space"大写形式，与字母键显示风格一致。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="annotation">
+            <strong>显示风格一致性</strong>：新默认值的显示形式 <span class="highlight">⌘⇧Space</span> 中，"Space"采用首字母大写形式，与字母键（如"V"）的大写显示风格一致。旧默认值的显示形式 <span class="highlight">⌘⇧V</span> 保持不变（回归保护）。
+        </div>
+    </div>
+
+    <!-- 场景 6：录制中状态 -->
+    <div class="scene">
+        <div class="scene-title">
+            场景 6：录制中状态（沿用现有交互，不变）
+        </div>
+        <div class="scene-desc">
+            用户点击快捷键录制器按钮进入录制模式，显示"按下快捷键..."提示。录制流程沿用现有交互，F1.10 不修改快捷键配置 UI 的交互、视觉、配置能力。
+        </div>
+        <div class="stage">
+            <div class="settings-window">
+                <div class="settings-titlebar">
+                    <span class="traffic-light red"></span>
+                    <span class="traffic-light yellow"></span>
+                    <span class="traffic-light green"></span>
+                    <span class="title">ClipMind 设置</span>
+                </div>
+                <div class="settings-form">
+                    <div class="form-section">
+                        <div class="form-section-title">快捷键</div>
+                        <div class="form-row">
+                            <span class="form-label">快捷键</span>
+                            <div class="hotkey-recorder">
+                                <div class="hotkey-display recording">按下快捷键...</div>
+                            </div>
+                        </div>
+                        <div class="form-caption">用于唤起 ClipMind 剪贴板历史窗口。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="annotation">
+            <strong>说明</strong>：录制中状态沿用现有交互，用户按下任意有效组合键后，录制器捕获并更新显示。F1.10 扩展了快捷键格式化工具对空格键的解析支持，因此用户可以录制包含空格键的组合（如 Cmd+Shift+Space）。Esc 键取消录制（沿用现有交互）。
+        </div>
+    </div>
+
+    <!-- 版本信息 -->
+    <div class="scene" style="padding: 12px 24px;">
+        <div class="meta" style="font-size: 11px; color: #6e6e70;">
+            <span>版本：v1.0</span>
+            <span>最后更新：2026-07-25</span>
+            <span>关联需求文档：F1.10_快捷键默认值修改_需求文档.md v1.0</span>
+            <span>关联设计文档：F1.10_快捷键默认值修改_设计文档.md v1.1</span>
+        </div>
+    </div>
+</body>
+</html>

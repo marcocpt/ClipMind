@@ -192,7 +192,7 @@ final class ClipItemModelTests: XCTestCase {
         XCTAssertTrue(settings.autoCleanupEnabled)
         XCTAssertEqual(settings.cleanupDays, 30)
         XCTAssertTrue(settings.launchAtLogin)
-        XCTAssertEqual(settings.hotkey, "cmd+shift+v")
+        XCTAssertEqual(settings.hotkey, TestHotkeys.default)
     }
 
     func testAppSettingsRoundTrip() throws {

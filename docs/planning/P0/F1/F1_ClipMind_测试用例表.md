@@ -1,4 +1,4 @@
-> 最后更新：2026-07-14 | 版本：v1.11（基于设计规范 v1.9）
+> 最后更新：2026-07-25 | 版本：v1.12（基于设计规范 v1.10）
 
 # ClipMind 初赛 MVP 测试用例表
 
@@ -212,14 +212,14 @@ ClipMindUITests/
 | TC-25-01 | AC-25 | Web 预览页可访问（curl） | Web 页已部署到 GitHub Pages | 1. 执行 `curl -I https://marcocpt.github.io/ClipMind/`<br>2. 检查 HTTP 状态码 | 返回 HTTP 200 | curl | ⏸️ DEFERRED | 延后至 Phase 4 T4.2 GitHub Pages 部署 |
 | TC-25-02 | AC-25 | Web 预览页 4 个交互流程可点击 | 浏览器已打开 Web 预览页 URL | 1. 浏览器打开 Web URL<br>2. 点击"复制演示内容"按钮<br>3. 点击"自动分类"按钮<br>4. 点击"搜索"按钮<br>5. 点击"一键处理"按钮<br>6. 观察响应 | 4 个核心流程按钮均可点击<br>每个按钮有交互响应 | 手动 | ✅ COVERED | Phase 4 已完成，browser_use 子代理验证 4 个交互流程 PASS，截图存于 docs/planning/P0/F1/screenshots/ |
 | TC-25-03 | AC-25 | Web 预览页内容完整 | 浏览器已打开 Web URL | 1. 浏览器打开 Web URL<br>2. 检查页面内容 | 包含产品介绍 + 交互式模拟<br>4 个核心流程可体验 | 手动 | ✅ COVERED | Phase 4 已完成，Web 页面包含产品介绍 + 4 个交互流程演示 |
-| TC-26-01 | AC-26 | "cmd+shift+v" 解析为正确 keyCode 与修饰键 | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "cmd+shift+v")`<br>2. 读取返回值 | 返回 `(keyCode=9, modifiers=cmdKey\|shiftKey)` | XCTest | ✅ COVERED | testParseStoredHotkey_CmdShiftV_ReturnsCorrectModifierAndKeyCode |
+| TC-26-01 | AC-26 | "cmd+shift+v"（旧默认值，回归保护）解析为正确 keyCode 与修饰键 | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: TestHotkeys.legacyDefault)`<br>2. 读取返回值 | 返回 `(keyCode=9, modifiers=cmdKey\|shiftKey)` | XCTest | ✅ COVERED | testParseStoredHotkey_CmdShiftV_ReturnsCorrectModifierAndKeyCode |
 | TC-26-02 | AC-26 | "ctrl+opt+a" 解析为正确 keyCode 与修饰键 | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "ctrl+opt+a")`<br>2. 读取返回值 | 返回 `(keyCode=0, modifiers=controlKey\|optionKey)` | XCTest | ✅ COVERED | testParseStoredHotkey_CtrlOptA_ReturnsCorrectModifierAndKeyCode |
 | TC-26-03 | AC-26 | "cmd+a" 解析为正确 keyCode 与修饰键 | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "cmd+a")`<br>2. 读取返回值 | 返回 `(keyCode=0, modifiers=cmdKey)` | XCTest | ✅ COVERED | testParseStoredHotkey_CmdOnly_ReturnsCorrectModifierAndKeyCode |
 | TC-26-04 | AC-26 | 无效格式返回 nil | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "invalid")`<br>2. 读取返回值 | 返回 nil | XCTest | ✅ COVERED | testParseStoredHotkey_InvalidFormat_ReturnsNil |
 | TC-26-05 | AC-26 | 空字符串返回 nil | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "")`<br>2. 读取返回值 | 返回 nil | XCTest | ✅ COVERED | testParseStoredHotkey_EmptyString_ReturnsNil |
 | TC-26-06 | AC-26 | 无修饰键返回 nil | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "v")`<br>2. 读取返回值 | 返回 nil | XCTest | ✅ COVERED | testParseStoredHotkey_NoModifier_ReturnsNil |
 | TC-26-07 | AC-26 | 未知字母返回 nil | HotkeyFormatter 就绪 | 1. 调用 `HotkeyFormatter.parse(stored: "cmd+zzz")`<br>2. 读取返回值 | 返回 nil | XCTest | ✅ COVERED | testParseStoredHotkey_UnknownKey_ReturnsNil |
-| TC-26-08 | AC-26 | 有效快捷键注册正确参数 | GlobalHotkeyService + mock 注册器就绪 | 1. 设置 AppSettings.hotkey = "cmd+shift+v"<br>2. 初始化 GlobalHotkeyService<br>3. 检查 mock 注册器收到的参数 | mock 注册器收到 `keyCode=9, modifiers=cmdKey\|shiftKey`<br>注册成功 | XCTest | ✅ COVERED | testGlobalHotkeyService_InitWithValidHotkey_RegistersWithCorrectParams |
+| TC-26-08 | AC-26 | 有效快捷键注册正确参数（当前默认值 cmd+shift+space） | GlobalHotkeyService + mock 注册器就绪 | 1. 设置 AppSettings.hotkey = TestHotkeys.default（cmd+shift+space）<br>2. 初始化 GlobalHotkeyService<br>3. 检查 mock 注册器收到的参数 | mock 注册器收到 `keyCode=49, modifiers=cmdKey\|shiftKey`（space 键）<br>注册成功 | XCTest | ✅ COVERED | testGlobalHotkeyService_InitWithValidHotkey_RegistersWithCorrectParams |
 | TC-26-09 | AC-26 | 无效快捷键不注册 | GlobalHotkeyService + mock 注册器就绪 | 1. 设置 AppSettings.hotkey = "invalid"<br>2. 初始化 GlobalHotkeyService<br>3. 检查注册状态 | 未调用注册器<br>未标记为已注册 | XCTest | ✅ COVERED | testGlobalHotkeyService_InitWithInvalidHotkey_IsNotRegistered |
 | TC-26-10 | AC-26 | 注销清理注册状态 | GlobalHotkeyService 已注册快捷键 | 1. 初始化 GlobalHotkeyService（有效快捷键）<br>2. 调用 `unregister()`<br>3. 检查注册状态 | 注册器 `unregister()` 被调用<br>已注册状态清除 | XCTest | ✅ COVERED | testGlobalHotkeyService_Unregister_ClearsRegistration |
 | TC-26-11 | AC-26 | 空快捷键不注册 | GlobalHotkeyService + mock 注册器就绪 | 1. 设置 AppSettings.hotkey = ""<br>2. 初始化 GlobalHotkeyService<br>3. 检查注册状态 | 未调用注册器<br>未标记为已注册 | XCTest | ✅ COVERED | testGlobalHotkeyService_EmptyHotkey_IsNotRegistered |

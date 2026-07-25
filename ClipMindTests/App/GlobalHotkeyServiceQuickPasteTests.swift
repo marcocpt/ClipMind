@@ -9,7 +9,7 @@ final class GlobalHotkeyServiceQuickPasteTests: XCTestCase
     func testHotkeyPressed_PostsOpenQuickPasteNotification()
     {
         let mock = MockHotkeyRegistrar()
-        let service = GlobalHotkeyService(hotkey: "cmd+shift+v", registrar: mock)
+        let service = GlobalHotkeyService(hotkey: TestHotkeys.arbitrary, registrar: mock)
 
         let quickPasteExpectation = XCTNSNotificationExpectation(name: .openQuickPaste)
         mock.simulateHotkeyPressed()
@@ -22,7 +22,7 @@ final class GlobalHotkeyServiceQuickPasteTests: XCTestCase
     func testHotkeyPressed_DoesNotPostOpenMainWindowNotification()
     {
         let mock = MockHotkeyRegistrar()
-        let service = GlobalHotkeyService(hotkey: "cmd+shift+v", registrar: mock)
+        let service = GlobalHotkeyService(hotkey: TestHotkeys.arbitrary, registrar: mock)
 
         let mainWindowExpectation = XCTNSNotificationExpectation(name: .openMainWindow)
         mainWindowExpectation.isInverted = true

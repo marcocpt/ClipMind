@@ -1,4 +1,4 @@
-> 最后更新：2026-07-14 | 版本：v1.9
+> 最后更新：2026-07-25 | 版本：v1.10
 
 # ClipMind 初赛 MVP 设计规范
 
@@ -396,7 +396,7 @@ flowchart LR
 | 菜单栏图标（NSStatusItem） | 系统菜单栏常驻 | 点击弹出 popover |
 | popover | 点击菜单栏图标 | 显示最近 5-10 条剪贴内容 + 搜索框 + 查看全部 |
 | 主窗口 | popover "查看全部" / 快捷键 | 完整历史、搜索、详情、设置 |
-| 全局搜索（快捷键） | Cmd+Shift+V（默认） | 唤起主窗口 |
+| 全局搜索（快捷键） | Cmd+Shift+Space（默认） | 唤起主窗口 |
 | 首次启动引导 | 首次启动 .app | 权限请求 + API Key + 隐私提示 |
 
 ---
@@ -601,7 +601,7 @@ struct AppSettings: Codable {
     var autoCleanupEnabled: Bool    // 自动清理开关，默认 true
     var cleanupDays: Int            // 清理周期天数，默认 30
     var launchAtLogin: Bool         // 开机启动，默认 true
-    var hotkey: String              // 全局快捷键，默认 "cmd+shift+v"
+    var hotkey: String              // 全局快捷键，默认 "cmd+shift+space"（F1.10 起从 cmd+shift+v 迁移）
 }
 
 enum APIProvider: String, Codable, CaseIterable {
@@ -772,7 +772,7 @@ class GlobalHotkeyService {
 | 自动清理开关 | Bool | true | UserDefaults | 否 |
 | 清理周期 | Int | 30 | UserDefaults | 否 |
 | 开机启动 | Bool | true | UserDefaults | 否 |
-| 全局快捷键 | String | "cmd+shift+v" | UserDefaults | 否 |
+| 全局快捷键 | String | "cmd+shift+space" | UserDefaults | 否 |
 
 ### 5.4 持久化方案
 
@@ -1280,11 +1280,11 @@ struct DebugConfig {
 
 **AC-26：全局快捷键唤醒主窗口**
 
-- **场景**：用户完成首启引导后，App 处于菜单栏常驻状态，按下默认快捷键 Cmd+Shift+V
+- **场景**：用户完成首启引导后，App 处于菜单栏常驻状态，按下默认快捷键 Cmd+Shift+Space
 - **预期**：主窗口被唤起到前台
 - **验证方式**：
   - 自动化：XCTest 验证 `GlobalHotkeyService` 通过 mock 注册器注册了正确的 `(keyCode, modifiers)`；触发时发送了 `.openMainWindow` 通知
-  - 手动：真实按下快捷键 Cmd+Shift+V，观察主窗口唤起到前台
+  - 手动：真实按下快捷键 Cmd+Shift+Space，观察主窗口唤起到前台
 
 ### 8.2 AC 覆盖矩阵
 
@@ -1891,7 +1891,7 @@ flowchart LR
 |------|---------|---------|---------|
 | 嵌入模型最终选择（MiniLM-L6 vs L12） | Phase 1 性能 | 推荐 L6（22MB，384 维，平衡速度与质量） | Phase 1 开始前 |
 | 数据库方案（SQLCipher vs 手动加密 SQLite） | Phase 0 实现 | 推荐手动加密（CryptoKit + SQLite.swift，避免 SQLCipher 依赖） | Phase 0 开始前 |
-| 快捷键默认值（Cmd+Shift+V vs 其他） | Phase 3 设置 | 已采用 Cmd+Shift+V，与系统无冲突 | 已决策 (v1.6) |
+| 快捷键默认值（Cmd+Shift+V vs 其他） | Phase 3 设置 | F1.10 起改为 Cmd+Shift+Space（Cmd+Shift+V 与 Paste 等热门剪贴板工具冲突） | 已决策 (v1.10) |
 | 清理周期是否可由用户自定义（除 30 天外） | Phase 3 设置 | 支持 7/14/30/90 天四档选择 | Phase 3 实现时 |
 | Web 交互预览页是否需要后端 | Phase 4 实现 | 不需要后端，纯前端模拟（静态 HTML + JS） | Phase 4 开始前 |
 | 是否提供 .app 签名 | Phase 4 发布 | 初赛不强制签名（用户需手动信任）；如时间允许则 ad-hoc 签名 | Phase 4 发布前 |
@@ -1914,3 +1914,4 @@ flowchart LR
 | v1.7 | 2026-07-14 | 同步权限图标/TCC/AppIcon 修复：6.1.3 节辅助功能权限描述从 `AXIsProcessTrusted()` 更新为 `AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt: true])`，标注首次启动时弹出系统 TCC 提示并自动把 ClipMind 加入权限列表 |
 | v1.8 | 2026-07-14 | 同步通知权限请求分支修复（F1.11）：6.1.3 节通知权限行补充 `authorizationStatus` 分支处理描述（`.notDetermined` 请求授权、`.denied` 打开系统设置通知页面、已授权不操作） |
 | v1.9 | 2026-07-14 | 同步 macOS 12.4 兼容性修复（F1.13）：6.1.1 节最低 macOS 版本从 14.0 降为 12.4；6.1.1 节可用性确认修正（项目实际未使用 NavigationStack/@Observable/SwiftData，采用 NavigationView/ObservableObject），新增 SMAppService macOS 13+ 降级说明；11.1 节 deployment target 描述从 14+ 改为 12.4 |
+| v1.10 | 2026-07-25 | 同步 F1.10 快捷键默认值修改：默认快捷键从 cmd+shift+v 改为 cmd+shift+space（与 Paste 等热门剪贴板工具冲突）；AppSettings 新增 defaultHotkey/legacyDefaultHotkey 常量与 migrateLegacyHotkey() 迁移方法；HotkeyFormatter 扩展 space 键支持；3.2 节功能模块表、5.2 节 AppSettings 模型、5.3 节配置项表、8.1 节 AC-26 场景、12.4 节决策记录同步更新 |

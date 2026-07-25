@@ -25,7 +25,7 @@ struct HotkeyRecorder: View {
     private static let keyCodeEsc: UInt16 = 53
 
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             recordingIndicator
             resetButton
         }
@@ -46,6 +46,7 @@ struct HotkeyRecorder: View {
                     .frame(minWidth: 80)
             }
             .accessibilityIdentifier("hotkeyRecorder")
+            .accessibilityLabel(HotkeyFormatter.display(hotkey))
         }
     }
 
@@ -53,7 +54,7 @@ struct HotkeyRecorder: View {
     private var resetButton: some View {
         if !isRecording && !hotkey.isEmpty {
             Button("重置") {
-                hotkey = "cmd+shift+v"
+                hotkey = AppSettings.defaultHotkey
                 LogCategory.app.info("快捷键已重置为默认值")
             }
             .accessibilityIdentifier("resetHotkeyButton")
@@ -114,6 +115,8 @@ enum HotkeyFormatter {
                 return "⌥"
             case "ctrl", "control":
                 return "⌃"
+            case "space":
+                return "Space"
             default:
                 return token.uppercased()
             }
@@ -123,10 +126,12 @@ enum HotkeyFormatter {
     /// 从 NSEvent 修饰键和 keyCode 解析出存储格式。
     static func parse(modifiers: NSEvent.ModifierFlags, keyCode: UInt16) -> String? {
         var parts: [String] = []
-        if modifiers.contains(.control) { parts.append("ctrl") }
-        if modifiers.contains(.option) { parts.append("opt") }
-        if modifiers.contains(.shift) { parts.append("shift") }
+        // 修饰键顺序遵循存储约定：cmd+shift+opt+ctrl+<key>
+        // 与 parse(stored:) 的字面约定一致，确保反向构造与解析互逆。
         if modifiers.contains(.command) { parts.append("cmd") }
+        if modifiers.contains(.shift) { parts.append("shift") }
+        if modifiers.contains(.option) { parts.append("opt") }
+        if modifiers.contains(.control) { parts.append("ctrl") }
 
         // 至少需要一个主修饰键
         guard !parts.isEmpty else { return nil }
@@ -179,7 +184,8 @@ enum HotkeyFormatter {
             13: "w", 14: "e", 15: "r", 16: "y", 17: "t", 18: "1",
             19: "2", 20: "3", 21: "4", 22: "6", 23: "5", 25: "9",
             26: "7", 28: "8", 29: "0", 31: "o", 32: "u", 34: "i",
-            35: "p", 37: "l", 38: "j", 40: "k", 45: "n", 46: "m"
+            35: "p", 37: "l", 38: "j", 40: "k", 45: "n", 46: "m",
+            49: "space"
         ]
         return keyMap[keyCode]
     }
@@ -192,7 +198,8 @@ enum HotkeyFormatter {
             "w": 13, "e": 14, "r": 15, "y": 16, "t": 17, "1": 18,
             "2": 19, "3": 20, "4": 21, "6": 22, "5": 23, "9": 25,
             "7": 26, "8": 28, "0": 29, "o": 31, "u": 32, "i": 34,
-            "p": 35, "l": 37, "j": 38, "k": 40, "n": 45, "m": 46
+            "p": 35, "l": 37, "j": 38, "k": 40, "n": 45, "m": 46,
+            "space": 49
         ]
         return keyMap[key]
     }
