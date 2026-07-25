@@ -59,4 +59,126 @@ final class ClipboardReplacerTests: XCTestCase
         let newChangeCount = pasteboard.changeCount
         XCTAssertTrue(suppressor.checkAndReset(changeCount: newChangeCount), "应标记新的 changeCount")
     }
+
+    // MARK: - F2.1.2：替换剪贴板时保留原始文本为 HTML 格式
+
+    /// 验证替换剪贴板后，原始文本作为 HTML 格式保留，让其他剪贴板 app 能捕获到原文。
+    func testReplacePreservesOriginalTextAsHTML() throws
+    {
+        pasteboard.clearContents()
+        pasteboard.setString("原始复制内容", forType: .string)
+        let changeCount = pasteboard.changeCount
+
+        let result = replacer.replace(
+            with: "/path/to/file.md",
+            originalText: "原始复制内容",
+            expectedChangeCount: changeCount
+        )
+
+        XCTAssertTrue(result, "changeCount 匹配时应成功替换")
+        XCTAssertEqual(pasteboard.string(forType: .string), "/path/to/file.md", "文件路径应作为纯文本主格式")
+        let htmlContent = pasteboard.string(forType: .html)
+        XCTAssertNotNil(htmlContent, "应写入 HTML 格式保留原始文本")
+        XCTAssertTrue(htmlContent?.contains("原始复制内容") ?? false, "HTML 内容应包含原始文本")
+    }
+
+    /// 验证原始文本中 HTML 特殊字符被正确转义。
+    func testReplacePreservesOriginalTextWithHtmlSpecialCharacters() throws
+    {
+        pasteboard.clearContents()
+        let changeCount = pasteboard.changeCount
+
+        _ = replacer.replace(
+            with: "/path/to/file.md",
+            originalText: "<script>alert('xss')</script> & <b>bold</b>",
+            expectedChangeCount: changeCount
+        )
+
+        let htmlContent = pasteboard.string(forType: .html)
+        XCTAssertNotNil(htmlContent, "应写入 HTML 格式")
+        XCTAssertTrue(htmlContent?.contains("&lt;script&gt;") ?? false, "应转义 < 为 &lt;")
+        XCTAssertTrue(htmlContent?.contains("&lt;b&gt;") ?? false, "应转义 HTML 标签")
+        XCTAssertTrue(htmlContent?.contains("&amp;") ?? false, "应转义 & 为 &amp;")
+        XCTAssertFalse(htmlContent?.contains("<script>") ?? true, "不应包含未转义的 <script>")
+    }
+
+    /// 验证 originalText 为 nil 时，仅写入文件路径（向后兼容）。
+    func testReplaceWithNilOriginalTextOnlyWritesPath() throws
+    {
+        pasteboard.clearContents()
+        pasteboard.setString("原内容", forType: .string)
+        let changeCount = pasteboard.changeCount
+
+        _ = replacer.replace(
+            with: "/path/to/file.md",
+            originalText: nil,
+            expectedChangeCount: changeCount
+        )
+
+        XCTAssertEqual(pasteboard.string(forType: .string), "/path/to/file.md", "文件路径应为纯文本")
+        XCTAssertNil(pasteboard.string(forType: .html), "originalText 为 nil 时不应写入 HTML")
+    }
+
+    /// 验证 originalText 为空字符串时，仅写入文件路径。
+    func testReplaceWithEmptyOriginalTextOnlyWritesPath() throws
+    {
+        pasteboard.clearContents()
+        let changeCount = pasteboard.changeCount
+
+        _ = replacer.replace(
+            with: "/path/to/file.md",
+            originalText: "",
+            expectedChangeCount: changeCount
+        )
+
+        XCTAssertEqual(pasteboard.string(forType: .string), "/path/to/file.md", "文件路径应为纯文本")
+        XCTAssertNil(pasteboard.string(forType: .html), "originalText 为空时不应写入 HTML")
+    }
+
+    /// 验证保留原始文本时也正确标记 markSelfWrite。
+    func testReplaceWithOriginalTextMarksSelfWrite() throws
+    {
+        pasteboard.clearContents()
+        let changeCount = pasteboard.changeCount
+
+        _ = replacer.replace(
+            with: "/path/to/file.md",
+            originalText: "原始内容",
+            expectedChangeCount: changeCount
+        )
+
+        let newChangeCount = pasteboard.changeCount
+        XCTAssertTrue(suppressor.checkAndReset(changeCount: newChangeCount), "保留原文时也应标记新的 changeCount")
+    }
+
+    // MARK: - F2.1.2 Round 2：原子写入验证（修复 ChatGPT 网页复制按钮场景下的竞态）
+
+    /// 验证 replace() 写入剪贴板时是原子操作，changeCount 增量应 <= 2。
+    ///
+    /// 背景：多次 `setString(_:forType:)` 会分别触发 `changeCount++`，其他剪贴板 app
+    /// （如 Paste）监听 changeCount 变化时可能在中途读取到只有 string 没 html 的
+    /// 不完整状态，导致"随机成功"。改用 `NSPasteboardItem` + `writeObjects(_:)`
+    /// 一次性写入所有类型，将 changeCount 变化次数从 3（clearContents + 2×setString）
+    /// 降至 2（clearContents + writeObjects），消除中间不完整状态。
+    func testReplaceWithOriginalTextIsAtomicWrite() throws
+    {
+        pasteboard.clearContents()
+        let beforeCount = pasteboard.changeCount
+
+        _ = replacer.replace(
+            with: "/path/to/file.md",
+            originalText: "原始内容",
+            expectedChangeCount: beforeCount
+        )
+
+        let afterCount = pasteboard.changeCount
+        let delta = afterCount - beforeCount
+        // clearContents() + writeObjects([item]) 最多触发 2 次 changeCount++
+        // 多次 setString() 会触发 3 次以上，导致其他剪贴板 app 在中途读取到不完整状态
+        XCTAssertLessThanOrEqual(
+            delta,
+            2,
+            "replace 应原子写入所有类型，changeCount 增量应 <= 2，实际: \(delta)"
+        )
+    }
 }

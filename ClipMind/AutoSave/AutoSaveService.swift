@@ -28,6 +28,12 @@ public final class AutoSaveService
     /// D10：EEXIST 重试次数上限，与 ConflictResolver.maxAttempts 一致。
     private static let maxEexistRetries = 999
 
+    /// F2.1.2：replace() 前的延迟，让其他剪贴板 app 读取原始内容。
+    ///
+    /// ChatGPT 网页复制按钮场景下，ClipMind 替换过快会导致其他剪贴板 app（如 Paste）
+    /// 错过原始内容。300ms 延迟经实测可稳定解决，且在 NFR-002 ≤500ms 限制内。
+    private static let replaceDelayForOtherAppsToRead: TimeInterval = 0.3
+
     /// 自动保存错误通知名称（D13 目录异常分级处理，AC-09 弹窗触发）
     static let errorNotification = Notification.Name("ClipMindAutoSaveError")
 
@@ -138,7 +144,27 @@ public final class AutoSaveService
         """)
 
         let formattedPath = pathFormatter.format(url: savedURL, format: config.pathFormat)
-        let replaced = clipboardReplacer.replace(with: formattedPath, expectedChangeCount: event.changeCount)
+
+        // F2.1.2：延迟 replace() 让其他剪贴板 app 读取原始内容。
+        //
+        // 背景：ChatGPT 网页复制按钮通过 navigator.clipboard.writeText() 异步写入剪贴板，
+        // ClipMind 的 PasteboardWatcher 在 0.5s 轮询周期内检测到变化并触发 F2.1 替换。
+        // 当 ChatGPT 复制与 ClipMind 替换间隔过短时，其他剪贴板 app（如 Paste）监听
+        // changeCount 变化时可能只收到合并后的通知，读取到替换后的文件路径，错过原始内容。
+        // Cmd+C 场景正常是因为键盘事件经系统处理有额外延迟，给其他 app 足够读取时间。
+        //
+        // 方案：文件保存成功后延迟 replace()，让其他剪贴板 app 有窗口读取原始内容。
+        // 延迟时间经实测 300ms 可稳定解决问题，且在 NFR-002 ≤500ms 限制内。
+        // 此处用 Thread.sleep 阻塞串行队列（不影响主线程），保证延迟期间不释放队列
+        // 避免用户连续复制时的事件乱序；D5 changeCount 前置条件仍会跳过过时事件。
+        Thread.sleep(forTimeInterval: Self.replaceDelayForOtherAppsToRead)
+
+        // F2.1.2：传入原始文本，让 ClipboardReplacer 同时写入 HTML 格式保留原文
+        let replaced = clipboardReplacer.replace(
+            with: formattedPath,
+            originalText: text,
+            expectedChangeCount: event.changeCount
+        )
         if !replaced
         {
             logger.info("""
