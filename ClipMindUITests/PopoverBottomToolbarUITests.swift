@@ -136,6 +136,10 @@ final class PopoverBottomToolbarUITests: XCTestCase
     // MARK: - AC-F1.11-8 「退出」按钮
 
     /// 验证「退出」按钮点击后：弹窗关闭 + 不打开新窗口 + 剪贴板内容不变。
+    ///
+    /// F1.11 Bug Fix：生产环境下「退出」按钮调用 `NSApp.terminate(nil)` 退出整个应用；
+    /// UITEST 模式下 `PopoverPreviewWindowFactory` 将 `onExitApp` 注入为 `window?.close()`，
+    /// 模拟「退出」行为避免终止测试进程，使 XCUITest 能验证按钮被触发且无副作用。
     func test04_ExitButton_ClosesPopoverOnly()
     {
         let app = XCUIApplication()

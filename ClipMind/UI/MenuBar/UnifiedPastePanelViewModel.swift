@@ -25,6 +25,14 @@ final class UnifiedPastePanelViewModel: ObservableObject
     /// Esc 键回调（由控制器关闭面板）。
     var onEscPressed: (() -> Void)?
 
+    /// 「退出」按钮回调（由控制器退出整个应用）。
+    ///
+    /// F1.11 Bug Fix：原实现将「退出」按钮定义为关闭弹窗（与 Esc 行为重复），
+    /// 但用户期望「退出」按钮退出整个应用。调整为独立的 `onExitApp` 回调，
+    /// 由 `StatusItemController` 注入 `NSApp.terminate(nil)`，
+    /// 由 `PopoverPreviewWindowFactory` 在 UITEST 模式下注入测试 stub（避免真的退出测试进程）。
+    var onExitApp: (() -> Void)?
+
     /// 单击回调（更新选中状态，不触发粘贴）。
     var onSingleClick: ((Int) -> Void)?
 

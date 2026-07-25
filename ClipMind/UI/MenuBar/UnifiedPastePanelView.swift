@@ -162,8 +162,9 @@ struct UnifiedPastePanelView: View
             },
             onExit:
             {
-                // 「退出」：仅关闭菜单栏弹窗，不发送任何通知
-                viewModel.onEscPressed?()
+                // F1.11 Bug Fix：「退出」按钮退出整个应用（原为关闭弹窗，与 Esc 重复）
+                // 由控制器注入 NSApp.terminate(nil)，UITEST 模式下注入测试 stub
+                viewModel.onExitApp?()
             }
         )
     }

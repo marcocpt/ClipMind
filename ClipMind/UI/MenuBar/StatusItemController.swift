@@ -97,6 +97,10 @@ final class StatusItemController: NSObject, PanelClosing
         viewModel.onEscPressed = { [weak self] in
             self?.closePanel()
         }
+        // F1.11 Bug Fix：「退出」按钮退出整个应用（原为关闭弹窗，与 Esc 重复）
+        viewModel.onExitApp = {
+            NSApp.terminate(nil)
+        }
         return UnifiedPastePanelView(
             viewModel: viewModel,
             showsBottomBar: true,

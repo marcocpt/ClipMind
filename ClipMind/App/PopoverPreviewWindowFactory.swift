@@ -19,6 +19,12 @@ enum PopoverPreviewWindowFactory
         viewModel.onEscPressed = { [weak window] in
             window?.close()
         }
+        // F1.11 Bug Fix：「退出」按钮在 UITEST 模式下不真的调用 NSApp.terminate
+        // （会终止测试进程），改为关闭预览窗口模拟「退出」行为，
+        // 使 XCUITest 能通过 searchField.waitForExistence 验证按钮被触发
+        viewModel.onExitApp = { [weak window] in
+            window?.close()
+        }
         configurePasteTrigger(viewModel: viewModel, window: window)
 
         window.contentViewController = NSHostingController(

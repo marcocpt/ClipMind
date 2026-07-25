@@ -134,4 +134,34 @@ final class BottomToolbarViewTests: XCTestCase
 
         XCTAssertNotNil(view as Any?, "showsBottomBar=false 时 UnifiedPastePanelView 可构造")
     }
+
+    // MARK: - F1.11 Bug Fix：退出按钮语义调整（退出整个应用）
+
+    /// 验证 `UnifiedPastePanelViewModel` 提供 `onExitApp` 回调字段（默认 nil）。
+    ///
+    /// Bug 背景：用户反馈「点击退出按钮没反应」，根因是语义误解 ——
+    /// 设计文档 v1.0 将「退出」按钮定义为「退出弹窗」（仅关闭 popover），
+    /// 但用户期望「退出」按钮退出整个应用。
+    /// 调整方向：将「退出」按钮行为改为 `NSApp.terminate(nil)`。
+    ///
+    /// 为保持可测试性，将退出动作抽象为 viewModel 的 `onExitApp` 回调，
+    /// 由 `StatusItemController` 注入 `NSApp.terminate`，
+    /// 由 `PopoverPreviewWindowFactory` 在 UITEST 模式下注入测试 stub。
+    func testViewModel_HasOnExitAppCallback_DefaultNil()
+    {
+        let viewModel = UnifiedPastePanelViewModel(clips: [])
+        XCTAssertNil(viewModel.onExitApp, "onExitApp 默认应为 nil，由控制器注入")
+    }
+
+    /// 验证 `onExitApp` 回调可被设置与触发（由控制器注入 `NSApp.terminate`）。
+    func testViewModel_OnExitAppCallback_CanBeSetAndInvoked()
+    {
+        let viewModel = UnifiedPastePanelViewModel(clips: [])
+        var exitAppCalled = false
+        viewModel.onExitApp = { exitAppCalled = true }
+
+        viewModel.onExitApp?()
+
+        XCTAssertTrue(exitAppCalled, "onExitApp 回调应可被设置和触发")
+    }
 }
