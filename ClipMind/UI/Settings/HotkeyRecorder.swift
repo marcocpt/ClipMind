@@ -27,6 +27,7 @@ struct HotkeyRecorder: View {
     var body: some View {
         HStack {
             recordingIndicator
+            Spacer()
             resetButton
         }
         .onDisappear { stopRecording() }
