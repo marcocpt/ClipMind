@@ -139,3 +139,55 @@ pasteboard.writeObjects([item])
 ### 总结（Round 2）
 
 Round 1 的多次 `setString` 产生多个中间状态，其他剪贴板 app 在中途读取到不完整内容。Round 2 改用 `NSPasteboardItem` + `writeObjects` 原子写入，消除中间不完整状态，确保其他 app 看到的要么是旧内容，要么是完整的新内容（文件路径 + 原始文本）。
+
+
+## Round 3：延迟方案（2026-07-25）
+
+### 用户反馈
+
+Round 2 修复后用户验证：**未修复，Paste 会随机成功**。怀疑两个写入到剪贴板的间隔太短了。
+
+### 根因调查（Round 3）
+
+分析时序：
+
+1. ChatGPT 网页复制按钮通过 `navigator.clipboard.writeText()` 异步写入剪贴板
+2. ClipMind 的 PasteboardWatcher 在 0.5s 轮询周期内检测到变化并触发 F2.1 替换
+3. 当 ChatGPT 复制与 ClipMind 替换间隔过短时，其他剪贴板 app（如 Paste）监听 changeCount 变化时可能只收到合并后的通知，读取到替换后的文件路径，错过原始内容
+
+Cmd+C 场景正常的原因：键盘事件经系统处理有额外延迟，给其他 app 足够读取时间。
+
+### 绿灯：修复实施（Round 3）
+
+在 `AutoSaveService.performSave()` 中文件保存成功后、`replace()` 前增加 300ms 延迟：
+
+```swift
+private static let replaceDelayForOtherAppsToRead: TimeInterval = 0.3
+
+// 文件保存成功后...
+Thread.sleep(forTimeInterval: Self.replaceDelayForOtherAppsToRead)
+let replaced = clipboardReplacer.replace(
+    with: formattedPath,
+    originalText: text,
+    expectedChangeCount: event.changeCount
+)
+```
+
+设计要点：
+
+- 300ms 延迟经实测可稳定解决问题，且在 NFR-002 ≤500ms 限制内
+- `Thread.sleep` 阻塞串行队列（不影响主线程），保证延迟期间不释放队列，避免用户连续复制时的事件乱序
+- D5 changeCount 前置条件仍会跳过过时事件，不会因延迟导致错误替换
+- 延迟时间提取为 `replaceDelayForOtherAppsToRead` 常量，便于调优
+
+### 绿灯验证结果（Round 3）
+
+- 用户验证：**已修复**，ChatGPT 网页复制按钮场景下 Paste 能稳定捕获原始内容
+- 本地 SwiftLint strict：0 violations
+- CI 触发：commit `7ef1a9b` 推送后 GitHub Actions 自动运行
+
+### 总结（Round 3）
+
+Round 1 解决了"多格式保留"问题（文件路径=纯文本，原文=HTML），Round 2 解决了"原子写入"问题（消除中间不完整状态），但两者都没解决"时序窗口"问题——ClipMind 替换过快导致其他剪贴板 app 错过原始内容。Round 3 通过 300ms 延迟给其他 app 留出读取窗口，彻底解决时序竞态。
+
+三层修复叠加生效：多格式保留（内容完整）+ 原子写入（状态完整）+ 延迟窗口（时序窗口），确保其他剪贴板 app 在 ChatGPT 网页复制按钮场景下能稳定捕获原始内容。
