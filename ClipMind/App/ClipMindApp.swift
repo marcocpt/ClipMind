@@ -347,9 +347,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func showPopoverContentInWindow() {
         NSApp.setActivationPolicy(.regular)
-        // F1.11 Phase 2：委托给 PopoverPreviewWindowFactory 创建 NSPanel 承载视图，
-        // UITEST 模式下通过 --UITEST_PREVIEW_DATA 注入 previewClips
-        let clips = ClipTestData.isUITesting ? ClipTestData.previewClips : []
+        // F1.11 Phase 2：委托给 PopoverPreviewWindowFactory 创建 NSPanel 承载视图。
+        // 启动参数决定 clips 数据源：
+        // - --UITEST_PREPOPULATE_IMAGE_AND_FILEPATH：预置图片/文件路径到 EncryptedStore 后加载
+        // - --UITEST_PREVIEW_DATA：使用 ClipTestData.previewClips（11 条文本）
+        // - 其他：空列表
+        let clips: [ClipItem]
+        if CommandLine.arguments.contains("--UITEST_PREPOPULATE_IMAGE_AND_FILEPATH")
+        {
+            prepopulateImageAndFilePathForTesting()
+            clips = loadClipsForQuickPaste()
+        } else if ClipTestData.isUITesting
+        {
+            clips = ClipTestData.previewClips
+        } else
+        {
+            clips = []
+        }
         PopoverPreviewWindowFactory.show(clips: clips)
     }
 
