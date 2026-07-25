@@ -1,6 +1,6 @@
 # ClipMind AI Agent Guide
 
-> 最后更新：2026-07-23 | 版本：v1.1
+> 最后更新：2026-07-26 | 版本：v1.3
 
 ## 1. 项目定位
 
@@ -95,6 +95,32 @@ xcodebuild build \
   CODE_SIGNING_ALLOWED=NO
 ```
 
+### 7.1 编译场景与签名策略
+
+项目区分两类编译场景，使用不同的签名策略：
+
+| 场景 | 签名策略 | 命令特征 |
+|---|---|---|
+| CI 构建 / 本地基线测试 | 禁用签名，无需证书即可跑通 build/test | `CODE_SIGN_IDENTITY="-"` `CODE_SIGNING_REQUIRED=NO` `CODE_SIGNING_ALLOWED=NO` |
+| 本地真实构建 / 安装到本机 / 发布归档 | 使用 Xcode 项目自动签名证书 | 不传上述 `CODE_SIGN_*` 参数，由 Xcode 工程签名配置决定 |
+
+要求：
+
+- **本地真实构建 app 时，必须使用与 Xcode 项目相同的证书**：`project.yml` 的 ClipMind target 已固化 `DEVELOPMENT_TEAM` 与 `CODE_SIGN_STYLE: Automatic`，经 `xcodegen generate` 生成 `.xcodeproj` 后，Xcode 「Automatically manage signing」会自动选用该 Team 下的开发者账号证书（当前为 Apple Development）。不得手动指定其他证书，也不得在真实构建/归档时临时禁用签名。
+- CI 与本地基线测试命令保留禁用签名参数，确保在无证书 runner 上可跑通，不在此约束范围内。
+- 发布归档（Archive）必须走主 Scheme `ClipMind` 的 Release 配置，使用 Xcode 项目自动签名证书，不得使用 `-` 伪签名。
+- `ClipMind-Dev` Scheme 仅用于本地验证，签名策略同主 Scheme，但不得用于发布归档（见第 10 节）。
+
+本地真实构建示例（不传 `CODE_SIGN_*` 参数，沿用 Xcode 工程签名配置）：
+
+```bash
+xcodebuild build \
+  -project ClipMind.xcodeproj \
+  -scheme ClipMind \
+  -destination 'platform=macOS' \
+  -configuration Debug
+```
+
 CI 使用 GitHub Actions（`.github/workflows/ci.yml`）在 macOS 15 runner 上执行：安装 swiftlint/xcodegen/xcbeautify → 生成工程 → SwiftLint strict → build → test。本地基线测试复用同一 xcodebuild test 命令。
 
 如果无法运行某条命令，记录原因和替代验证，不要声称未运行的验证已经通过。
@@ -134,3 +160,5 @@ ClipMind 计划上架 Mac App Store，所有面向发布的代码必须满足 Ap
 |------|------|------|
 | v1.0 | 2026-07-14 | 初始版本，建立 AI 代理主入口 |
 | v1.1 | 2026-07-23 | 新增第 10 节 App Store 合规要求，区分主 Scheme `ClipMind` 与开发验证 Scheme `ClipMind-Dev` |
+| v1.2 | 2026-07-26 | 第 7 节新增 7.1 编译场景与签名策略，明确本地真实构建/归档必须使用 Xcode 项目自动签名证书，CI/测试保留禁用签名 |
+| v1.3 | 2026-07-26 | project.yml 固化 DEVELOPMENT_TEAM 与 CODE_SIGN_STYLE: Automatic，7.1 同步说明证书来源 |
