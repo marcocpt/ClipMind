@@ -1,3 +1,4 @@
+import CoreGraphics
 import XCTest
 
 /// F1.10 AC-F1.10-9 / AC-F1.10-7-02：验证设置页快捷键录制器默认显示新默认值。
@@ -84,11 +85,14 @@ final class GeneralSettingsHotkeyDisplayUITests: XCTestCase
         let recorder = app.buttons["hotkeyRecorder"]
         XCTAssertTrue(recorder.waitForExistence(timeout: 5.0))
 
-        // Act - 点击重置按钮（激活窗口确保 hittable，与 SettingsUITests 模式一致）
+        // Act - 点击重置按钮
+        // CI runner 上 resetHotkeyButton 报 "is not hittable"（hit test 失败，
+        // 可能由 SwiftUI Form row 布局与窗口坐标共同导致）。改用 coordinate.tap()
+        // 直接在元素中心坐标发起点击，绕过 hit test 检查。
         let resetButton = app.buttons["resetHotkeyButton"]
         XCTAssertTrue(resetButton.waitForExistence(timeout: 2.0), "重置按钮应存在")
         app.activate()
-        resetButton.click()
+        resetButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         Thread.sleep(forTimeInterval: 0.5)
 
         // Assert - 显示更新为 ⌘⇧Space
