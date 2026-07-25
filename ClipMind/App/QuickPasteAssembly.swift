@@ -134,10 +134,13 @@ extension AppDelegate
         viewModel.onEscPressed = { [weak self] in
             self?.quickPastePanelController?.handleEscKey()
         }
-        // F1.11 Phase 1：切换到 UnifiedPastePanelView（快捷键场景：不显示底部工具栏）
+        // F1.11 后续 bug 修复：快捷键面板与菜单栏弹窗对齐，显示底部工具栏
+        viewModel.onExitApp = {
+            NSApp.terminate(nil)
+        }
         let view = UnifiedPastePanelView(
             viewModel: viewModel,
-            showsBottomBar: false,
+            showsBottomBar: true,
             accessibilityPrefix: "quickPaste"
         )
         return NSHostingController(rootView: view)

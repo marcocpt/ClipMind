@@ -41,27 +41,53 @@ struct BottomToolbarView: View
     {
         HStack(spacing: 0)
         {
-            Button("查看全部", action: onViewAll)
-                .buttonStyle(.borderless)
-                .accessibilityIdentifier(Self.viewAllButtonIdentifier)
+            Button(action: onViewAll)
+            {
+                Image(systemName: Self.viewAllIconName)
+                    .imageScale(.large)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityIdentifier(Self.viewAllButtonIdentifier)
+            .accessibilityLabel("查看全部")
 
             Spacer()
 
-            Button("配置", action: onSettings)
-                .buttonStyle(.borderless)
-                .accessibilityIdentifier(Self.settingsButtonIdentifier)
+            Button(action: onSettings)
+            {
+                Image(systemName: Self.settingsIconName)
+                    .imageScale(.large)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityIdentifier(Self.settingsButtonIdentifier)
+            .accessibilityLabel("配置")
 
             Spacer()
 
-            Button("退出", action: onExit)
-                .buttonStyle(.borderless)
-                .accessibilityIdentifier(Self.exitButtonIdentifier)
+            Button(action: onExit)
+            {
+                Image(systemName: Self.exitIconName)
+                    .imageScale(.large)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityIdentifier(Self.exitButtonIdentifier)
+            .accessibilityLabel("退出")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .frame(height: 36)
         .background(Color(NSColor.controlBackgroundColor))
     }
+
+    // MARK: - 图标常量
+
+    /// 「查看全部」按钮 SF Symbol 名称。
+    static let viewAllIconName = "list.bullet"
+
+    /// 「配置」按钮 SF Symbol 名称。
+    static let settingsIconName = "gearshape"
+
+    /// 「退出」按钮 SF Symbol 名称。
+    static let exitIconName = "power"
 
     // MARK: - 测试辅助
 

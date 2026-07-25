@@ -354,4 +354,42 @@ final class QuickPastePanelUITests: XCTestCase
         wait(for: [expectation], timeout: 3.0)
         XCTAssertFalse(hint.exists, "点击其他行后提示应清除")
     }
+
+    // MARK: - F1.11 后续 bug 修复：全局热键面板底部工具栏
+
+    /// 验证全局热键打开的快速粘贴面板包含底部工具栏三按钮（F1.11 后续 bug 修复）。
+    ///
+    /// Bug：QuickPasteAssembly 创建 UnifiedPastePanelView 时 showsBottomBar=false，
+    /// 导致全局热键面板没有底部工具栏，与菜单栏弹窗不一致。
+    ///
+    /// 修复：showsBottomBar 改为 true，并注入 onExitApp 回调终止应用，
+    /// 使全局热键面板与菜单栏弹窗视觉和行为对齐。
+    func testQuickPastePanelHasBottomToolbarButtons()
+    {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_QUICK_PASTE_PANEL",
+            "--UITEST_PREVIEW_DATA"
+        ]
+        app.launch()
+        app.activate()
+
+        let searchField = app.textFields["quickPasteSearchField"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5), "快速粘贴面板应出现")
+
+        // 三按钮均应存在（与菜单栏弹窗共用 BottomToolbarView 的 accessibilityIdentifier）
+        XCTAssertTrue(
+            app.buttons["popoverViewAllButton"].waitForExistence(timeout: 3),
+            "快捷键面板应包含「查看全部」按钮"
+        )
+        XCTAssertTrue(
+            app.buttons["popoverSettingsButton"].exists,
+            "快捷键面板应包含「配置」按钮"
+        )
+        XCTAssertTrue(
+            app.buttons["popoverExitButton"].exists,
+            "快捷键面板应包含「退出」按钮"
+        )
+    }
 }
