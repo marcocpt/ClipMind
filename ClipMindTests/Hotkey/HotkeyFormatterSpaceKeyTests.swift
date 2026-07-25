@@ -20,4 +20,18 @@ final class HotkeyFormatterSpaceKeyTests: XCTestCase
         XCTAssertTrue((parsed?.modifiers ?? 0) & 0x0100 != 0, "修饰键应包含 cmdKey (0x0100)")
         XCTAssertTrue((parsed?.modifiers ?? 0) & 0x0200 != 0, "修饰键应包含 shiftKey (0x0200)")
     }
+
+    // MARK: - AC-F1.10-2：显示新默认值为 ⌘⇧Space 大写形式
+
+    func testDisplay_NewDefault_ReturnsCmdShiftSpaceUppercase()
+    {
+        // Arrange
+        let stored = TestHotkeys.default
+
+        // Act
+        let displayed = HotkeyFormatter.display(stored)
+
+        // Assert
+        XCTAssertEqual(displayed, "⌘⇧Space", "新默认值应显示为 ⌘⇧Space（命令符号 + Shift 符号 + 大写 Space 字样）")
+    }
 }

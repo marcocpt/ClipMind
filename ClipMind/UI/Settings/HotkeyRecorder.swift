@@ -114,6 +114,8 @@ enum HotkeyFormatter {
                 return "⌥"
             case "ctrl", "control":
                 return "⌃"
+            case "space":
+                return "Space"
             default:
                 return token.uppercased()
             }
