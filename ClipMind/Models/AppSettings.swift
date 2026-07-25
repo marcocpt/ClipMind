@@ -17,4 +17,17 @@ struct AppSettings: Codable, Equatable {
     var cleanupDays: Int = 30
     var launchAtLogin: Bool = true
     var hotkey: String = AppSettings.defaultHotkey
+
+    /// F1.10：老用户旧默认值迁移检查。
+    ///
+    /// 仅当 `hotkey` 等于 `legacyDefaultHotkey` 时，迁移为 `defaultHotkey`；
+    /// 其他值（自定义值、新默认值、空值、无效值）不修改。
+    /// 迁移检查是幂等的：已是新默认值时不会再次迁移。
+    mutating func migrateLegacyHotkey() {
+        guard hotkey == Self.legacyDefaultHotkey else {
+            return
+        }
+        hotkey = Self.defaultHotkey
+        LogCategory.app.info("已迁移旧默认快捷键为新默认值")
+    }
 }
