@@ -127,14 +127,19 @@ extension AppDelegate
     func makeQuickPasteContentController(coordinator: PasteCoordinator) -> NSViewController
     {
         let clips = loadClipsForQuickPaste()
-        let viewModel = QuickPasteViewModel(clips: clips)
+        let viewModel = UnifiedPastePanelViewModel(clips: clips)
         viewModel.onPasteTriggered = { clip in
             coordinator.handlePaste(clip: clip)
         }
         viewModel.onEscPressed = { [weak self] in
             self?.quickPastePanelController?.handleEscKey()
         }
-        let view = QuickPasteView(viewModel: viewModel)
+        // F1.11 Phase 1：切换到 UnifiedPastePanelView（快捷键场景：不显示底部工具栏）
+        let view = UnifiedPastePanelView(
+            viewModel: viewModel,
+            showsBottomBar: false,
+            accessibilityPrefix: "quickPaste"
+        )
         return NSHostingController(rootView: view)
     }
 
@@ -236,7 +241,10 @@ private final class ScreenCenterPanelLocator: PanelScreenLocating
 }
 
 /// 屏幕中央浮层定位器（降级浮层使用）。
-private final class ScreenCenterOverlayLocator: OverlayScreenLocating
+///
+/// F1.11 Phase 1：从 `private` 改为 `internal`，使 `AppDelegate.setupStatusItemController`
+/// 可复用同一实现构造菜单栏弹窗专用的 `PasteOverlayController`。
+internal final class ScreenCenterOverlayLocator: OverlayScreenLocating
 {
     func locatePosition() -> NSPoint
     {

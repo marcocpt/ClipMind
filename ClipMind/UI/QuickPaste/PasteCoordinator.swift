@@ -84,7 +84,7 @@ final class PasteCoordinator
         self.pasteSimulator = pasteSimulator
     }
 
-    /// 处理粘贴请求（由 QuickPasteViewModel.onPasteTriggered 调用）。
+    /// 处理粘贴请求（由 UnifiedPastePanelViewModel.onPasteTriggered 调用）。
     /// - Parameter clip: 用户双击/回车选中的剪贴项
     func handlePaste(clip: ClipItem)
     {
