@@ -5,11 +5,11 @@ import SwiftUI
 ///
 /// 对应设计规范 3.8 节通用设置分区，包含：
 /// - 开机启动开关（默认开）
-/// - 快捷键配置（默认 cmd+shift+v）
+/// - 快捷键配置（默认 cmd+shift+space，引用 AppSettings.defaultHotkey）
 /// - 清除示例数据按钮（F1.8 新增）
 struct GeneralSettingsView: View {
     @AppStorage("launchAtLogin") private var launchAtLogin = true
-    @AppStorage("hotkey") private var hotkey = "cmd+shift+v"
+    @AppStorage("hotkey") private var hotkey = AppSettings.defaultHotkey
     @State private var showDeleteConfirmation = false
 
     var body: some View {
