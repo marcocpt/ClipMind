@@ -80,3 +80,62 @@ ChatGPT 网页点击「复制」按钮触发 F2.1 自动保存后，其他剪贴
 ## 总结
 
 bug 根因为 `ClipboardReplacer` 的 `clearContents() + setString(path, .string)` 操作丢失了原始文本，导致其他剪贴板 app 无法捕获原文。修复方案是在写入文件路径的同时，把原始文本以 HTML 格式写入剪贴板，实现「替换但多格式保留」。修复向后兼容（`originalText` 默认 nil），现有测试全部通过。
+
+---
+
+## Round 2：原子写入修复（2026-07-25）
+
+### 用户反馈
+
+Round 1 修复后用户验证：**未修复，Paste 会随机成功**。怀疑两个写入到剪贴板的间隔太短了。
+
+### 根因调查（Round 2）
+
+分析 Round 1 实现的写入时序：
+
+```swift
+pasteboard.clearContents()                    // changeCount++ (1)
+pasteboard.setString(newPath, forType: .string)  // changeCount++ (2)
+pasteboard.setString(html, forType: .html)       // changeCount++ (3)
+```
+
+- 每次 `setString(_:forType:)` 都触发 `changeCount++`
+- 其他剪贴板 app（如 Paste）监听 changeCount 变化，每次变化时读取剪贴板
+- 在 `setString(.string)` 之后、`setString(.html)` 之前读取，只看到文件路径，没看到原始文本
+- 在 `setString(.html)` 之后读取，看到完整内容（文件路径 + 原始文本）
+- **结果**：其他 app 的读取时机不同，导致"随机成功"
+
+### 红灯：测试用例（Round 2）
+
+新增 1 个 XCTest 测试用例：
+
+- `testReplaceWithOriginalTextIsAtomicWrite`：验证 `replace()` 后 `changeCount` 增量 <= 2（约束原子写入，防止未来退化）
+
+### 绿灯：修复实施（Round 2）
+
+改用 `NSPasteboardItem` + `writeObjects(_:)` 原子写入所有类型：
+
+```swift
+let item = NSPasteboardItem()
+item.setString(newPath, forType: .string)
+if let originalText = originalText, !originalText.isEmpty
+{
+    let html = Self.wrapAsHTML(originalText)
+    item.setString(html, forType: .html)
+}
+pasteboard.clearContents()
+pasteboard.writeObjects([item])
+```
+
+- 先在 `NSPasteboardItem` 上设置所有类型，再一次 `writeObjects` 写入
+- `clearContents()` + `writeObjects()` 只产生一个完整的对外可见状态
+- 消除"只有 string 没 html"的中间不完整状态
+
+### 绿灯验证结果（Round 2）
+
+- 本地 XCTest 单测试文件：8 个测试全部通过（含新增原子写入测试）
+- XCUITest 验证：延迟到步骤 3.2.5 走 CI
+
+### 总结（Round 2）
+
+Round 1 的多次 `setString` 产生多个中间状态，其他剪贴板 app 在中途读取到不完整内容。Round 2 改用 `NSPasteboardItem` + `writeObjects` 原子写入，消除中间不完整状态，确保其他 app 看到的要么是旧内容，要么是完整的新内容（文件路径 + 原始文本）。

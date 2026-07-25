@@ -19,6 +19,13 @@ public final class ClipboardReplacer
 
     /// 替换剪贴板内容（D5 changeCount 前置条件 + D4 markSelfWrite）。
     ///
+    /// F2.1.2 Round 2：使用 `NSPasteboardItem` + `writeObjects(_:)` 原子写入所有类型，
+    /// 避免 `clearContents()` 后多次 `setString(_:forType:)` 产生中间不完整状态。
+    ///
+    /// 背景：ChatGPT 网页复制按钮场景下，其他剪贴板 app（如 Paste）监听 changeCount
+    /// 变化时，可能在 `setString(.string)` 之后、`setString(.html)` 之前读取到只有
+    /// 文件路径没原始文本的不完整状态，导致"随机成功"。原子写入确保所有类型同时可见。
+    ///
     /// - Parameters:
     ///   - newPath: 文件路径，作为 `public.utf8-plain-text` 主格式写入。
     ///   - originalText: 原始复制文本，非空时作为 `public.html` 写入以保留原文。
@@ -43,15 +50,23 @@ public final class ClipboardReplacer
             return false
         }
 
-        pasteboard.clearContents()
-        pasteboard.setString(newPath, forType: .string)
+        // F2.1.2 Round 2：构造 NSPasteboardItem 一次性写入所有类型
+        // 避免多次 setString 触发多次 changeCount++，消除中间不完整状态
+        let item = NSPasteboardItem()
+        item.setString(newPath, forType: .string)
 
-        // F2.1.2：原始文本非空时，作为 HTML 格式写入保留原文
-        // 解决 ChatGPT 网页复制按钮场景下，其他剪贴板 app（如 Paste）只能看到文件路径的问题
         if let originalText = originalText, !originalText.isEmpty
         {
             let html = Self.wrapAsHTML(originalText)
-            pasteboard.setString(html, forType: .html)
+            item.setString(html, forType: .html)
+        }
+
+        pasteboard.clearContents()
+        let writeSucceeded = pasteboard.writeObjects([item])
+        guard writeSucceeded else
+        {
+            logger.error("Pasteboard writeObjects failed")
+            return false
         }
 
         // D4：标记自我写入

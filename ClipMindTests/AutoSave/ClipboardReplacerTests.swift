@@ -150,4 +150,35 @@ final class ClipboardReplacerTests: XCTestCase
         let newChangeCount = pasteboard.changeCount
         XCTAssertTrue(suppressor.checkAndReset(changeCount: newChangeCount), "保留原文时也应标记新的 changeCount")
     }
+
+    // MARK: - F2.1.2 Round 2：原子写入验证（修复 ChatGPT 网页复制按钮场景下的竞态）
+
+    /// 验证 replace() 写入剪贴板时是原子操作，changeCount 增量应 <= 2。
+    ///
+    /// 背景：多次 `setString(_:forType:)` 会分别触发 `changeCount++`，其他剪贴板 app
+    /// （如 Paste）监听 changeCount 变化时可能在中途读取到只有 string 没 html 的
+    /// 不完整状态，导致"随机成功"。改用 `NSPasteboardItem` + `writeObjects(_:)`
+    /// 一次性写入所有类型，将 changeCount 变化次数从 3（clearContents + 2×setString）
+    /// 降至 2（clearContents + writeObjects），消除中间不完整状态。
+    func testReplaceWithOriginalTextIsAtomicWrite() throws
+    {
+        pasteboard.clearContents()
+        let beforeCount = pasteboard.changeCount
+
+        _ = replacer.replace(
+            with: "/path/to/file.md",
+            originalText: "原始内容",
+            expectedChangeCount: beforeCount
+        )
+
+        let afterCount = pasteboard.changeCount
+        let delta = afterCount - beforeCount
+        // clearContents() + writeObjects([item]) 最多触发 2 次 changeCount++
+        // 多次 setString() 会触发 3 次以上，导致其他剪贴板 app 在中途读取到不完整状态
+        XCTAssertLessThanOrEqual(
+            delta,
+            2,
+            "replace 应原子写入所有类型，changeCount 增量应 <= 2，实际: \(delta)"
+        )
+    }
 }
