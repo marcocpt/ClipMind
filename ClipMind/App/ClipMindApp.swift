@@ -351,8 +351,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// 初始化全局快捷键服务
+    ///
+    /// 从 UserDefaults 读取持久化 hotkey（保留用户自定义值），并执行 F1.10 旧默认值迁移。
+    /// 迁移在 `migrateLegacyHotkey` 内部写回 UserDefaults，确保下次启动幂等。
     private func setupHotkeyService() {
-        let settings = AppSettings()
+        var settings = AppSettings(userDefaults: .standard)
+        settings.migrateLegacyHotkey()
         hotkeyService = GlobalHotkeyService(hotkey: settings.hotkey)
     }
 
