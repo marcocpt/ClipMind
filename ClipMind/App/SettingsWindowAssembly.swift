@@ -10,6 +10,11 @@ extension AppDelegate
     /// 生产环境通过 macOS 13 的 `showSettingsWindow:` 选择器触发 SwiftUI Settings 场景。
     /// UI 测试模式下（CI 环境）Settings 场景无法通过 sendAction 正常创建窗口，
     /// 复用 `MainWindow.showSettingsInStandaloneWindow` 的独立窗口路径，确保 XCUITest 能可靠定位元素。
+    ///
+    /// F1.11 Phase 3 修复：菜单栏应用默认 `accessory` 激活策略，直接 `sendAction` 会导致
+    /// 「Window ordered front from a non-active application」警告且设置窗口可能不置前。
+    /// 参照 `handleOpenMainWindow` 的模式，先将激活策略切换为 `.regular` 并激活应用，
+    /// 再触发 Settings 场景。
     @objc func handleOpenSettings()
     {
         if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW")
@@ -17,6 +22,8 @@ extension AppDelegate
             showSettingsInStandaloneWindow()
             return
         }
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
         NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 

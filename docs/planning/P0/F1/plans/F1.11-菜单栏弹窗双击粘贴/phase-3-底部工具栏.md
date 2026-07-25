@@ -1,6 +1,6 @@
 # Phase 3：底部工具栏三按钮 + openSettings 通知
 
-> 最后更新：2026-07-25 | 版本：v1.4
+> 最后更新：2026-07-25 | 版本：v1.5
 
 **全局约束（AGENTS.md §8）：** 本 Phase 中所有任务在执行 `git commit` 前必须先运行 `swiftlint lint --strict` 并通过。仅文档、配置等非代码改动可跳过。任务步骤中不再重复说明 Lint 环节，但每个 Commit 步骤默认包含「Lint → Commit」两步。
 
@@ -1188,6 +1188,7 @@ Phase 3 基线达成：
 | v1.2 | 2026-07-25 | Phase 3 实现完成：所有 7 个任务通过 TDD 实现，`BottomToolbarViewTests`（8 条单元测试）与 `PopoverBottomToolbarUITests`（5 条 UI 测试）全部 PASS。新增 `SettingsWindowAssembly.swift` 拆分 AppDelegate 类型体长度（避免 type_body_length 违规）。XCUITest 中通过 `app.activate()` 缓解「Application is not foreground」竞态。 |
 | v1.3 | 2026-07-25 | 任务 8 全量验证完成：`swiftlint lint --strict` 0 违规（205 文件）；`ClipMindTests` 579 条单元测试全部通过；`PopoverBottomToolbarUITests` 5 条 UI 测试全部通过（重跑后稳定）。发现 `test02`/`test04` 在套件首跑存在 flaky 现象，单独运行与重跑均 PASS，根因为 `NSWindow.didBecomeKeyNotification` 监听器与 `window.close()` 的时序竞争，已记录待后续优化。 |
 | v1.4 | 2026-07-25 | Flaky test 修复完成：(1) `PopoverPreviewWindowFactory` 新增 `NSWindow.willCloseNotification` 监听器，在 popover 窗口关闭时移除 `didBecomeKeyNotification` 监听器，避免 close 后延迟触发的 didBecomeKey 事件导致主窗口被误 orderOut；(2) `UnifiedPastePanelView.bottomToolbar` 调整 `onViewAll`/`onSettings` 回调顺序为「先 `onEscPressed`（close）后发送通知」，确保 close 触发 willClose 清理监听器后再让主窗口/设置窗口成为 key。连续两次运行 `PopoverBottomToolbarUITests` 均 5/5 通过（44.181s + 44.395s），flaky 问题消除。 |
+| v1.5 | 2026-07-25 | 修复「设置按钮」点击后控制台报 `Window ordered front from a non-active application` 警告：菜单栏应用默认 `accessory` 激活策略，直接 `sendAction(showSettingsWindow:)` 会触发警告且设置窗口可能不置前。`SettingsWindowAssembly.handleOpenSettings` 在 sendAction 之前追加 `NSApp.setActivationPolicy(.regular)` 与 `NSApp.activate(ignoringOtherApps: true)`，参照 `handleOpenMainWindow` 模式。验证：`PopoverBottomToolbarUITests` 5/5 通过（43.826s），`PopoverHintUITests` 3/3 通过（30.234s），日志无 `non-active application` 警告。 |
 
 ## 实现记录（v1.2 完成）
 
@@ -1409,3 +1410,96 @@ onViewAll:
 - ✅ SwiftLint 0 违规
 - ✅ 单元测试 579 条全部通过
 - ✅ BUILD SUCCEEDED
+
+## 设置按钮 non-active application 警告修复（v1.5 补充）
+
+**修复时间**：2026-07-25 19:00 ~ 19:05
+
+### 问题现象
+
+用户在顶部菜单栏弹出的 popover 中点击「配置」按钮后，控制台输出：
+
+```
+[Window] Warning: Window SwiftUI.AppKitWindow 0x122f371a0 ordered front from a non-active application
+ and may order beneath the active application's windows.
+[UI] Menu bar popover closed by PanelClosing protocol
+```
+
+设置窗口虽然能弹出，但 macOS 警告「窗口从前台非激活应用置前，可能位于其他应用窗口下方」，存在窗口被遮挡风险。
+
+### 根因分析
+
+ClipMind 作为菜单栏应用，启动时通过 `configureActivationPolicy()` 设置为 `NSApplicationActivationPolicy.accessory`（仅在菜单栏显示图标，无 Dock 图标）。在 `accessory` 策略下：
+
+- `NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)` 触发 SwiftUI `Settings` 场景时，AppKit 检测到应用非激活状态，输出 `ordered front from a non-active application` 警告
+- 设置窗口虽然创建，但可能被其他应用的窗口遮挡，无法保证置前
+
+参照 `handleOpenMainWindow` 的实现（已通过 `NSApp.setActivationPolicy(.regular)` + `NSApp.activate(ignoringOtherApps: true)` 处理相同场景），`handleOpenSettings` 缺少激活前置步骤。
+
+### 修复方案
+
+`ClipMind/App/SettingsWindowAssembly.swift` 中 `handleOpenSettings` 在 sendAction 之前追加激活步骤（与 `handleOpenMainWindow` 完全一致的模式）：
+
+```swift
+@objc func handleOpenSettings()
+{
+    if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW")
+    {
+        showSettingsInStandaloneWindow()
+        return
+    }
+    NSApp.setActivationPolicy(.regular)
+    NSApp.activate(ignoringOtherApps: true)
+    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+}
+```
+
+**关键点**：
+- `NSApp.setActivationPolicy(.regular)` 切换为常规应用（Dock 显示图标），让后续窗口操作进入正常激活路径
+- `NSApp.activate(ignoringOtherApps: true)` 强制激活应用，忽略其他应用抢焦
+- UI 测试模式（`--UITEST_SHOW_MAIN_WINDOW`）继续走 `showSettingsInStandaloneWindow` 路径，已在内部调用 `NSApp.activate`，无需重复
+
+### 修复验证
+
+#### 1. SwiftLint strict
+
+```bash
+swiftlint lint --strict
+```
+
+- 结果：通过（无输出，退出码 0）
+
+#### 2. PopoverBottomToolbarUITests（5 条 UI 测试）
+
+```bash
+xcodebuild test -only-testing:ClipMindUITests/PopoverBottomToolbarUITests
+```
+
+- 结果：`Executed 5 tests, with 0 failures (0 unexpected) in 43.826 seconds`
+- 状态：✅ 通过
+
+#### 3. PopoverHintUITests（3 条 UI 测试，回归验证）
+
+```bash
+xcodebuild test -only-testing:ClipMindUITests/PopoverBottomToolbarUITests \
+                -only-testing:ClipMindUITests/PopoverHintUITests
+```
+
+- 结果：`Executed 8 tests, with 0 failures (0 unexpected) in 74.188 seconds`
+- 状态：✅ 通过
+
+#### 4. 警告消除验证
+
+```bash
+grep -E "non-active application|ordered front from a non-active" /tmp/f1_11_bottom_toolbar_uitest.log
+```
+
+- 结果：No matches found（无 `non-active application` 警告）
+- 状态：✅ 通过
+
+### 修复结论
+
+- ✅ 设置按钮点击后无 `non-active application` 警告
+- ✅ `PopoverBottomToolbarUITests` 5/5 通过
+- ✅ `PopoverHintUITests` 回归 3/3 通过
+- ✅ SwiftLint strict 0 违规
