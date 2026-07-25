@@ -42,7 +42,13 @@ struct GeneralSettingsView: View {
 
     private var hotkeySection: some View {
         Section("快捷键") {
-            HotkeyRecorder(hotkey: $hotkey)
+            if #available(macOS 13.0, *) {
+                LabeledContent("快捷键") {
+                    HotkeyRecorder(hotkey: $hotkey)
+                }
+            } else {
+                HotkeyRecorder(hotkey: $hotkey)
+            }
 
             Text("用于唤起 ClipMind 剪贴板历史窗口。")
                 .font(.caption)
@@ -59,19 +65,20 @@ struct GeneralSettingsView: View {
     {
         Section("快速粘贴")
         {
-            HStack
+            if #available(macOS 13.0, *)
             {
-                Text("浮层超时兜底时长")
-                Spacer()
-                Stepper(
-                    value: $overlayTimeoutSeconds,
-                    in: QuickPasteSettings.overlayDurationRange
-                )
+                LabeledContent("浮层超时兜底时长")
                 {
-                    Text("\(Int(overlayTimeoutSeconds)) 秒")
-                        .monospacedDigit()
+                    stepperControl
                 }
-                .accessibilityIdentifier("overlayTimeoutStepper")
+            } else {
+                HStack
+                {
+                    Text("浮层超时兜底时长")
+                        .lineLimit(1)
+                    Spacer()
+                    stepperControl
+                }
             }
 
             Text("无辅助功能权限时，降级浮层提示的超时兜底时长（1-30 秒）。超时后浮层自动消失。")
@@ -85,6 +92,21 @@ struct GeneralSettingsView: View {
         .onChange(of: overlayTimeoutSeconds) { newValue in
             quickPasteSettings.saveOverlayDuration(newValue)
         }
+    }
+
+    // MARK: - 浮层超时 Stepper（F1.9）
+
+    private var stepperControl: some View
+    {
+        Stepper(
+            value: $overlayTimeoutSeconds,
+            in: QuickPasteSettings.overlayDurationRange
+        )
+        {
+            Text("\(Int(overlayTimeoutSeconds)) 秒")
+                .monospacedDigit()
+        }
+        .accessibilityIdentifier("overlayTimeoutStepper")
     }
 
     // MARK: - 清除示例数据（F1.8 新增）

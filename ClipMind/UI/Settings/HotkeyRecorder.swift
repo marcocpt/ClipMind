@@ -25,9 +25,8 @@ struct HotkeyRecorder: View {
     private static let keyCodeEsc: UInt16 = 53
 
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             recordingIndicator
-            Spacer()
             resetButton
         }
         .onDisappear { stopRecording() }
