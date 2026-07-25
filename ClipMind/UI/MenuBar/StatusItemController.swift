@@ -4,6 +4,10 @@ import SwiftUI
 extension Notification.Name
 {
     static let openMainWindow = Notification.Name("ClipMindOpenMainWindow")
+
+    /// F1.11 Phase 3 新增：打开设置窗口信号。
+    /// 由底部工具栏「配置」按钮发送，AppDelegate 监听后打开设置窗口。
+    static let openSettingsWindow = Notification.Name("ClipMindOpenSettingsWindow")
 }
 
 /// 状态栏图标控制器（F1.11 Phase 1）。

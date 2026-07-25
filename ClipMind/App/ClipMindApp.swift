@@ -91,6 +91,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .openQuickPaste,
             object: nil
         )
+        // F1.11 Phase 3：监听「打开设置窗口」信号
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOpenSettings),
+            name: .openSettingsWindow,
+            object: nil
+        )
         // 监听 F2.1 自动保存错误通知（D13 目录异常分级处理）
         NotificationCenter.default.addObserver(
             self,

@@ -40,7 +40,7 @@ struct UnifiedPastePanelView: View
             if showsBottomBar
             {
                 Divider()
-                bottomBarPlaceholder
+                bottomToolbar
             }
         }
         .frame(width: 360, height: 480)
@@ -140,19 +140,29 @@ struct UnifiedPastePanelView: View
         }
     }
 
-    // MARK: - 底部工具栏占位（Phase 3 任务 4 替换为 BottomToolbarView）
+    // MARK: - 底部工具栏（F1.11 Phase 3 任务 4 集成 BottomToolbarView）
 
-    private var bottomBarPlaceholder: some View
+    private var bottomToolbar: some View
     {
-        HStack
-        {
-            Button("查看全部") {
+        BottomToolbarView(
+            onViewAll:
+            {
+                // 「查看全部」：发送打开主窗口信号 + 关闭菜单栏弹窗
                 NotificationCenter.default.post(name: .openMainWindow, object: nil)
+                viewModel.onEscPressed?()
+            },
+            onSettings:
+            {
+                // 「配置」：发送打开设置窗口信号 + 关闭菜单栏弹窗
+                NotificationCenter.default.post(name: .openSettingsWindow, object: nil)
+                viewModel.onEscPressed?()
+            },
+            onExit:
+            {
+                // 「退出」：仅关闭菜单栏弹窗，不发送任何通知
+                viewModel.onEscPressed?()
             }
-            .accessibilityIdentifier("\(accessibilityPrefix)ViewAllButton")
-            Spacer()
-        }
-        .padding(8)
+        )
     }
 
     // MARK: - 键盘事件监听
