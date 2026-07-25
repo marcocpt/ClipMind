@@ -97,6 +97,10 @@ extension AppDelegate
     }
 
     /// 构造粘贴协调器。ClipMind-Dev Scheme 注入 PasteSimulator 启用有权限路径模拟按键。
+    ///
+    /// F1.11 Bug 3：注入共享的 `selfWriteSuppressor` 到 `ClipboardWriter`，
+    /// 使 F1.9 粘贴路径与 F2.1 自动保存路径共用同一套自我写入抑制机制，
+    /// 避免双击粘贴后列表出现重复条目。
     @MainActor
     private func makePasteCoordinator(
         permissionChecker: PastePermissionChecking,
@@ -107,7 +111,7 @@ extension AppDelegate
         #if CLIPMIND_DEV
         return PasteCoordinator(
             permissionChecker: permissionChecker,
-            clipboardWriter: ClipboardWriter(),
+            clipboardWriter: ClipboardWriter(suppressor: selfWriteSuppressor),
             panelCloser: panelController,
             overlayShower: overlayController,
             pasteSimulator: PasteSimulator()
@@ -115,7 +119,7 @@ extension AppDelegate
         #else
         return PasteCoordinator(
             permissionChecker: permissionChecker,
-            clipboardWriter: ClipboardWriter(),
+            clipboardWriter: ClipboardWriter(suppressor: selfWriteSuppressor),
             panelCloser: panelController,
             overlayShower: overlayController
         )

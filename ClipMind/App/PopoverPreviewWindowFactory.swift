@@ -10,8 +10,11 @@ import SwiftUI
 enum PopoverPreviewWindowFactory
 {
     /// 创建并显示菜单栏弹窗预览窗口。
-    /// - Parameter clips: 注入的剪贴项列表（UITEST 模式下为 `ClipTestData.previewClips`）
-    static func show(clips: [ClipItem])
+    /// - Parameters:
+    ///   - clips: 注入的剪贴项列表（UITEST 模式下为 `ClipTestData.previewClips`）
+    ///   - suppressor: 共享的自我写入抑制器。UITEST_FORCE_NO_PERMISSION 路径下注入到
+    ///     ClipboardWriter，使应用自身写入不触发 PasteboardWatcher 捕获（F1.11 Bug 3）。
+    static func show(clips: [ClipItem], suppressor: SelfWriteSuppressor? = nil)
     {
         let window = makeWindow()
         let viewModel = UnifiedPastePanelViewModel(clips: clips)
@@ -25,7 +28,7 @@ enum PopoverPreviewWindowFactory
         viewModel.onExitApp = { [weak window] in
             window?.close()
         }
-        configurePasteTrigger(viewModel: viewModel, window: window)
+        configurePasteTrigger(viewModel: viewModel, window: window, suppressor: suppressor)
 
         window.contentViewController = NSHostingController(
             rootView: UnifiedPastePanelView(
@@ -103,7 +106,8 @@ enum PopoverPreviewWindowFactory
     /// - 默认：不接入 PasteCoordinator，仅模拟「粘贴触发后关闭面板」信号。
     private static func configurePasteTrigger(
         viewModel: UnifiedPastePanelViewModel,
-        window: NSPanel
+        window: NSPanel,
+        suppressor: SelfWriteSuppressor?
     )
     {
         if CommandLine.arguments.contains("--UITEST_FORCE_NO_PERMISSION")
@@ -115,9 +119,11 @@ enum PopoverPreviewWindowFactory
                 settings: QuickPasteSettings(),
                 screenLocator: ScreenCenterOverlayLocator()
             )
+            // F1.11 Bug 3：UITEST_FORCE_NO_PERMISSION 路径同样注入共享 suppressor，
+            // 使 ClipboardWriter 写入与 PasteboardWatcher 行为一致。
             let coordinator = PasteCoordinator(
                 permissionChecker: permissionChecker,
-                clipboardWriter: ClipboardWriter(),
+                clipboardWriter: ClipboardWriter(suppressor: suppressor),
                 panelCloser: NoOpPanelCloser(),
                 overlayShower: overlayShower
             )

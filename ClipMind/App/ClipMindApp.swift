@@ -36,7 +36,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var captureService: ClipCaptureService?
     private var hotkeyService: GlobalHotkeyService?
     private var autoSaveService: AutoSaveService?
-    private var selfWriteSuppressor: SelfWriteSuppressor?
+    // F1.11 Bug 3：由 private 改为 internal，使 QuickPasteAssembly / StatusItemAssembly /
+    // PopoverPreviewWindowFactory 等 extension 可访问共享实例，注入到 ClipboardWriter，
+    // 与 PasteboardWatcher 共享同一套自我写入抑制机制。
+    var selfWriteSuppressor: SelfWriteSuppressor?
     // F2.1.1 新增：Toast 协调模块
     private var toastCoordinator: ToastCoordinator?
     // internal 以便 QuickPasteAssembly.swift 同模块访问
@@ -312,7 +315,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         {
             clips = []
         }
-        PopoverPreviewWindowFactory.show(clips: clips)
+        PopoverPreviewWindowFactory.show(clips: clips, suppressor: selfWriteSuppressor)
     }
 
     @objc private func handleOpenMainWindow() {
