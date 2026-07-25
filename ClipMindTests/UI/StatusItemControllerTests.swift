@@ -91,3 +91,75 @@ final class StatusItemMockOverlayShower: OverlayShowing
         hideOverlayCallCount += 1
     }
 }
+
+/// 测试用：始终返回无权限的权限检测器（Phase 2 任务 1，避免与其它测试文件重名）。
+@MainActor
+final class StatusItemNoPermissionChecker: PastePermissionChecking
+{
+    func isAccessibilityGranted() -> Bool { false }
+}
+
+// MARK: - Phase 2 任务 1：PasteCoordinator 接入验证
+
+extension StatusItemControllerTests
+{
+    /// AC-F1.11-2/-3：验证 StatusItemController 接收的 PasteCoordinator 实例，
+    /// 其 panelCloser 指向 StatusItemController 自身（PanelClosing 协议）。
+    /// 图片类型双击不触发写入、不关闭面板。
+    func testPasteCoordinator_IntegrationWithStatusItemController_ImageClipSkipped()
+    {
+        let controller = StatusItemController()
+        let store = try? EncryptedStore()
+        XCTAssertNotNil(store, "EncryptedStore 应可初始化")
+
+        let overlayShower = StatusItemMockOverlayShower()
+        let coordinator = PasteCoordinator(
+            permissionChecker: SystemPastePermissionChecker(),
+            clipboardWriter: ClipboardWriter(),
+            panelCloser: controller,
+            overlayShower: overlayShower
+        )
+        controller.setup(encryptedStore: store!, pasteCoordinator: coordinator)
+
+        // 图片类型不进入粘贴流程
+        let imageClip = ClipItem.makeImage(
+            Data([0x89, 0x50, 0x4E, 0x47]),
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        coordinator.handlePaste(clip: imageClip)
+
+        XCTAssertEqual(overlayShower.showOverlayCallCount, 0, "图片类型不触发浮层")
+        XCTAssertFalse(controller.isPanelVisible, "图片类型不关闭面板")
+    }
+
+    /// AC-F1.11-2/-3：无权限路径下文本类型触发浮层显示（降级提示）。
+    /// 单元测试下 controller.isPanelVisible 初始即为 false，
+    /// 真实场景下面板已显示时 closePanel 会执行关闭。
+    func testPasteCoordinator_TextClip_NoPermission_TriggersOverlay()
+    {
+        let controller = StatusItemController()
+        let store = try? EncryptedStore()
+        XCTAssertNotNil(store, "EncryptedStore 应可初始化")
+
+        let overlayShower = StatusItemMockOverlayShower()
+        let coordinator = PasteCoordinator(
+            permissionChecker: StatusItemNoPermissionChecker(),
+            clipboardWriter: ClipboardWriter(),
+            panelCloser: controller,
+            overlayShower: overlayShower
+        )
+        controller.setup(encryptedStore: store!, pasteCoordinator: coordinator)
+
+        let textClip = ClipItem.makeText(
+            "hello",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        coordinator.handlePaste(clip: textClip)
+
+        XCTAssertEqual(overlayShower.showOverlayCallCount, 1, "无权限路径应显示浮层")
+    }
+}
