@@ -63,6 +63,49 @@ final class MainWindowUITests: XCTestCase {
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 5), "主窗口应包含设置按钮")
     }
 
+    /// 验证主窗口列表行单击后详情面板更新（F1.11 后续 bug 修复）。
+    ///
+    /// Bug：HistoryListView 创建 ClipRowView 时未传 onSingleClick，
+    /// ClipRowView 内部 .onTapGesture(count: 1) 吞掉点击事件但不执行任何操作，
+    /// 外层 .onTapGesture { selectedClip = clip } 不触发，导致详情面板不更新。
+    ///
+    /// 修复：HistoryListView 与 UnifiedPastePanelView 对齐，将选中回调注入
+    /// ClipRowView 的 onSingleClick 参数。
+    func testMainWindowListClick_UpdatesDetailPanel() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--UITEST_SHOW_MAIN_WINDOW", "--UITEST_PREVIEW_DATA"]
+        app.launch()
+        app.activate()
+
+        // 初始详情面板应显示空状态文本
+        let emptyDetailText = app.staticTexts["选择一条剪贴内容查看详情"]
+        XCTAssertTrue(
+            emptyDetailText.waitForExistence(timeout: 5),
+            "初始详情面板应显示空状态"
+        )
+
+        // 点击列表第一行（包含预览数据首条文本 "func viewDidLoad() { super.viewDidLoad() }"）
+        let firstRowText = app.staticTexts["func viewDidLoad() { super.viewDidLoad() }"]
+        XCTAssertTrue(
+            firstRowText.waitForExistence(timeout: 3),
+            "第一行应包含预览文本"
+        )
+        firstRowText.click()
+
+        // 修复前：selectedClip 不更新，空状态文本不消失
+        // 修复后：onSingleClick 触发 selectedClip = clip，详情面板更新
+        let emptyDetailGone = NSPredicate(format: "exists == NO")
+        let expectation = XCTNSPredicateExpectation(
+            predicate: emptyDetailGone,
+            object: emptyDetailText
+        )
+        wait(for: [expectation], timeout: 2.0)
+        XCTAssertFalse(
+            emptyDetailText.exists,
+            "点击行后详情面板应更新，空状态文本应消失"
+        )
+    }
+
     /// 验证侧边栏最小宽度为 350pt（F1.12: 原 700 太宽导致窗口缩小时内容溢出）。
     ///
     /// NavigationView 内的 VStack 无法被 XCUITest 直接定位，通过详情面板空状态文本
