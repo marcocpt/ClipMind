@@ -125,10 +125,12 @@ enum HotkeyFormatter {
     /// 从 NSEvent 修饰键和 keyCode 解析出存储格式。
     static func parse(modifiers: NSEvent.ModifierFlags, keyCode: UInt16) -> String? {
         var parts: [String] = []
-        if modifiers.contains(.control) { parts.append("ctrl") }
-        if modifiers.contains(.option) { parts.append("opt") }
-        if modifiers.contains(.shift) { parts.append("shift") }
+        // 修饰键顺序遵循存储约定：cmd+shift+opt+ctrl+<key>
+        // 与 parse(stored:) 的字面约定一致，确保反向构造与解析互逆。
         if modifiers.contains(.command) { parts.append("cmd") }
+        if modifiers.contains(.shift) { parts.append("shift") }
+        if modifiers.contains(.option) { parts.append("opt") }
+        if modifiers.contains(.control) { parts.append("ctrl") }
 
         // 至少需要一个主修饰键
         guard !parts.isEmpty else { return nil }
