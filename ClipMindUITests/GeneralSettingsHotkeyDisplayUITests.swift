@@ -78,15 +78,18 @@ final class GeneralSettingsHotkeyDisplayUITests: XCTestCase
             "--UITEST_CUSTOM_HOTKEY"
         ]
         app.launch()
+        app.activate()
         openGeneralSettings(in: app)
 
         let recorder = app.buttons["hotkeyRecorder"]
         XCTAssertTrue(recorder.waitForExistence(timeout: 5.0))
 
-        // Act - 点击重置按钮
+        // Act - 点击重置按钮（激活窗口确保 hittable，与 SettingsUITests 模式一致）
         let resetButton = app.buttons["resetHotkeyButton"]
         XCTAssertTrue(resetButton.waitForExistence(timeout: 2.0), "重置按钮应存在")
+        app.activate()
         resetButton.click()
+        Thread.sleep(forTimeInterval: 0.5)
 
         // Assert - 显示更新为 ⌘⇧Space
         XCTAssertEqual(recorder.label, "⌘⇧Space", "重置后应显示 ⌘⇧Space")
@@ -98,6 +101,7 @@ final class GeneralSettingsHotkeyDisplayUITests: XCTestCase
     /// 通用标签已通过 --UITEST_INITIAL_TAB=general 启动参数定位，无需切换标签。
     private func openGeneralSettings(in app: XCUIApplication)
     {
+        app.activate()
         let settingsButton = app.buttons["settingsButton"].firstMatch
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 5.0), "设置按钮应存在")
         settingsButton.click()
