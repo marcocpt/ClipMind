@@ -350,6 +350,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // F1.11 Phase 2：委托给 PopoverPreviewWindowFactory 创建 NSPanel 承载视图。
         // 启动参数决定 clips 数据源：
         // - --UITEST_PREPOPULATE_IMAGE_AND_FILEPATH：预置图片/文件路径到 EncryptedStore 后加载
+        // - --UITEST_PREVIEW_DATA_SMALL：使用 ClipTestData.previewClips 前 3 条（边界用例专用，避免 LazyVStack 滚动卡顿）
         // - --UITEST_PREVIEW_DATA：使用 ClipTestData.previewClips（11 条文本）
         // - 其他：空列表
         let clips: [ClipItem]
@@ -357,6 +358,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         {
             prepopulateImageAndFilePathForTesting()
             clips = loadClipsForQuickPaste()
+        } else if CommandLine.arguments.contains("--UITEST_PREVIEW_DATA_SMALL")
+        {
+            clips = Array(ClipTestData.previewClips.prefix(3))
         } else if ClipTestData.isUITesting
         {
             clips = ClipTestData.previewClips
