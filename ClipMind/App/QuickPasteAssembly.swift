@@ -236,7 +236,10 @@ private final class ScreenCenterPanelLocator: PanelScreenLocating
 }
 
 /// 屏幕中央浮层定位器（降级浮层使用）。
-private final class ScreenCenterOverlayLocator: OverlayScreenLocating
+///
+/// F1.11 Phase 1：从 `private` 改为 `internal`，使 `AppDelegate.setupStatusItemController`
+/// 可复用同一实现构造菜单栏弹窗专用的 `PasteOverlayController`。
+internal final class ScreenCenterOverlayLocator: OverlayScreenLocating
 {
     func locatePosition() -> NSPoint
     {

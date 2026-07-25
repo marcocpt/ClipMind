@@ -30,7 +30,8 @@ struct ClipMindApp: App {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var statusItemController: StatusItemController?
+    // F1.11：改为 internal 以便 StatusItemAssembly.swift 同模块访问
+    var statusItemController: StatusItemController?
     private var cleanupService: CleanupService?
     private var captureService: ClipCaptureService?
     private var hotkeyService: GlobalHotkeyService?
@@ -187,11 +188,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 NSApp.setActivationPolicy(.accessory)
             }
-            statusItemController = StatusItemController()
-            statusItemController?.setup()
             setupServices()
             setupHotkeyService()
             setupQuickPastePanelController()
+            setupStatusItemController()
         } else {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
