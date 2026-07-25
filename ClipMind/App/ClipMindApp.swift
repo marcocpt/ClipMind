@@ -170,6 +170,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             store.save(settings)
             LogCategory.app.logger.info("已通过 --UITEST_ENABLE_AUTOSAVE 启用 F2.1 总开关")
         }
+        if CommandLine.arguments.contains("--UITEST_LEGACY_HOTKEY")
+        {
+            UserDefaults.standard.set("cmd+shift+v", forKey: "hotkey")
+            UserDefaults.standard.synchronize()
+            LogCategory.app.logger.info("已通过 --UITEST_LEGACY_HOTKEY 注入老用户旧默认快捷键")
+        }
+        if CommandLine.arguments.contains("--UITEST_CUSTOM_HOTKEY")
+        {
+            UserDefaults.standard.set("ctrl+opt+a", forKey: "hotkey")
+            UserDefaults.standard.synchronize()
+            LogCategory.app.logger.info("已通过 --UITEST_CUSTOM_HOTKEY 注入自定义快捷键")
+        }
     }
 
     /// 根据引导状态配置激活策略和服务

@@ -46,6 +46,7 @@ struct HotkeyRecorder: View {
                     .frame(minWidth: 80)
             }
             .accessibilityIdentifier("hotkeyRecorder")
+            .accessibilityLabel(HotkeyFormatter.display(hotkey))
         }
     }
 
