@@ -25,6 +25,7 @@
 		169D77E1F9EB50DF3455A131 /* PrivacyNoticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28B67ED5A9989DC7CD8F05EC /* PrivacyNoticeView.swift */; };
 		16BE84E9768706E009A8DFCC /* ContentReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFB70953AAE16C89101A34B /* ContentReaderTests.swift */; };
 		1768D39210E4A185BC0B914D /* ToastWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33B3391016229CAC358DC7C /* ToastWindowManager.swift */; };
+		18A864A825CA98A7D21DA836 /* HotkeyRecorderResetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F251B7AE980808D43161B6B /* HotkeyRecorderResetTests.swift */; };
 		18D81C7E595E8933A954234F /* SearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38EF7AD4964558E111CCA9C /* SearchBar.swift */; };
 		1A063E6113F494171C6B30F0 /* SummarizeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB619D93AF164C83D25E3C53 /* SummarizeTests.swift */; };
 		1A0F6C8A81050570D6F43C92 /* AutoSavePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D160212934EC31D6CA4830EE /* AutoSavePerformanceTests.swift */; };
@@ -299,6 +300,7 @@
 		5C626C2E4480671EA68F3A65 /* DetailPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailPanel.swift; sourceTree = "<group>"; };
 		5CBC52D4BFC541BF5AC1125C /* AutoSaveIntegrationPhase1Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveIntegrationPhase1Tests.swift; sourceTree = "<group>"; };
 		5EAA6D6E20E61EE8E12B6CA4 /* PermissionRequester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequester.swift; sourceTree = "<group>"; };
+		5F251B7AE980808D43161B6B /* HotkeyRecorderResetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorderResetTests.swift; sourceTree = "<group>"; };
 		62D655CA286AD3A68F3B858E /* PasteboardWatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardWatcherTests.swift; sourceTree = "<group>"; };
 		63DEB7531FB7A28A9CCC7372 /* EncryptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptionTests.swift; sourceTree = "<group>"; };
 		6400A1E9423E685A8AF9244E /* AppSettingsHotkeyMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsHotkeyMigrationTests.swift; sourceTree = "<group>"; };
@@ -624,6 +626,7 @@
 				46A60F0331FB08C88304C913 /* ClipboardConsumerWatcherTests.swift */,
 				6FEC71FB7F792A4A1F5B587A /* ClipboardWriterTests.swift */,
 				ED13F78D795292DB7194F5E9 /* ClipRowViewInteractionTests.swift */,
+				5F251B7AE980808D43161B6B /* HotkeyRecorderResetTests.swift */,
 				A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */,
 				7C5F705AEFA1D709C90AAE0E /* PasteCoordinatorTests.swift */,
 				9FC44E4CB94A7B3901DC67A0 /* PasteOverlayControllerTests.swift */,
@@ -1303,6 +1306,7 @@
 				6B4DA729B0992FDF452BCBE2 /* GlobalHotkeyServiceTests.swift in Sources */,
 				1F111AF24F37F7D00AACC7F8 /* HotkeyFormatterRoundTripTests.swift in Sources */,
 				A0F46456211A1957478CBA20 /* HotkeyFormatterSpaceKeyTests.swift in Sources */,
+				18A864A825CA98A7D21DA836 /* HotkeyRecorderResetTests.swift in Sources */,
 				D96F39B6A9EDDE7F77BABDF7 /* HotkeyTestConstants.swift in Sources */,
 				043BD6F0E918EA893A42DCA5 /* InterceptingURLProtocol.swift in Sources */,
 				07A5A105DA645C7D0A303CB4 /* LLMFixtureLoader.swift in Sources */,

@@ -53,7 +53,7 @@ struct HotkeyRecorder: View {
     private var resetButton: some View {
         if !isRecording && !hotkey.isEmpty {
             Button("重置") {
-                hotkey = "cmd+shift+v"
+                hotkey = AppSettings.defaultHotkey
                 LogCategory.app.info("快捷键已重置为默认值")
             }
             .accessibilityIdentifier("resetHotkeyButton")
