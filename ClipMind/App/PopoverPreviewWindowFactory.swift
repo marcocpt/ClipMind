@@ -37,8 +37,11 @@ enum PopoverPreviewWindowFactory
         // NSWindow.didBecomeKey 通知：任何其他窗口成为 key 时立即关闭并让 popover 重新成为 key。
         // 使用 orderOut 而非 close，避免触发 NSApplication.terminate。
         // 防护：仅当 popover 窗口仍然可见时才处理，避免 popover 关闭后监听器触发循环。
-        // 监听持续整个测试过程（应用退出时自动清理）。
-        NotificationCenter.default.addObserver(
+        //
+        // F1.11 Phase 3 任务 8 修复：保存监听器 token，在 popover 窗口关闭时移除监听器，
+        // 避免 close 后延迟触发的 didBecomeKey 事件导致时序竞争（test02/test04 flaky 根因）。
+        var keyWindowObserver: NSObjectProtocol?
+        keyWindowObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.didBecomeKeyNotification,
             object: nil,
             queue: .main
@@ -49,6 +52,22 @@ enum PopoverPreviewWindowFactory
             becameKey.orderOut(nil)
             window?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
+        }
+
+        // 监听 popover 窗口关闭事件，移除 didBecomeKey 监听器。
+        // 无论是 Esc 键、底部工具栏按钮点击、还是双击粘贴触发 close，都会通过此监听器清理。
+        // 避免窗口关闭后仍有延迟的 didBecomeKey 事件触发监听器，导致主窗口被误 orderOut。
+        // willClose 监听器本身无需移除：窗口关闭后不会再触发 willClose 事件。
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { _ in
+            if let observer = keyWindowObserver
+            {
+                NotificationCenter.default.removeObserver(observer)
+                keyWindowObserver = nil
+            }
         }
     }
 

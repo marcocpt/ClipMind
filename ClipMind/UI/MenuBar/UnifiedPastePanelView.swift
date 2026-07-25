@@ -147,15 +147,18 @@ struct UnifiedPastePanelView: View
         BottomToolbarView(
             onViewAll:
             {
-                // 「查看全部」：发送打开主窗口信号 + 关闭菜单栏弹窗
-                NotificationCenter.default.post(name: .openMainWindow, object: nil)
+                // 「查看全部」：先关闭菜单栏弹窗，再发送打开主窗口信号。
+                // F1.11 Phase 3 任务 8 修复：调整顺序避免 didBecomeKeyNotification 监听器
+                // 与 window.close() 的时序竞争。先 close 触发 willCloseNotification 移除监听器，
+                // 再发送通知让主窗口成为 key，避免监听器 orderOut 主窗口。
                 viewModel.onEscPressed?()
+                NotificationCenter.default.post(name: .openMainWindow, object: nil)
             },
             onSettings:
             {
-                // 「配置」：发送打开设置窗口信号 + 关闭菜单栏弹窗
-                NotificationCenter.default.post(name: .openSettingsWindow, object: nil)
+                // 「配置」：先关闭菜单栏弹窗，再发送打开设置窗口信号（时序修复同上）。
                 viewModel.onEscPressed?()
+                NotificationCenter.default.post(name: .openSettingsWindow, object: nil)
             },
             onExit:
             {

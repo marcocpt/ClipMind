@@ -1,6 +1,6 @@
 # Phase 3：底部工具栏三按钮 + openSettings 通知
 
-> 最后更新：2026-07-25 | 版本：v1.3
+> 最后更新：2026-07-25 | 版本：v1.4
 
 **全局约束（AGENTS.md §8）：** 本 Phase 中所有任务在执行 `git commit` 前必须先运行 `swiftlint lint --strict` 并通过。仅文档、配置等非代码改动可跳过。任务步骤中不再重复说明 Lint 环节，但每个 Commit 步骤默认包含「Lint → Commit」两步。
 
@@ -1187,6 +1187,7 @@ Phase 3 基线达成：
 | v1.1 | 2026-07-25 | 补充任务 3 简化方案与「设置窗口 UITEST 模式说明」。 |
 | v1.2 | 2026-07-25 | Phase 3 实现完成：所有 7 个任务通过 TDD 实现，`BottomToolbarViewTests`（8 条单元测试）与 `PopoverBottomToolbarUITests`（5 条 UI 测试）全部 PASS。新增 `SettingsWindowAssembly.swift` 拆分 AppDelegate 类型体长度（避免 type_body_length 违规）。XCUITest 中通过 `app.activate()` 缓解「Application is not foreground」竞态。 |
 | v1.3 | 2026-07-25 | 任务 8 全量验证完成：`swiftlint lint --strict` 0 违规（205 文件）；`ClipMindTests` 579 条单元测试全部通过；`PopoverBottomToolbarUITests` 5 条 UI 测试全部通过（重跑后稳定）。发现 `test02`/`test04` 在套件首跑存在 flaky 现象，单独运行与重跑均 PASS，根因为 `NSWindow.didBecomeKeyNotification` 监听器与 `window.close()` 的时序竞争，已记录待后续优化。 |
+| v1.4 | 2026-07-25 | Flaky test 修复完成：(1) `PopoverPreviewWindowFactory` 新增 `NSWindow.willCloseNotification` 监听器，在 popover 窗口关闭时移除 `didBecomeKeyNotification` 监听器，避免 close 后延迟触发的 didBecomeKey 事件导致主窗口被误 orderOut；(2) `UnifiedPastePanelView.bottomToolbar` 调整 `onViewAll`/`onSettings` 回调顺序为「先 `onEscPressed`（close）后发送通知」，确保 close 触发 willClose 清理监听器后再让主窗口/设置窗口成为 key。连续两次运行 `PopoverBottomToolbarUITests` 均 5/5 通过（44.181s + 44.395s），flaky 问题消除。 |
 
 ## 实现记录（v1.2 完成）
 
@@ -1344,3 +1345,67 @@ xcodebuild test -project ClipMind.xcodeproj -scheme ClipMind \
 - ✅ 单元测试 579 条全部通过（含 Phase 3 新增 8 条）
 - ✅ Phase 3 UI 测试 5 条全部通过（重跑后稳定，flaky 问题已记录）
 - ⚠️ flaky test 问题已记录，待后续优化
+
+## Flaky Test 修复（v1.4 补充）
+
+**修复时间**：2026-07-25 18:42 ~ 18:47
+
+### 修复方案
+
+#### 1. `PopoverPreviewWindowFactory.swift` 新增 willCloseNotification 清理监听器
+
+保存 `didBecomeKeyNotification` 监听器 token 到 `keyWindowObserver` 变量，新增 `NSWindow.willCloseNotification` 监听器：当 popover 窗口关闭时（无论是 Esc 键、按钮点击、还是双击粘贴触发），移除 `didBecomeKeyNotification` 监听器，避免 close 后延迟触发的 didBecomeKey 事件导致主窗口被误 orderOut。
+
+```swift
+var keyWindowObserver: NSObjectProtocol?
+keyWindowObserver = NotificationCenter.default.addObserver(
+    forName: NSWindow.didBecomeKeyNotification,
+    object: nil,
+    queue: .main
+) { [weak window] note in
+    // ... 原有逻辑
+}
+
+NotificationCenter.default.addObserver(
+    forName: NSWindow.willCloseNotification,
+    object: window,
+    queue: .main
+) { _ in
+    if let observer = keyWindowObserver
+    {
+        NotificationCenter.default.removeObserver(observer)
+        keyWindowObserver = nil
+    }
+}
+```
+
+#### 2. `UnifiedPastePanelView.bottomToolbar` 调整回调顺序
+
+将 `onViewAll`/`onSettings` 的回调顺序从「先发送通知后 close」调整为「先 close 后发送通知」：
+
+```swift
+onViewAll:
+{
+    // 先关闭弹窗（触发 willCloseNotification 移除 didBecomeKey 监听器）
+    viewModel.onEscPressed?()
+    // 再发送通知让主窗口成为 key（监听器已移除，不干预）
+    NotificationCenter.default.post(name: .openMainWindow, object: nil)
+},
+```
+
+### 修复验证
+
+连续两次运行 `PopoverBottomToolbarUITests`：
+
+| 运行次数 | 结果 | 耗时 |
+|---------|------|------|
+| 第 1 次 | 5/5 通过 | 44.181s |
+| 第 2 次 | 5/5 通过 | 44.395s |
+
+### 修复结论
+
+- ✅ Flaky test 问题已消除
+- ✅ 连续两次运行均 5/5 通过
+- ✅ SwiftLint 0 违规
+- ✅ 单元测试 579 条全部通过
+- ✅ BUILD SUCCEEDED
