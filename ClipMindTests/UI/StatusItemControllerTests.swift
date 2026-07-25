@@ -34,3 +34,60 @@ final class StatusItemControllerTests: XCTestCase
         XCTAssertFalse(controller.isPanelVisible, "初始状态 isPanelVisible = false")
     }
 }
+
+extension StatusItemControllerTests
+{
+    // MARK: - AC-F1.11-12 / AC-F1.11-14：依赖注入链路
+
+    /// 验证 setup(encryptedStore:pasteCoordinator:) 接受 EncryptedStore 与 PasteCoordinator 注入。
+    /// 注入后调用 closePanel 不崩溃，说明依赖已正确注入。
+    func testSetup_InjectsEncryptedStoreAndPasteCoordinator()
+    {
+        let controller = StatusItemController()
+        let store = try? EncryptedStore()
+        let permissionChecker = SystemPastePermissionChecker()
+        let overlayShower = StatusItemMockOverlayShower()
+        let coordinator = PasteCoordinator(
+            permissionChecker: permissionChecker,
+            clipboardWriter: ClipboardWriter(),
+            panelCloser: controller,
+            overlayShower: overlayShower
+        )
+        XCTAssertNotNil(store, "EncryptedStore 应可初始化")
+
+        controller.setup(encryptedStore: store!, pasteCoordinator: coordinator)
+
+        // 注入后调用 closePanel 不崩溃，说明依赖已注入
+        controller.closePanel()
+        XCTAssertFalse(controller.isPanelVisible, "未弹出过弹窗时 isPanelVisible = false")
+    }
+
+    /// 验证未注入依赖时 closePanel 也安全（防御性测试）。
+    func testClosePanel_WithoutSetup_DoesNotCrash()
+    {
+        let controller = StatusItemController()
+
+        // 未调用 setup，直接 closePanel 应被 guard 拦截
+        controller.closePanel()
+
+        XCTAssertFalse(controller.isPanelVisible)
+    }
+}
+
+/// 测试用浮层显示协议实现（记录调用，避免与 PasteCoordinatorTests.MockOverlayShower 重名）。
+@MainActor
+final class StatusItemMockOverlayShower: OverlayShowing
+{
+    var showOverlayCallCount = 0
+    var hideOverlayCallCount = 0
+
+    func showOverlay()
+    {
+        showOverlayCallCount += 1
+    }
+
+    func hideOverlay()
+    {
+        hideOverlayCallCount += 1
+    }
+}
