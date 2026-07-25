@@ -1,6 +1,6 @@
 # Phase 3：底部工具栏三按钮 + openSettings 通知
 
-> 最后更新：2026-07-25 | 版本：v1.1
+> 最后更新：2026-07-25 | 版本：v1.2
 
 **全局约束（AGENTS.md §8）：** 本 Phase 中所有任务在执行 `git commit` 前必须先运行 `swiftlint lint --strict` 并通过。仅文档、配置等非代码改动可跳过。任务步骤中不再重复说明 Lint 环节，但每个 Commit 步骤默认包含「Lint → Commit」两步。
 
@@ -1184,3 +1184,72 @@ Phase 3 基线达成：
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
 | v1.0 | 2026-07-25 | Phase 3 初始版本，7 个任务覆盖 `Notification.Name.openSettingsWindow` 新增、`BottomToolbarView` 组件创建、`AppDelegate` 监听通知、`UnifiedPastePanelView` 集成条件渲染、「查看全部 / 配置 / 退出」三按钮端到端验证。关联 AC-F1.11-6、AC-F1.11-7、AC-F1.11-8、AC-F1.11-13。 |
+| v1.1 | 2026-07-25 | 补充任务 3 简化方案与「设置窗口 UITEST 模式说明」。 |
+| v1.2 | 2026-07-25 | Phase 3 实现完成：所有 7 个任务通过 TDD 实现，`BottomToolbarViewTests`（8 条单元测试）与 `PopoverBottomToolbarUITests`（5 条 UI 测试）全部 PASS。新增 `SettingsWindowAssembly.swift` 拆分 AppDelegate 类型体长度（避免 type_body_length 违规）。XCUITest 中通过 `app.activate()` 缓解「Application is not foreground」竞态。 |
+
+## 实现记录（v1.2 完成）
+
+### 任务 1：新增 `Notification.Name.openSettingsWindow`
+
+- 文件：`ClipMind/UI/MenuBar/StatusItemController.swift`
+- 状态：✅ 完成
+- 验证：编译通过 + Lint 0 违规
+
+### 任务 2：创建 `BottomToolbarView` 组件 + 单元测试
+
+- 文件：
+  - 创建：`ClipMind/UI/MenuBar/BottomToolbarView.swift`
+  - 创建：`ClipMindTests/UI/BottomToolbarViewTests.swift`
+- 状态：✅ 完成
+- 单元测试结果：8 条用例全部 PASS
+  - testBottomToolbarView_IsConstructible
+  - testViewAllButton_TriggersCallback（AC-F1.11-6）
+  - testSettingsButton_TriggersCallback（AC-F1.11-7）
+  - testExitButton_TriggersCallback（AC-F1.11-8）
+  - testButtonIdentifierConstants_AreCorrect
+  - testOpenSettingsWindowNotification_DoesNotCrash
+  - testUnifiedPastePanelView_WithShowsBottomBar_True_RendersBottomToolbar（AC-F1.11-13）
+  - testUnifiedPastePanelView_WithShowsBottomBar_False_DoesNotRenderBottomToolbar（AC-F1.11-13）
+
+### 任务 3：`AppDelegate` 监听 `openSettingsWindow` 通知
+
+- 文件：
+  - 修改：`ClipMind/App/ClipMindApp.swift`（注册观察者）
+  - 创建：`ClipMind/App/SettingsWindowAssembly.swift`（拆分 `handleOpenSettings` + `showSettingsInStandaloneWindow` 到 extension，避免 AppDelegate type_body_length 违规）
+- 状态：✅ 完成
+- 设计调整：原计划将 `handleOpenSettings` 直接放入 AppDelegate 类型体，导致类型体长度超过 300 行违规。改为独立 `SettingsWindowAssembly.swift` extension 文件承载，与 `QuickPasteAssembly.swift`、`StatusItemAssembly.swift` 的拆分模式一致。
+
+### 任务 4：`UnifiedPastePanelView` 集成 `BottomToolbarView`
+
+- 文件：修改 `ClipMind/UI/MenuBar/UnifiedPastePanelView.swift`
+- 状态：✅ 完成
+- 实现要点：
+  - `bottomBarPlaceholder` 替换为 `bottomToolbar`，引用 `BottomToolbarView`
+  - 三按钮回调链路：
+    - 「查看全部」：发送 `openMainWindow` 通知 + 调用 `viewModel.onEscPressed?()` 关闭弹窗
+    - 「配置」：发送 `openSettingsWindow` 通知 + 调用 `viewModel.onEscPressed?()` 关闭弹窗
+    - 「退出」：仅调用 `viewModel.onEscPressed?()` 关闭弹窗（不发送任何通知，符合 AC-F1.11-8）
+  - 复用 Phase 1 `StatusItemController.makeUnifiedPanelView` 注入的 `onEscPressed` 回调关闭弹窗
+
+### 任务 5-7：三按钮 XCUITest 端到端验证
+
+- 文件：创建 `ClipMindUITests/PopoverBottomToolbarUITests.swift`
+- 状态：✅ 完成
+- UI 测试结果：5 条用例全部 PASS（最近一次完整运行 `** TEST SUCCEEDED **`，63.479 秒）
+  - test01_BottomToolbar_ThreeButtonsVisible（AC-F1.11-13）
+  - test02_ViewAllButton_ClosesPopoverAndOpensMainWindow（AC-F1.11-6）
+  - test03_SettingsButton_ClosesPopoverAndOpensSettingsWindow（AC-F1.11-7）
+  - test04_ExitButton_ClosesPopoverOnly（AC-F1.11-8）
+  - test05_ExitButton_DoesNotOpenSettingsWindow（AC-F1.11-8）
+- 稳定性优化：在三按钮 `click()` 前增加 `app.activate()` 调用，缓解「Application is not foreground」竞态（沿用 `PopoverDoublePasteUITests` 在 `typeKey` 前激活应用的模式）。
+
+### Phase 3 基线达成
+
+- ✅ `xcodebuild build` BUILD SUCCEEDED
+- ✅ `swiftlint lint --strict` 0 违规（205 文件）
+- ✅ `BottomToolbarViewTests` 8 条单元测试全部通过
+- ✅ `PopoverBottomToolbarUITests` 5 条 UI 测试全部通过
+- ✅ 底部三按钮在菜单栏弹窗场景可见，在快捷键场景不可见
+- ✅ 「查看全部」按钮发送 `openMainWindow` 通知并关闭弹窗（test02 验证）
+- ✅ 「配置」按钮发送 `openSettingsWindow` 通知并关闭弹窗，`AppDelegate` 收到通知后打开设置窗口（test03 验证）
+- ✅ 「退出」按钮仅关闭弹窗，不发送任何通知，不写入剪贴板（test04/test05 验证）
