@@ -138,7 +138,12 @@ public final class AutoSaveService
         """)
 
         let formattedPath = pathFormatter.format(url: savedURL, format: config.pathFormat)
-        let replaced = clipboardReplacer.replace(with: formattedPath, expectedChangeCount: event.changeCount)
+        // F2.1.2：传入原始文本，让 ClipboardReplacer 同时写入 HTML 格式保留原文
+        let replaced = clipboardReplacer.replace(
+            with: formattedPath,
+            originalText: text,
+            expectedChangeCount: event.changeCount
+        )
         if !replaced
         {
             logger.info("""
