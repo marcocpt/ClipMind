@@ -115,7 +115,7 @@ final class QuickPastePanelController: PanelClosing
         LogCategory.ui.info("QuickPaste panel closed, position recorded")
     }
 
-    /// 设置面板内容视图控制器（供 AppDelegate 注入 QuickPasteView 的 NSHostingController）。
+    /// 设置面板内容视图控制器（供 AppDelegate 注入 UnifiedPastePanelView 的 NSHostingController）。
     /// - Parameter controller: 内容视图控制器
     func setContentView(_ controller: NSViewController)
     {
@@ -128,7 +128,7 @@ final class QuickPastePanelController: PanelClosing
     /// 失焦通知观察者。
     private var resignObserver: NSObjectProtocol?
 
-    /// Esc 键处理（由 QuickPasteView 的 NSEvent 监听器调用，任务 6 接入）。
+    /// Esc 键处理（由 UnifiedPastePanelView 的 NSEvent 监听器调用，任务 6 接入）。
     func handleEscKey()
     {
         guard isPanelVisible else { return }

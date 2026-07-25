@@ -138,4 +138,87 @@ final class UnifiedPastePanelViewModelTests: XCTestCase
 
         XCTAssertTrue(escCalled, "Esc 键触发 onEscPressed 回调")
     }
+
+    // MARK: - 边缘用例（从 QuickPasteViewTests 迁移，F1.11 Phase 1 任务 6）
+
+    /// 空列表按回车不应触发粘贴（避免 selectedIndex=-1 越界）。
+    func testHandleEnterKey_OnEmptyList_DoesNotTriggerPaste()
+    {
+        let viewModel = UnifiedPastePanelViewModel(clips: [])
+        var pasteCalled = false
+        viewModel.onPasteTriggered = { _ in pasteCalled = true }
+
+        viewModel.handleEnterKey()
+
+        XCTAssertFalse(pasteCalled, "空列表按回车不应触发粘贴")
+    }
+
+    /// 双击文件路径类型行应显示提示且不触发粘贴。
+    func testHandleDoubleClick_FilePathClip_ShowsHintAndDoesNotTrigger()
+    {
+        let filePathClip = ClipItem.makeFilePath(
+            [URL(fileURLWithPath: "/tmp/test.txt")],
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let viewModel = UnifiedPastePanelViewModel(clips: [filePathClip])
+        var pasteCalled = false
+        viewModel.onPasteTriggered = { _ in pasteCalled = true }
+
+        viewModel.handleDoubleClick(clip: filePathClip)
+
+        XCTAssertFalse(pasteCalled, "双击文件路径 clip 不应触发粘贴")
+        XCTAssertTrue(viewModel.shouldShowTextOnlyHint, "应显示「仅支持文本粘贴」提示")
+    }
+
+    /// 连续双击两行应触发两次粘贴回调（验证多次触发不互相干扰）。
+    func testHandleDoubleClick_OnTwoTextClips_TriggersPasteTwice()
+    {
+        let clip1 = ClipItem.makeText(
+            "第一条",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let clip2 = ClipItem.makeText(
+            "第二条",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let viewModel = UnifiedPastePanelViewModel(clips: [clip1, clip2])
+        var pasteCount = 0
+        viewModel.onPasteTriggered = { _ in pasteCount += 1 }
+
+        viewModel.handleDoubleClick(clip: clip1)
+        viewModel.handleDoubleClick(clip: clip2)
+
+        XCTAssertEqual(pasteCount, 2, "双击两行应触发两次粘贴回调")
+    }
+
+    /// 选中其他行后应清除「仅支持文本粘贴」提示。
+    func testSelectIndex_ClearsHint_AfterImageDoubleClick()
+    {
+        let imageClip = ClipItem.makeImage(
+            Data([0x89]),
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let textClip = ClipItem.makeText(
+            "文本",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let viewModel = UnifiedPastePanelViewModel(clips: [imageClip, textClip])
+
+        viewModel.handleDoubleClick(clip: imageClip)
+        XCTAssertTrue(viewModel.shouldShowTextOnlyHint, "双击图片后应显示提示")
+
+        viewModel.selectIndex(1)
+        XCTAssertFalse(viewModel.shouldShowTextOnlyHint, "选中其他行后提示应消失")
+        XCTAssertEqual(viewModel.selectedIndex, 1)
+    }
 }

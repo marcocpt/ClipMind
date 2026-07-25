@@ -127,14 +127,19 @@ extension AppDelegate
     func makeQuickPasteContentController(coordinator: PasteCoordinator) -> NSViewController
     {
         let clips = loadClipsForQuickPaste()
-        let viewModel = QuickPasteViewModel(clips: clips)
+        let viewModel = UnifiedPastePanelViewModel(clips: clips)
         viewModel.onPasteTriggered = { clip in
             coordinator.handlePaste(clip: clip)
         }
         viewModel.onEscPressed = { [weak self] in
             self?.quickPastePanelController?.handleEscKey()
         }
-        let view = QuickPasteView(viewModel: viewModel)
+        // F1.11 Phase 1：切换到 UnifiedPastePanelView（快捷键场景：不显示底部工具栏）
+        let view = UnifiedPastePanelView(
+            viewModel: viewModel,
+            showsBottomBar: false,
+            accessibilityPrefix: "quickPaste"
+        )
         return NSHostingController(rootView: view)
     }
 

@@ -344,6 +344,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyService = GlobalHotkeyService(hotkey: settings.hotkey)
     }
 
+    @MainActor
     private func showPopoverContentInWindow() {
         NSApp.setActivationPolicy(.regular)
         let window = NSWindow(
@@ -353,7 +354,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             defer: false
         )
         window.title = "PopoverPreview"
-        window.contentViewController = NSHostingController(rootView: PopoverView())
+        // F1.11 Phase 1：PopoverView 已合并到 UnifiedPastePanelView
+        let clips = ClipTestData.isUITesting ? ClipTestData.previewClips : []
+        let viewModel = UnifiedPastePanelViewModel(clips: clips)
+        window.contentViewController = NSHostingController(
+            rootView: UnifiedPastePanelView(
+                viewModel: viewModel,
+                showsBottomBar: true,
+                accessibilityPrefix: "popover"
+            )
+        )
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
