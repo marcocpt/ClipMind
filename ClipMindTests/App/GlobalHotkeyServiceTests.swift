@@ -33,7 +33,7 @@ final class GlobalHotkeyServiceTests: XCTestCase {
     // MARK: - HotkeyFormatter.parse(stored:)
 
     func testParseStoredHotkey_CmdShiftV_ReturnsCorrectModifierAndKeyCode() {
-        let parsed = HotkeyFormatter.parse(stored: "cmd+shift+v")
+        let parsed = HotkeyFormatter.parse(stored: TestHotkeys.legacyDefault)
         XCTAssertNotNil(parsed)
         XCTAssertEqual(parsed?.keyCode, 9) // keyCode for 'v'
         XCTAssertTrue(parsed?.modifiers ?? 0 != 0)
@@ -81,9 +81,9 @@ final class GlobalHotkeyServiceTests: XCTestCase {
 
     func testGlobalHotkeyService_InitWithValidHotkey_RegistersWithCorrectParams() {
         let mock = MockHotkeyRegistrar()
-        let service = GlobalHotkeyService(hotkey: "cmd+shift+v", registrar: mock)
+        let service = GlobalHotkeyService(hotkey: TestHotkeys.default, registrar: mock)
         XCTAssertTrue(service.isRegistered, "有效的快捷键配置应成功注册")
-        XCTAssertEqual(mock.registeredKeyCode, 9, "应注册 keyCode 9 (v)")
+        XCTAssertEqual(mock.registeredKeyCode, 49, "应注册 keyCode 49 (space)")
         XCTAssertNotNil(mock.registeredModifiers, "应注册修饰键")
         XCTAssertTrue(mock.registeredModifiers! & 0x0100 != 0, "修饰键应包含 cmdKey")
         XCTAssertTrue(mock.registeredModifiers! & 0x0200 != 0, "修饰键应包含 shiftKey")
@@ -98,7 +98,7 @@ final class GlobalHotkeyServiceTests: XCTestCase {
 
     func testGlobalHotkeyService_Unregister_ClearsRegistration() {
         let mock = MockHotkeyRegistrar()
-        let service = GlobalHotkeyService(hotkey: "cmd+shift+v", registrar: mock)
+        let service = GlobalHotkeyService(hotkey: TestHotkeys.arbitrary, registrar: mock)
         XCTAssertTrue(service.isRegistered)
         service.unregister()
         XCTAssertFalse(service.isRegistered, "注销后应不再处于注册状态")
@@ -114,7 +114,7 @@ final class GlobalHotkeyServiceTests: XCTestCase {
     func testGlobalHotkeyService_RegistrarFails_IsNotRegistered() {
         let mock = MockHotkeyRegistrar()
         mock.shouldSucceed = false
-        let service = GlobalHotkeyService(hotkey: "cmd+shift+v", registrar: mock)
+        let service = GlobalHotkeyService(hotkey: TestHotkeys.arbitrary, registrar: mock)
         XCTAssertFalse(service.isRegistered, "注册器失败时不应标记为已注册")
     }
 
@@ -122,7 +122,7 @@ final class GlobalHotkeyServiceTests: XCTestCase {
 
     func testGlobalHotkeyService_HotkeyPressed_PostsOpenQuickPasteNotification() {
         let mock = MockHotkeyRegistrar()
-        let service = GlobalHotkeyService(hotkey: "cmd+shift+v", registrar: mock)
+        let service = GlobalHotkeyService(hotkey: TestHotkeys.arbitrary, registrar: mock)
 
         let expectation = XCTNSNotificationExpectation(name: .openQuickPaste)
         mock.simulateHotkeyPressed()
