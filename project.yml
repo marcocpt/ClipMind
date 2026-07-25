@@ -48,6 +48,8 @@ targets:
         ENABLE_HARDENED_RUNTIME: YES
         ENABLE_TESTABILITY: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        DEVELOPMENT_TEAM: VQLBN4DB8C
+        CODE_SIGN_STYLE: Automatic
   ClipMindTests:
     type: bundle.unit-test
     platform: macOS
