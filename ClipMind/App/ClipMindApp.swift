@@ -347,25 +347,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func showPopoverContentInWindow() {
         NSApp.setActivationPolicy(.regular)
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 480),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = "PopoverPreview"
-        // F1.11 Phase 1：PopoverView 已合并到 UnifiedPastePanelView
+        // F1.11 Phase 2：委托给 PopoverPreviewWindowFactory 创建 NSPanel 承载视图，
+        // UITEST 模式下通过 --UITEST_PREVIEW_DATA 注入 previewClips
         let clips = ClipTestData.isUITesting ? ClipTestData.previewClips : []
-        let viewModel = UnifiedPastePanelViewModel(clips: clips)
-        window.contentViewController = NSHostingController(
-            rootView: UnifiedPastePanelView(
-                viewModel: viewModel,
-                showsBottomBar: true,
-                accessibilityPrefix: "popover"
-            )
-        )
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        PopoverPreviewWindowFactory.show(clips: clips)
     }
 
     @objc private func handleOpenMainWindow() {
