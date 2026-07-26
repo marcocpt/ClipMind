@@ -10,6 +10,10 @@ import XCTest
 ///
 /// 覆盖 caret 定位优先级：有 caret → caret 附近；无 caret → 鼠标位置；
 /// 无权限 → 上次关闭位置；无权限无上次位置 → 屏幕中央。
+///
+/// 标记 `@MainActor`：被测对象 `CaretPanelLocator` 实现 `PanelScreenLocating`（@MainActor），
+/// 且 `screenFinder` 默认闭包引用 `NSScreen.screens`（main actor-isolated），需要主线程上下文。
+@MainActor
 final class CaretPanelLocatorTests: XCTestCase
 {
     /// 测试用固定屏幕尺寸，避免依赖宿主机实际分辨率造成非确定性失败。
@@ -116,6 +120,70 @@ final class CaretPanelLocatorTests: XCTestCase
         let panelRect = NSRect(origin: position, size: panelSize)
 
         XCTAssertFalse(panelRect.contains(caret), "面板不应遮挡 caret")
+    }
+
+    // MARK: - 多屏：caret 在外置显示器时面板应留在副屏
+
+    /// 主屏在左、副屏在右。caret 坐标落在副屏内时，面板应钳制到副屏可视范围内，
+    /// 而不是回退到主屏。这是 F1.11 「全局快捷键弹出窗口没有跟随输入外置就近出现」的回归测试。
+    func testLocatePosition_CaretOnExternalDisplay_PanelStaysOnExternalDisplay()
+    {
+        let mainFrame = NSRect(x: 0, y: 0, width: 1512, height: 944)
+        let externalFrame = NSRect(x: 1512, y: 0, width: 1920, height: 1080)
+        let screens = [mainFrame, externalFrame]
+
+        let caret = NSPoint(x: 2000, y: 500)
+        let locator = CaretPanelLocator(
+            accessibilityService: MockAccessibilityService(
+                caret: caret,
+                mouse: NSPoint(x: 100, y: 100),
+                granted: true
+            ),
+            screenFrameProvider: { mainFrame },
+            screenFinder: { point in
+                screens.first { $0.contains(point) } ?? mainFrame
+            }
+        )
+
+        let position = locator.locatePosition(lastClosedPosition: nil)
+        let panelSize = QuickPastePanelController.panelSize
+        let panelRect = NSRect(origin: position, size: panelSize)
+
+        XCTAssertTrue(
+            externalFrame.contains(panelRect),
+            "caret 在副屏时面板应留在副屏内，实际位置：\(position)"
+        )
+    }
+
+    // MARK: - 多屏：无 caret 时鼠标在外置显示器时面板应留在副屏
+
+    func testLocatePosition_MouseOnExternalDisplay_PanelStaysOnExternalDisplay()
+    {
+        let mainFrame = NSRect(x: 0, y: 0, width: 1512, height: 944)
+        let externalFrame = NSRect(x: 1512, y: 0, width: 1920, height: 1080)
+        let screens = [mainFrame, externalFrame]
+
+        let mouse = NSPoint(x: 2000, y: 500)
+        let locator = CaretPanelLocator(
+            accessibilityService: MockAccessibilityService(
+                caret: nil,
+                mouse: mouse,
+                granted: true
+            ),
+            screenFrameProvider: { mainFrame },
+            screenFinder: { point in
+                screens.first { $0.contains(point) } ?? mainFrame
+            }
+        )
+
+        let position = locator.locatePosition(lastClosedPosition: nil)
+        let panelSize = QuickPastePanelController.panelSize
+        let panelRect = NSRect(origin: position, size: panelSize)
+
+        XCTAssertTrue(
+            externalFrame.contains(panelRect),
+            "鼠标在副屏时面板应留在副屏内，实际位置：\(position)"
+        )
     }
 
     // MARK: - 测试辅助 Mock
