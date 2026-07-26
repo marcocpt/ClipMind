@@ -1,4 +1,4 @@
-> 最后更新：2026-07-25 | 版本：v1.12（基于设计规范 v1.10）
+> 最后更新：2026-07-27 | 版本：v1.13（基于设计规范 v1.10）
 
 # ClipMind 初赛 MVP 测试用例表
 
@@ -193,11 +193,13 @@ ClipMindUITests/
 | TC-23-02 | AC-23 | 点击菜单栏图标弹出 popover | App 已启动，菜单栏图标可见 | 1. 点击菜单栏 ClipMind 图标<br>2. 观察 popover | popover 弹出<br>显示最近 5-10 条剪贴内容 + 搜索框 + "查看全部"按钮 | XCUITest | ✅ COVERED | PopoverUITests.testPopoverAppearsOnIconClick + testPopoverContainsSearchField + testPopoverContainsViewAllButton |
 | TC-23-03 | AC-23 | popover 手动验证 | App 已启动，已有复制内容 | 1. 点击菜单栏图标<br>2. 观察 popover 内容 | popover 显示最近条目<br>含类型标签 + 内容预览 + 来源 + 时间 | 手动 | ⏸️ DEFERRED | UX 验证，延后至 Phase 4 T4.4 |
 | TC-23-04 | AC-23 | 侧边栏最小宽度为 350（F1.12 回归） | LayoutConstants 可访问 | 1. 读取 LayoutConstants.sidebarMinWidth<br>2. 与 350 比较 | sidebarMinWidth == 350（原值 700 过宽导致窗口缩小时内容溢出） | XCTest | ✅ COVERED | MainWindowLayoutTests.testSidebarMinWidthIs350 覆盖；F1.12 bug 修复回归保护 |
-| TC-23-05 | AC-23 | 侧边栏最小宽度不超过窗口最小宽度一半（F1.12 回归） | LayoutConstants 可访问 | 1. 计算 LayoutConstants.mainWindowMinWidth / 2<br>2. 比较 sidebarMinWidth 与一半窗口宽度 | sidebarMinWidth ≤ mainWindowMinWidth / 2（避免详情面板被挤压） | XCTest | ✅ COVERED | MainWindowLayoutTests.testSidebarMinWidthDoesNotExceedHalfOfWindow 覆盖；F1.12 bug 修复回归保护 |
+| TC-23-05 | AC-23 | 侧边栏最小宽度不超过窗口最小宽度的 60%（F1.15 放宽回归保护） | LayoutConstants 可访问 | 1. 计算 LayoutConstants.sidebarMinWidth / LayoutConstants.mainWindowMinWidth<br>2. 验证比例 ≤ 0.6 | sidebarMinWidth / mainWindowMinWidth ≤ 0.6（避免详情面板被挤压）<br>F1.15 由 50% 放宽到 60%：mainWindowMinWidth 调整为 670 后，侧边栏 350 占比 52.2%，详情面板剩 320 ≥ DetailPanel.minWidth=200 | XCTest | ✅ COVERED | MainWindowLayoutTests.testSidebarMinWidthDoesNotExceedSixtyPercentOfWindow 覆盖；F1.12 bug 修复回归保护，F1.15 放宽约束到 60% |
 | TC-23-06 | AC-23 | 窗口缩到最小时详情面板剩余空间为正（F1.12 回归） | LayoutConstants 可访问 | 1. 计算 mainWindowMinWidth - sidebarMinWidth<br>2. 验证结果 > 0 | 剩余空间 > 0（详情面板可见） | XCTest | ✅ COVERED | MainWindowLayoutTests.testDetailPanelHasPositiveSpaceAtWindowMinimum 覆盖；F1.12 bug 修复回归保护 |
-| TC-23-07 | AC-23 | 主窗口最小尺寸常量稳定（F1.12 回归） | LayoutConstants 可访问 | 1. 读取 LayoutConstants.mainWindowMinWidth<br>2. 读取 LayoutConstants.mainWindowMinHeight<br>3. 分别与 980 和 500 比较 | mainWindowMinWidth == 980<br>mainWindowMinHeight == 500 | XCTest | ✅ COVERED | MainWindowLayoutTests.testMainWindowMinimumDimensions 覆盖；F1.12 bug 修复回归保护 |
+| TC-23-07 | AC-23 | 主窗口最小尺寸常量稳定（F1.12 回归，F1.15 调整宽度） | LayoutConstants 可访问 | 1. 读取 LayoutConstants.mainWindowMinWidth<br>2. 读取 LayoutConstants.mainWindowMinHeight<br>3. 分别与 670 和 500 比较 | mainWindowMinWidth == 670（F1.15 由 980 调整为 670）<br>mainWindowMinHeight == 500 | XCTest | ✅ COVERED | MainWindowLayoutTests.testMainWindowMinimumDimensions 覆盖；F1.12 bug 修复回归保护，F1.15 同步更新预期值为 670 |
 | TC-23-08 | AC-23 | App 外层 frame minWidth 不小于 MainWindow 内层（F1.14 回归） | LayoutConstants 可访问 | 1. 比较 LayoutConstants.appWindowMinWidth 与 mainWindowMinWidth | appWindowMinWidth ≥ mainWindowMinWidth（避免缩窗时侧边栏被推出窗口可见区域） | XCTest | ✅ COVERED | MainWindowLayoutTests.testAppWindowMinWidthNotSmallerThanMainWindowMinWidth 覆盖；F1.14 bug 修复回归保护 |
 | TC-23-09 | AC-23 | App 外层 frame minHeight 不小于 MainWindow 内层（F1.14 回归） | LayoutConstants 可访问 | 1. 比较 LayoutConstants.appWindowMinHeight 与 mainWindowMinHeight | appWindowMinHeight ≥ mainWindowMinHeight | XCTest | ✅ COVERED | MainWindowLayoutTests.testAppWindowMinHeightNotSmallerThanMainWindowMinHeight 覆盖；F1.14 bug 修复回归保护 |
+| TC-23-10 | AC-23 | 主窗口最小宽度为 670（F1.15 回归保护） | LayoutConstants 可访问 | 1. 读取 LayoutConstants.mainWindowMinWidth<br>2. 与 670 比较 | mainWindowMinWidth == 670（原值 980 过宽影响小屏使用体验，调整为 670 后侧边栏 350 + 详情面板 320 仍可正常显示） | XCTest | ✅ COVERED | MainWindowLayoutTests.testMainWindowMinWidthIs670 覆盖；F1.15 bug 修复回归保护 |
+| TC-23-11 | AC-23 | App 外层 frame minWidth 同步为 670（F1.15 回归保护） | LayoutConstants 可访问 | 1. 读取 LayoutConstants.appWindowMinWidth<br>2. 与 670 比较 | appWindowMinWidth == 670（与 mainWindowMinWidth 同步，保持外层与内层一致避免嵌套冲突） | XCTest | ✅ COVERED | MainWindowLayoutTests.testAppWindowMinWidthIs670 覆盖；F1.15 bug 修复回归保护，同步外层 frame minWidth 与内层一致 |
 | TC-24-01 | AC-24 | 首次启动引导流程完整（UI 自动化） | UserDefaults 已清空 | 1. 清空 UserDefaults<br>2. 启动 App<br>3. 遍历引导流程<br>4. 断言每个步骤页面出现 | 依次显示：欢迎页 → 权限请求 → API Key 配置引导（可跳过）→ 隐私默认值提示 → 进入主界面 | XCUITest | ✅ COVERED | FirstLaunchUITests.testFirstLaunchOnboardingFlow |
 | TC-24-02 | AC-24 | API Key 配置引导可跳过 | UserDefaults 已清空 | 1. 启动 App 进入引导<br>2. 到达 API Key 配置步骤<br>3. 点击"跳过"<br>4. 观察提示 | 提示"分类/搜索本地可用，处理需配置"<br>进入隐私默认值提示步骤 | XCUITest | ✅ COVERED | FirstLaunchUITests.testAPIKeyGuideCanBeSkipped |
 | TC-24-03 | AC-24 | 首次启动引导手动验证 | App 偏好已删除 | 1. 删除 App 偏好<br>2. 启动 App<br>3. 观察引导流程 | 5 个步骤依次出现<br>权限请求正确展示 | 手动 | ❌ MISSING | 依赖 T3.7 首次启动引导（Phase 3） |
@@ -1328,19 +1330,20 @@ ClipMindUITests/
 - **覆盖状态**：✅ COVERED
 - **备注**：F1.12 bug 修复回归保护；MainWindowLayoutTests.testSidebarMinWidthIs350 覆盖
 
-**TC-23-05：侧边栏最小宽度不超过窗口最小宽度一半（F1.12 回归保护）**
+**TC-23-05：侧边栏最小宽度不超过窗口最小宽度的 60%（F1.15 放宽回归保护）**
 
 - **前置条件**：
   - `LayoutConstants` 可访问
 - **测试步骤**：
-  1. 计算 `LayoutConstants.mainWindowMinWidth / 2`
-  2. 比较 `sidebarMinWidth` 与一半窗口宽度
+  1. 计算 `LayoutConstants.sidebarMinWidth / LayoutConstants.mainWindowMinWidth`
+  2. 验证比例 ≤ 0.6
 - **预期结果**：
-  - `sidebarMinWidth ≤ mainWindowMinWidth / 2`
+  - `sidebarMinWidth / mainWindowMinWidth ≤ 0.6`
   - 确保详情面板在窗口缩到最小时仍有合理空间
+  - F1.15 由 50% 放宽到 60%：mainWindowMinWidth 调整为 670 后，侧边栏 350 占比 52.2%，详情面板剩 320 ≥ DetailPanel.minWidth=200
 - **测试框架**：XCTest
 - **覆盖状态**：✅ COVERED
-- **备注**：F1.12 bug 修复回归保护；MainWindowLayoutTests.testSidebarMinWidthDoesNotExceedHalfOfWindow 覆盖
+- **备注**：F1.12 bug 修复回归保护，F1.15 放宽约束到 60%；MainWindowLayoutTests.testSidebarMinWidthDoesNotExceedSixtyPercentOfWindow 覆盖
 
 **TC-23-06：窗口缩到最小时详情面板剩余空间为正（F1.12 回归保护）**
 
@@ -1356,21 +1359,21 @@ ClipMindUITests/
 - **覆盖状态**：✅ COVERED
 - **备注**：F1.12 bug 修复回归保护；MainWindowLayoutTests.testDetailPanelHasPositiveSpaceAtWindowMinimum 覆盖
 
-**TC-23-07：主窗口最小尺寸常量稳定（F1.12 回归保护）**
+**TC-23-07：主窗口最小尺寸常量稳定（F1.12 回归保护，F1.15 调整宽度）**
 
 - **前置条件**：
   - `LayoutConstants` 可访问
 - **测试步骤**：
   1. 读取 `LayoutConstants.mainWindowMinWidth`
   2. 读取 `LayoutConstants.mainWindowMinHeight`
-  3. 分别与 980 和 500 比较
+  3. 分别与 670 和 500 比较
 - **预期结果**：
-  - `mainWindowMinWidth == 980`
+  - `mainWindowMinWidth == 670`（F1.15 由 980 调整为 670）
   - `mainWindowMinHeight == 500`
   - 窗口最小尺寸常量保持稳定（回归保护）
 - **测试框架**：XCTest
 - **覆盖状态**：✅ COVERED
-- **备注**：F1.12 bug 修复回归保护；MainWindowLayoutTests.testMainWindowMinimumDimensions 覆盖
+- **备注**：F1.12 bug 修复回归保护，F1.15 同步更新预期值为 670；MainWindowLayoutTests.testMainWindowMinimumDimensions 覆盖
 
 **TC-23-08：App 外层 frame minWidth 不小于 MainWindow 内层（F1.14 回归保护）**
 
@@ -1401,6 +1404,34 @@ ClipMindUITests/
 - **测试框架**：XCTest
 - **覆盖状态**：✅ COVERED
 - **备注**：F1.14 bug 修复回归保护；MainWindowLayoutTests.testAppWindowMinHeightNotSmallerThanMainWindowMinHeight 覆盖
+
+**TC-23-10：主窗口最小宽度为 670（F1.15 回归保护）**
+
+- **前置条件**：
+  - `LayoutConstants` 可访问
+- **测试步骤**：
+  1. 读取 `LayoutConstants.mainWindowMinWidth`
+  2. 与 670 比较
+- **预期结果**：
+  - `mainWindowMinWidth == 670`
+  - 原值 980 过宽影响小屏使用体验，调整为 670 后侧边栏 350 + 详情面板 320（≥ DetailPanel.minWidth=200）仍可正常显示
+- **测试框架**：XCTest
+- **覆盖状态**：✅ COVERED
+- **备注**：F1.15 bug 修复回归保护；MainWindowLayoutTests.testMainWindowMinWidthIs670 覆盖
+
+**TC-23-11：App 外层 frame minWidth 同步为 670（F1.15 回归保护）**
+
+- **前置条件**：
+  - `LayoutConstants` 可访问
+- **测试步骤**：
+  1. 读取 `LayoutConstants.appWindowMinWidth`
+  2. 与 670 比较
+- **预期结果**：
+  - `appWindowMinWidth == 670`
+  - 与 `mainWindowMinWidth` 同步，保持外层与内层一致避免嵌套冲突
+- **测试框架**：XCTest
+- **覆盖状态**：✅ COVERED
+- **备注**：F1.15 bug 修复回归保护，同步外层 frame minWidth 与内层一致；MainWindowLayoutTests.testAppWindowMinWidthIs670 覆盖
 
 ---
 
@@ -1901,8 +1932,8 @@ ClipMindUITests/
 | 指标 | 数值 |
 |------|------|
 | AC 总数 | 26 |
-| 测试用例总数 | 96 |
-| 平均每 AC 用例数 | 3.69 |
+| 测试用例总数 | 98 |
+| 平均每 AC 用例数 | 3.77 |
 | AC 覆盖率 | 100%（26/26） |
 
 ### 6.2 按 AC 覆盖率
@@ -1933,7 +1964,7 @@ ClipMindUITests/
 | AC-20 | 3 | ❌3 |
 | AC-21 | 4 | ✅2 ❌2 |
 | AC-22 | 3 | ❌3 |
-| AC-23 | 9 | ✅8 ⏸️1 |
+| AC-23 | 11 | ✅10 ⏸️1 |
 | AC-24 | 11 | ✅10 ❌1 |
 | AC-25 | 3 | ⏸️3 |
 | AC-26 | 13 | ✅13 |
@@ -1942,11 +1973,11 @@ ClipMindUITests/
 
 | 测试框架 | 用例数 | 占比 |
 |---------|--------|------|
-| XCTest | 65 | 67.71% |
-| XCUITest | 14 | 14.58% |
-| 手动 | 16 | 16.67% |
-| curl | 1 | 1.04% |
-| **合计** | **96** | **100%** |
+| XCTest | 67 | 68.37% |
+| XCUITest | 14 | 14.29% |
+| 手动 | 16 | 16.33% |
+| curl | 1 | 1.02% |
+| **合计** | **98** | **100%** |
 
 **说明**：部分用例同时涉及 XCTest（mock）与手动（真实 API），统计时按主框架归类。
 
@@ -1954,13 +1985,13 @@ ClipMindUITests/
 
 | 覆盖状态 | 用例数 | 占比 |
 |---------|--------|------|
-| ✅ COVERED | 59 | 61.46% |
-| 🟡 PARTIAL | 8 | 8.33% |
-| ❌ MISSING | 16 | 16.67% |
-| ⏸️ DEFERRED | 13 | 13.54% |
-| **合计** | **96** | **100%** |
+| ✅ COVERED | 61 | 62.24% |
+| 🟡 PARTIAL | 8 | 8.16% |
+| ❌ MISSING | 16 | 16.33% |
+| ⏸️ DEFERRED | 13 | 13.27% |
+| **合计** | **98** | **100%** |
 
-> **当前状态**：Phase 4（Web + Demo 帖）已完成。55 条用例通过 XCTest/XCUITest 自动化覆盖；8 条因数据集缩减或仅 UI 路径覆盖标注为 PARTIAL；13 条真实 API 集成与截图/录屏手动验证用例延后（TC-25-01 curl 验证需合并到 main 后执行）；16 条依赖 Phase 3 任务（SensitiveDetector / BlacklistService / CleanupService / 首启引导）尚未实现，标注为 MISSING。Phase 4 的 TC-25-02/03 已通过 browser_use 子代理验证并更新为 ✅ COVERED。TC-26-01 ~ TC-26-13（全局快捷键唤醒主窗口）已通过 XCTest 自动化覆盖。TC-24-05（辅助功能请求触发 TCC 提示）已通过 XCTest 自动化覆盖。TC-24-06（点击「打开系统设置」不崩溃）已通过 XCUITest 自动化覆盖，回归保护 `kAXTrustedCheckOptionPrompt` 全局常量为 NULL 导致的 EXC_BAD_ACCESS 崩溃。TC-24-07（打开系统设置与触发 TCC 提示的调用顺序）已通过 XCTest 自动化覆盖，回归保护 TCC 提示对话框被系统设置面板遮挡的问题。TC-C-01（跳过提示框内容完整呈现）已通过 XCUITest 自动化覆盖，回归保护 onChange 两步绑定导致 alert 呈现时被重渲染打断、图标延迟显示的问题。TC-24-08/09/10（通知权限请求分支行为）已通过 XCTest 自动化覆盖，回归保护 `.denied` 状态下点击「授权通知」无反应的问题（`.denied` 时打开系统设置通知页面引导用户手动开启）。TC-23-04 ~ TC-23-07（主窗口布局常量回归保护）已通过 XCTest 自动化覆盖，回归保护 F1.12 bug 修复（导航栏最小宽度从 700 调整为 350，解决窗口缩小时搜索框和列表溢出问题）。TC-23-08/09（App 外层 frame 与 MainWindow 内层 frame 嵌套冲突回归保护）已通过 XCTest 自动化覆盖，回归保护 F1.14 bug 修复（外层 frame minWidth/minHeight 由 900/600 调整为 980/500 与内层对齐，消除嵌套冲突导致缩窗时侧边栏被推出窗口可见区域的问题）。
+> **当前状态**：Phase 4（Web + Demo 帖）已完成。55 条用例通过 XCTest/XCUITest 自动化覆盖；8 条因数据集缩减或仅 UI 路径覆盖标注为 PARTIAL；13 条真实 API 集成与截图/录屏手动验证用例延后（TC-25-01 curl 验证需合并到 main 后执行）；16 条依赖 Phase 3 任务（SensitiveDetector / BlacklistService / CleanupService / 首启引导）尚未实现，标注为 MISSING。Phase 4 的 TC-25-02/03 已通过 browser_use 子代理验证并更新为 ✅ COVERED。TC-26-01 ~ TC-26-13（全局快捷键唤醒主窗口）已通过 XCTest 自动化覆盖。TC-24-05（辅助功能请求触发 TCC 提示）已通过 XCTest 自动化覆盖。TC-24-06（点击「打开系统设置」不崩溃）已通过 XCUITest 自动化覆盖，回归保护 `kAXTrustedCheckOptionPrompt` 全局常量为 NULL 导致的 EXC_BAD_ACCESS 崩溃。TC-24-07（打开系统设置与触发 TCC 提示的调用顺序）已通过 XCTest 自动化覆盖，回归保护 TCC 提示对话框被系统设置面板遮挡的问题。TC-C-01（跳过提示框内容完整呈现）已通过 XCUITest 自动化覆盖，回归保护 onChange 两步绑定导致 alert 呈现时被重渲染打断、图标延迟显示的问题。TC-24-08/09/10（通知权限请求分支行为）已通过 XCTest 自动化覆盖，回归保护 `.denied` 状态下点击「授权通知」无反应的问题（`.denied` 时打开系统设置通知页面引导用户手动开启）。TC-23-04 ~ TC-23-07（主窗口布局常量回归保护）已通过 XCTest 自动化覆盖，回归保护 F1.12 bug 修复（导航栏最小宽度从 700 调整为 350，解决窗口缩小时搜索框和列表溢出问题）。TC-23-08/09（App 外层 frame 与 MainWindow 内层 frame 嵌套冲突回归保护）已通过 XCTest 自动化覆盖，回归保护 F1.14 bug 修复（外层 frame minWidth/minHeight 由 900/600 调整为 980/500 与内层对齐，消除嵌套冲突导致缩窗时侧边栏被推出窗口可见区域的问题）。TC-23-05（侧边栏占比约束）已更新放宽到 60%，TC-23-07（主窗口最小尺寸）已同步更新预期值为 670，TC-23-10/11（主窗口最小宽度 670 与 App 外层 frame 同步）已通过 XCTest 自动化覆盖，回归保护 F1.15 bug 修复（mainWindowMinWidth 与 appWindowMinWidth 由 980 同步调整为 670，适配小屏使用场景，侧边栏 350 + 详情面板 320 仍可正常显示）。
 
 ### 6.5 按模块分布
 
@@ -1972,10 +2003,10 @@ ClipMindUITests/
 | F1.4 一键处理 | 5 | 19 | 11 | 3 | 5 | 0 |
 | F1.5 本地加密存储 | 2 | 5 | 2 | 0 | 3 | 0 |
 | F1.6 隐私保护 | 3 | 10 | 9 | 1 | 0 | 0 |
-| F1.7 主界面与交互 | 4 | 36 | 24 | 7 | 4 | 1 |
-| **合计** | **26** | **96** | **65** | **14** | **16** | **1** |
+| F1.7 主界面与交互 | 4 | 38 | 26 | 7 | 4 | 1 |
+| **合计** | **26** | **98** | **67** | **14** | **16** | **1** |
 
-> **说明**：每条用例按"主测试框架"归类一次，无双重计数。F1.2 中 TC-08-07（复制 Token 弹通知）归类为手动；F1.4 新增 4 条 LLM API 错误路径用例（TC-13-04/14-04/15-04/16-04）归类为 XCTest；F1.6 新增 TC-21-04（恰好 30 天边界）归类为 XCTest；F1.7 新增 13 条全局快捷键用例（TC-26-01 ~ TC-26-13）归类为 XCTest；F1.7 新增 TC-24-05（辅助功能请求触发 TCC 提示，PermissionRequesterTests）归类为 XCTest；F1.7 新增 TC-24-06（点击「打开系统设置」不崩溃，PermissionRequestUITests）归类为 XCUITest。F1.7 新增 TC-24-07（打开系统设置与触发 TCC 提示的调用顺序，PermissionRequesterTests）归类为 XCTest。F1.7 新增 TC-C-01（跳过提示框内容完整呈现，FirstLaunchUITests）归类为 XCUITest。F1.7 新增 TC-24-08/09/10（通知权限请求分支行为，PermissionRequesterTests）归类为 XCTest。F1.7 新增 4 条主窗口布局常量回归保护用例（TC-23-04 ~ TC-23-07，MainWindowLayoutTests）归类为 XCTest，对应 F1.12 bug 修复（导航栏最小宽度 700→350）。F1.7 新增 2 条 App 外层 frame 嵌套冲突回归保护用例（TC-23-08/09，MainWindowLayoutTests）归类为 XCTest，对应 F1.14 bug 修复（外层 frame 900/600 → 980/500 与内层对齐）。
+> **说明**：每条用例按"主测试框架"归类一次，无双重计数。F1.2 中 TC-08-07（复制 Token 弹通知）归类为手动；F1.4 新增 4 条 LLM API 错误路径用例（TC-13-04/14-04/15-04/16-04）归类为 XCTest；F1.6 新增 TC-21-04（恰好 30 天边界）归类为 XCTest；F1.7 新增 13 条全局快捷键用例（TC-26-01 ~ TC-26-13）归类为 XCTest；F1.7 新增 TC-24-05（辅助功能请求触发 TCC 提示，PermissionRequesterTests）归类为 XCTest；F1.7 新增 TC-24-06（点击「打开系统设置」不崩溃，PermissionRequestUITests）归类为 XCUITest。F1.7 新增 TC-24-07（打开系统设置与触发 TCC 提示的调用顺序，PermissionRequesterTests）归类为 XCTest。F1.7 新增 TC-C-01（跳过提示框内容完整呈现，FirstLaunchUITests）归类为 XCUITest。F1.7 新增 TC-24-08/09/10（通知权限请求分支行为，PermissionRequesterTests）归类为 XCTest。F1.7 新增 4 条主窗口布局常量回归保护用例（TC-23-04 ~ TC-23-07，MainWindowLayoutTests）归类为 XCTest，对应 F1.12 bug 修复（导航栏最小宽度 700→350）。F1.7 新增 2 条 App 外层 frame 嵌套冲突回归保护用例（TC-23-08/09，MainWindowLayoutTests）归类为 XCTest，对应 F1.14 bug 修复（外层 frame 900/600 → 980/500 与内层对齐）。F1.7 新增 2 条主窗口最小宽度调整回归保护用例（TC-23-10/11，MainWindowLayoutTests）归类为 XCTest，对应 F1.15 bug 修复（mainWindowMinWidth 与 appWindowMinWidth 由 980 同步调整为 670）；TC-23-05 侧边栏占比约束由 50% 放宽到 60%、TC-23-07 主窗口最小宽度预期值由 980 更新为 670，归类保持 XCTest。
 
 ---
 
@@ -1995,3 +2026,4 @@ ClipMindUITests/
 | v1.9 | 2026-07-14 | 合并 F1.11 通知权限请求分支修复到 main（基线含 F1.7 API Key 跳过 + F1.9 TCC 调用顺序）：新增 TC-24-08/09/10 三条 XCTest 覆盖 `requestNotification` 在 `.notDetermined`/`.denied`/`.authorized` 三种状态下的分支行为（TC-24-09 为核心 bug 回归，`.denied` 时打开系统设置通知页面）；6.1 节总数 88→90、平均每 AC 用例数 3.38→3.46；6.2 节 AC-24 用例数 9→11（✅10 ❌1）；6.3 节 XCTest 59（占比 65.56%）、XCUITest 14（占比 15.56%）、合计 88→90；6.4 节 ✅ COVERED 49→53（占比 55.68%→58.89%）、❌ MISSING 18→16（占比 20.45%→17.78%）、合计 88→90；6.5 节 F1.7 用例数 28→30、XCUITest 5→7、合计 88→90 |
 | v1.10 | 2026-07-14 | 合并 F1.12 导航栏宽度溢出修复到 main（基线含 F1.11 通知权限 + F1.9 TCC + F1.7 API Key 跳过）：新增 TC-23-04 ~ TC-23-07 四条 XCTest 主窗口布局常量回归保护用例（MainWindowLayoutTests.testSidebarMinWidthIs350 / testSidebarMinWidthDoesNotExceedHalfOfWindow / testDetailPanelHasPositiveSpaceAtWindowMinimum / testMainWindowMinimumDimensions，验证 sidebarMinWidth=350 / mainWindowMinWidth=980 / mainWindowMinHeight=500）；更新 XCUITest testSidebarMinWidth700→testSidebarMinWidth350 反映 700→350 变更；1.4 节测试组织结构树补充 UI/MainWindowLayoutTests.swift；6.1 节总数 90→94、平均每 AC 用例数 3.46→3.62；6.2 节 AC-23 用例数 3→7（✅2 ⏸️1 → ✅6 ⏸️1）；6.3 节 XCTest 59→63（占比 65.56%→67.02%）、合计 90→94；6.4 节 ✅ COVERED 53→57（占比 58.89%→60.64%）、合计 90→94；6.5 节 F1.7 用例数 30→34、XCTest 18→22、合计 90→94 |
 | v1.11 | 2026-07-14 | 同步 F1.14 窗口外层 frame 与内层嵌套冲突修复（基于设计规范 v1.10）：新增 TC-23-08/09 两条 XCTest 回归保护用例（MainWindowLayoutTests.testAppWindowMinWidthNotSmallerThanMainWindowMinWidth / testAppWindowMinHeightNotSmallerThanMainWindowMinHeight，验证 appWindowMinWidth(980) ≥ mainWindowMinWidth(980) 与 appWindowMinHeight(500) ≥ mainWindowMinHeight(500)）；6.1 节总数 94→96、平均每 AC 用例数 3.62→3.69；6.2 节 AC-23 用例数 7→9（✅6 ⏸️1 → ✅8 ⏸️1）；6.3 节 XCTest 63→65（占比 67.02%→67.71%）、合计 94→96；6.4 节 ✅ COVERED 57→59（占比 60.64%→61.46%）、合计 94→96；6.5 节 F1.7 用例数 34→36、XCTest 22→24、合计 94→96 |
+| v1.13 | 2026-07-27 | 同步 F1.15 主窗口最小宽度调整修复（基于设计规范 v1.10）：新增 TC-23-10/11 两条 XCTest 回归保护用例（MainWindowLayoutTests.testMainWindowMinWidthIs670 / testAppWindowMinWidthIs670，验证 mainWindowMinWidth=670 与 appWindowMinWidth=670 同步调整）；更新 TC-23-05 侧边栏占比约束由 50% 放宽到 60%（testSidebarMinWidthDoesNotExceedHalfOfWindow → testSidebarMinWidthDoesNotExceedSixtyPercentOfWindow，mainWindowMinWidth 调整为 670 后侧边栏 350 占比 52.2%，详情面板剩 320 ≥ DetailPanel.minWidth=200）；更新 TC-23-07 主窗口最小宽度预期值 980→670；6.1 节总数 96→98、平均每 AC 用例数 3.69→3.77；6.2 节 AC-23 用例数 9→11（✅8 ⏸️1 → ✅10 ⏸️1）；6.3 节 XCTest 65→67（占比 67.71%→68.37%）、合计 96→98；6.4 节 ✅ COVERED 59→61（占比 61.46%→62.24%）、合计 96→98；6.5 节 F1.7 用例数 36→38、XCTest 24→26、合计 96→98 |
