@@ -23,6 +23,58 @@ final class SystemPastePermissionChecker: PastePermissionChecking
     }
 }
 
+/// 剪贴项置顶协议（依赖注入，便于测试 mock）。
+///
+/// F1.11 Bug 4：双击粘贴成功后调用 `touch(id:)`，把被粘贴项的 timestamp
+/// 更新为当前时间，使其在列表中置顶（"使用一次就置顶"语义）。
+/// 默认实现 `EncryptedStoreClipToucher` 封装 `EncryptedStore.touchTimestamp`
+/// 调用并发送 `clipDidUpdateNotification` 通知让 UI 刷新。
+protocol ClipTouching: AnyObject
+{
+    /// 把指定 ClipItem 的 timestamp 更新为当前时间。
+    /// - Parameter id: ClipItem 的 UUID
+    /// - Returns: 是否找到并更新了记录
+    @discardableResult
+    func touch(id: UUID) -> Bool
+}
+
+/// `ClipTouching` 默认实现：基于 `EncryptedStore`。
+///
+/// - 在主线程调用 `EncryptedStore.touchTimestamp` 更新数据库 timestamp 列
+/// - 更新成功后发送 `ClipCaptureService.clipDidUpdateNotification`
+///   通知触发 `ClipStore.loadClips()` 刷新 UI
+/// - 失败时记录日志但不抛出（粘贴流程已经完成，置顶失败不影响主流程）
+final class EncryptedStoreClipToucher: ClipTouching
+{
+    private let store: EncryptedStore
+
+    init(store: EncryptedStore)
+    {
+        self.store = store
+    }
+
+    @discardableResult
+    func touch(id: UUID) -> Bool
+    {
+        do {
+            let updated = try store.touchTimestamp(id: id)
+            if updated {
+                LogCategory.app.info("Clip touched (moved to top): id=\(id.uuidString.prefix(8))")
+                NotificationCenter.default.post(
+                    name: ClipCaptureService.clipDidUpdateNotification,
+                    object: nil
+                )
+            } else {
+                LogCategory.app.info("Clip touch skipped: id not found")
+            }
+            return updated
+        } catch {
+            LogCategory.storage.error("Clip touch failed: \(error.localizedDescription)")
+            return false
+        }
+    }
+}
+
 /// 面板关闭协议（抽象 QuickPastePanelController 便于测试 mock）。
 ///
 /// 标记为 @MainActor 与实现类 QuickPastePanelController 保持一致，
@@ -69,12 +121,18 @@ final class PasteCoordinator
     /// 使用 `Any?` 避免条件编译包裹 init 参数导致的脆弱语法。
     private let pasteSimulator: Any?
 
+    /// 剪贴项置顶器（可选）。F1.11 Bug 4：双击粘贴成功后调用 `touch(id:)`
+    /// 把被粘贴项的 timestamp 更新为当前时间，使其在列表中置顶。
+    /// 为 nil 时不进行置顶（向后兼容，测试可不注入）。
+    private let clipToucher: ClipTouching?
+
     init(
         permissionChecker: PastePermissionChecking,
         clipboardWriter: ClipboardWriting,
         panelCloser: PanelClosing,
         overlayShower: OverlayShowing,
-        pasteSimulator: Any? = nil
+        pasteSimulator: Any? = nil,
+        clipToucher: ClipTouching? = nil
     )
     {
         self.permissionChecker = permissionChecker
@@ -82,6 +140,7 @@ final class PasteCoordinator
         self.panelCloser = panelCloser
         self.overlayShower = overlayShower
         self.pasteSimulator = pasteSimulator
+        self.clipToucher = clipToucher
     }
 
     /// 处理粘贴请求（由 UnifiedPastePanelViewModel.onPasteTriggered 调用）。
@@ -105,6 +164,10 @@ final class PasteCoordinator
             LogCategory.app.error("Clipboard write failed, abort paste flow")
             return
         }
+
+        // F1.11 Bug 4：写入成功后置顶被粘贴项（移到列表最前面）。
+        // 失败时仅记录日志，不影响粘贴主流程。
+        clipToucher?.touch(id: clip.id)
 
         // 关闭快速粘贴面板
         panelCloser.closePanel()

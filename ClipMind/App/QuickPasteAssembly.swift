@@ -101,6 +101,8 @@ extension AppDelegate
     /// F1.11 Bug 3：注入共享的 `selfWriteSuppressor` 到 `ClipboardWriter`，
     /// 使 F1.9 粘贴路径与 F2.1 自动保存路径共用同一套自我写入抑制机制，
     /// 避免双击粘贴后列表出现重复条目。
+    ///
+    /// F1.11 Bug 4：注入共享的 `clipToucher`，使快捷键面板双击粘贴后置顶被粘贴项。
     @MainActor
     private func makePasteCoordinator(
         permissionChecker: PastePermissionChecking,
@@ -114,14 +116,16 @@ extension AppDelegate
             clipboardWriter: ClipboardWriter(suppressor: selfWriteSuppressor),
             panelCloser: panelController,
             overlayShower: overlayController,
-            pasteSimulator: PasteSimulator()
+            pasteSimulator: PasteSimulator(),
+            clipToucher: clipToucher
         )
         #else
         return PasteCoordinator(
             permissionChecker: permissionChecker,
             clipboardWriter: ClipboardWriter(suppressor: selfWriteSuppressor),
             panelCloser: panelController,
-            overlayShower: overlayController
+            overlayShower: overlayController,
+            clipToucher: clipToucher
         )
         #endif
     }

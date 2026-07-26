@@ -40,6 +40,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // PopoverPreviewWindowFactory 等 extension 可访问共享实例，注入到 ClipboardWriter，
     // 与 PasteboardWatcher 共享同一套自我写入抑制机制。
     var selfWriteSuppressor: SelfWriteSuppressor?
+    // F1.11 Bug 4：双击粘贴后置顶器，供 PasteCoordinator 装配点共享。
+    // 在 setupServices 中基于 EncryptedStore 初始化，注入到 QuickPaste/StatusItem 装配点。
+    var clipToucher: EncryptedStoreClipToucher?
     // F2.1.1 新增：Toast 协调模块
     private var toastCoordinator: ToastCoordinator?
     // internal 以便 QuickPasteAssembly.swift 同模块访问
@@ -147,6 +150,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let store = try EncryptedStore()
             setupCaptureService(store: store)
             setupCleanupService(store: store)
+            // F1.11 Bug 4：基于共享 store 创建置顶器，供 PasteCoordinator 装配点注入
+            clipToucher = EncryptedStoreClipToucher(store: store)
 
             // UI 测试预置数据（仅 --UITEST_PREPOPULATE_SAMPLE_AND_REAL 启动参数时执行）
             if CommandLine.arguments.contains("--UITEST_PREPOPULATE_SAMPLE_AND_REAL") {
@@ -315,7 +320,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         {
             clips = []
         }
-        PopoverPreviewWindowFactory.show(clips: clips, suppressor: selfWriteSuppressor)
+        PopoverPreviewWindowFactory.show(
+            clips: clips,
+            suppressor: selfWriteSuppressor,
+            clipToucher: clipToucher
+        )
     }
 
     @objc private func handleOpenMainWindow() {

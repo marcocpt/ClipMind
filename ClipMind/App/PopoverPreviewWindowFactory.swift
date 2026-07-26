@@ -13,8 +13,14 @@ enum PopoverPreviewWindowFactory
     /// - Parameters:
     ///   - clips: 注入的剪贴项列表（UITEST 模式下为 `ClipTestData.previewClips`）
     ///   - suppressor: 共享的自我写入抑制器。UITEST_FORCE_NO_PERMISSION 路径下注入到
-    ///     ClipboardWriter，使应用自身写入不触发 PasteboardWatcher 捕获（F1.11 Bug 3）。
-    static func show(clips: [ClipItem], suppressor: SelfWriteSuppressor? = nil)
+    ///     ClipboardWriter，使自我写入抑制行为与生产装配一致。
+    ///   - clipToucher: 共享的剪贴项置顶器。UITEST_FORCE_NO_PERMISSION 路径下注入到
+    ///     PasteCoordinator，使双击粘贴后置顶行为与生产装配一致。
+    static func show(
+        clips: [ClipItem],
+        suppressor: SelfWriteSuppressor? = nil,
+        clipToucher: ClipTouching? = nil
+    )
     {
         let window = makeWindow()
         let viewModel = UnifiedPastePanelViewModel(clips: clips)
@@ -28,7 +34,12 @@ enum PopoverPreviewWindowFactory
         viewModel.onExitApp = { [weak window] in
             window?.close()
         }
-        configurePasteTrigger(viewModel: viewModel, window: window, suppressor: suppressor)
+        configurePasteTrigger(
+            viewModel: viewModel,
+            window: window,
+            suppressor: suppressor,
+            clipToucher: clipToucher
+        )
 
         window.contentViewController = NSHostingController(
             rootView: UnifiedPastePanelView(
@@ -107,7 +118,8 @@ enum PopoverPreviewWindowFactory
     private static func configurePasteTrigger(
         viewModel: UnifiedPastePanelViewModel,
         window: NSPanel,
-        suppressor: SelfWriteSuppressor?
+        suppressor: SelfWriteSuppressor?,
+        clipToucher: ClipTouching?
     )
     {
         if CommandLine.arguments.contains("--UITEST_FORCE_NO_PERMISSION")
@@ -121,11 +133,13 @@ enum PopoverPreviewWindowFactory
             )
             // F1.11 Bug 3：UITEST_FORCE_NO_PERMISSION 路径同样注入共享 suppressor，
             // 使 ClipboardWriter 写入与 PasteboardWatcher 行为一致。
+            // F1.11 Bug 4：同步注入 clipToucher，使双击粘贴后置顶行为与生产一致。
             let coordinator = PasteCoordinator(
                 permissionChecker: permissionChecker,
                 clipboardWriter: ClipboardWriter(suppressor: suppressor),
                 panelCloser: NoOpPanelCloser(),
-                overlayShower: overlayShower
+                overlayShower: overlayShower,
+                clipToucher: clipToucher
             )
             viewModel.onPasteTriggered = { clip in
                 coordinator.handlePaste(clip: clip)

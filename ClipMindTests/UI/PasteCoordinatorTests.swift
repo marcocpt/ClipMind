@@ -3,9 +3,6 @@ import AppKit
 import Foundation
 import XCTest
 
-/// 测试共享调用顺序计数器（供 MockPanelCloser / MockOverlayShower / MockPasteSimulator 共享）。
-private var sharedCallSequence = 0
-
 @MainActor
 final class PasteCoordinatorTests: XCTestCase
 {
@@ -223,6 +220,56 @@ final class PasteCoordinatorTests: XCTestCase
         XCTAssertTrue(controller is PanelClosing, "QuickPastePanelController 应遵循 PanelClosing 协议")
         _ = controller
     }
+
+    // MARK: - TC-F1.11-Bug4 双击粘贴后置顶被粘贴项（写入成功后调用 clipToucher）
+
+    func testHandlePaste_WriteSuccess_CallsClipToucher_WithClipId()
+    {
+        let permissionChecker = MockPermissionChecker(granted: false)
+        let writer = MockClipboardWriter()
+        let panel = MockPanelCloser()
+        let overlay = MockOverlayShower()
+        let clipToucher = MockClipToucher()
+        let coordinator = PasteCoordinator(
+            permissionChecker: permissionChecker,
+            clipboardWriter: writer,
+            panelCloser: panel,
+            overlayShower: overlay,
+            clipToucher: clipToucher
+        )
+
+        let clip = ClipItem.makeText("置顶测试", contentType: .other, sourceApp: "com.test", sourceAppName: "Test")
+        coordinator.handlePaste(clip: clip)
+
+        XCTAssertTrue(writer.writeCalled, "应写入剪贴板")
+        XCTAssertTrue(clipToucher.touchCalled, "写入成功后应调用 clipToucher.touch")
+        XCTAssertEqual(clipToucher.touchedId, clip.id, "应传入被粘贴项的 id")
+    }
+
+    // MARK: - TC-F1.11-Bug4 写入失败时不调用 clipToucher（避免无效置顶）
+
+    func testHandlePaste_WriteFailure_DoesNotCallClipToucher()
+    {
+        let permissionChecker = MockPermissionChecker(granted: false)
+        let writer = MockClipboardWriter()
+        writer.shouldSucceed = false
+        let panel = MockPanelCloser()
+        let overlay = MockOverlayShower()
+        let clipToucher = MockClipToucher()
+        let coordinator = PasteCoordinator(
+            permissionChecker: permissionChecker,
+            clipboardWriter: writer,
+            panelCloser: panel,
+            overlayShower: overlay,
+            clipToucher: clipToucher
+        )
+
+        let clip = ClipItem.makeText("失败测试", contentType: .other, sourceApp: "com.test", sourceAppName: "Test")
+        coordinator.handlePaste(clip: clip)
+
+        XCTAssertTrue(writer.writeCalled, "应尝试写入剪贴板")
+        XCTAssertFalse(clipToucher.touchCalled, "写入失败时不应调用 clipToucher.touch（guard return 前不触发）")
+    }
 }
 
 // MARK: - Phase 4：有权限路径测试（仅 ClipMind-Dev Scheme 编译）
@@ -373,124 +420,6 @@ extension PasteCoordinatorTests
         let secondCount = permissionChecker.checkCallCount
 
         XCTAssertEqual(secondCount, firstCount + 1, "每次粘贴流程都应重新检测权限")
-    }
-}
-
-#endif
-
-// MARK: - 测试辅助 Mock
-
-private final class MockPermissionChecker: PastePermissionChecking
-{
-    var granted: Bool
-    private(set) var checkCallCount = 0
-
-    init(granted: Bool)
-    {
-        self.granted = granted
-    }
-
-    func isAccessibilityGranted() -> Bool
-    {
-        checkCallCount += 1
-        return granted
-    }
-}
-
-private final class MockClipboardWriter: ClipboardWriting
-{
-    var shouldSucceed = true
-    private(set) var writeCalled = false
-    private(set) var writtenText: String = ""
-
-    func write(text: String) -> Bool
-    {
-        writeCalled = true
-        writtenText = text
-        return shouldSucceed
-    }
-
-    func reset()
-    {
-        writeCalled = false
-        writtenText = ""
-        shouldSucceed = true
-    }
-}
-
-private final class MockPanelCloser: PanelClosing
-{
-    private(set) var closeCalled = false
-    private(set) var callOrder = 0
-
-    var isPanelVisible: Bool { !closeCalled }
-
-    func closePanel()
-    {
-        closeCalled = true
-        sharedCallSequence += 1
-        callOrder = sharedCallSequence
-    }
-
-    func reset()
-    {
-        closeCalled = false
-        callOrder = 0
-    }
-}
-
-private final class MockOverlayShower: OverlayShowing
-{
-    private(set) var showCalled = false
-    private(set) var callOrder = 0
-
-    func showOverlay()
-    {
-        showCalled = true
-        sharedCallSequence += 1
-        callOrder = sharedCallSequence
-    }
-
-    func hideOverlay() {}
-
-    func reset()
-    {
-        showCalled = false
-        callOrder = 0
-    }
-}
-
-@MainActor
-private final class ScreenCenterLocatorForIntegration: PanelScreenLocating
-{
-    func locatePosition(lastClosedPosition: NSPoint?) -> NSPoint
-    {
-        let screenFrame = NSScreen.main?.frame ?? .zero
-        return NSPoint(
-            x: screenFrame.midX - QuickPastePanelController.panelSize.width / 2.0,
-            y: screenFrame.midY - QuickPastePanelController.panelSize.height / 2.0
-        )
-    }
-}
-
-#if CLIPMIND_DEV
-
-private final class MockPasteSimulator: PasteSimulating
-{
-    private(set) var simulateCalled = false
-    private(set) var callOrder = 0
-
-    func simulatePaste()
-    {
-        simulateCalled = true
-        sharedCallSequence += 1
-        callOrder = sharedCallSequence
-    }
-
-    func reset()
-    {
-        simulateCalled = false
-        callOrder = 0
     }
 }
 

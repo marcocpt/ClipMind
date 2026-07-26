@@ -6,7 +6,7 @@ struct ClipItem: Identifiable, Codable, Equatable {
     var contentType: ContentType
     let sourceApp: String
     let sourceAppName: String
-    let timestamp: Date
+    var timestamp: Date
     var summary: String?
     var translation: String?
     var rewrite: String?
