@@ -186,6 +186,46 @@ final class CaretPanelLocatorTests: XCTestCase
         )
     }
 
+    // MARK: - 鼠标位置无效时降级到屏幕中央（修复 Trae CN 等 Electron 应用左下角 bug）
+
+    /// Bug 场景：在 Trae CN 等 Electron 应用中按全局热键，面板停在屏幕左下角 (0, 0)。
+    ///
+    /// 根因：Electron 应用不支持 AXSelectedTextRange，locateCaret() 返回 nil；
+    /// 降级到 currentMouseLocation() 时，CGEvent(source: nil) 在非激活面板应用中
+    /// 可能返回 nil 或 .zero，NSEvent.mouseLocation 也可能返回 (0, 0)；
+    /// 经 clampToScreen 后面板被钳制到屏幕左下角 (0, 0)。
+    ///
+    /// 期望：鼠标位置明显无效（位于屏幕原点）时，应降级到屏幕中央，
+    /// 而不是停在左下角。
+    func testLocatePosition_NoCaret_InvalidMouseLocation_FallsBackToScreenCenter()
+    {
+        // 模拟 Trae CN 场景：caret 不可用，鼠标位置返回 (0, 0)
+        let mouse = NSPoint(x: 0, y: 0)
+        let locator = CaretPanelLocator(
+            accessibilityService: MockAccessibilityService(
+                caret: nil,
+                mouse: mouse,
+                granted: true
+            ),
+            screenFrameProvider: { self.testScreenFrame }
+        )
+
+        let position = locator.locatePosition(lastClosedPosition: nil)
+        let panelSize = QuickPastePanelController.panelSize
+
+        // 不应停在左下角 (0, 0)
+        XCTAssertFalse(
+            position.x == 0 && position.y == 0,
+            "鼠标位置无效时不应停在屏幕左下角，实际位置：\(position)"
+        )
+
+        // 应降级到屏幕中央
+        let expectedX = testScreenFrame.midX - panelSize.width / 2.0
+        let expectedY = testScreenFrame.midY - panelSize.height / 2.0
+        XCTAssertEqual(position.x, expectedX, accuracy: 1.0, "鼠标位置无效时应降级到屏幕中央")
+        XCTAssertEqual(position.y, expectedY, accuracy: 1.0, "鼠标位置无效时应降级到屏幕中央")
+    }
+
     // MARK: - 测试辅助 Mock
 
     private final class MockAccessibilityService: PastePermissionChecking, CaretLocating, MousePositionProviding

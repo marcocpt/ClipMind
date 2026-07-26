@@ -66,6 +66,19 @@ final class CaretPanelLocator: PanelScreenLocating
                 return clampToScreen(position: position, panelSize: panelSize, anchor: caret)
             } else {
                 let mouse = accessibilityService.currentMouseLocation()
+
+                // 鼠标位置无效检测：CGEvent(source: nil) 在非激活面板应用中可能返回 nil，
+                // NSEvent.mouseLocation 在未接收鼠标事件时返回 (0, 0)。经 clampToScreen
+                // 后面板会被钳制到屏幕左下角 (0, 0)，影响 Trae CN 等 Electron 应用。
+                // 当鼠标位置为原点 (0, 0) 时视为无效，降级到屏幕中央。
+                if mouse.x == 0 && mouse.y == 0
+                {
+                    return NSPoint(
+                        x: mainScreenFrame.midX - panelSize.width / 2.0,
+                        y: mainScreenFrame.midY - panelSize.height / 2.0
+                    )
+                }
+
                 let position = NSPoint(
                     x: mouse.x - panelSize.width / 2.0,
                     y: mouse.y - panelSize.height / 2.0
