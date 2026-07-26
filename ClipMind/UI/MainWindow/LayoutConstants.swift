@@ -6,6 +6,7 @@ import Foundation
 /// 将魔术数字提取为命名常量，便于测试验证与统一维护。
 /// 对应 bug 修复 F1.12：导航栏宽度从 700 调整为 350，解决窗口缩小时内容溢出。
 /// 对应 bug 修复 F1.14：消除 ClipMindApp 外层 frame 与 MainWindow 内层 frame 的嵌套冲突。
+/// 对应 bug 修复 F1.15：主窗口最小宽度由 980 调整为 670，适配小屏使用场景。
 enum LayoutConstants {
     /// 侧边栏（导航栏）最小宽度。
     ///
@@ -14,7 +15,10 @@ enum LayoutConstants {
     static let sidebarMinWidth: CGFloat = 350
 
     /// 主窗口最小宽度。
-    static let mainWindowMinWidth: CGFloat = 980
+    ///
+    /// F1.15 由原值 980 调整为 670：原值过宽影响小屏使用体验，
+    /// 调整后侧边栏 350 + 详情面板 320（>= DetailPanel.minWidth=200）仍可正常显示。
+    static let mainWindowMinWidth: CGFloat = 670
 
     /// 主窗口最小高度。
     static let mainWindowMinHeight: CGFloat = 500
@@ -25,7 +29,8 @@ enum LayoutConstants {
     /// 内层 minWidth，窗口会被外层限制到小于内层期望的宽度，导致 NavigationView
     /// 布局冲突，缩窗时侧边栏内容（搜索栏 + 列表）被推出窗口可见区域（F1.14）。
     /// F1.14 由原值 900 调整为 980，与 mainWindowMinWidth 对齐消除嵌套冲突。
-    static let appWindowMinWidth: CGFloat = 980
+    /// F1.15 同步 mainWindowMinWidth 调整为 670，保持外层与内层一致。
+    static let appWindowMinWidth: CGFloat = 670
 
     /// App 级窗口最小高度（ClipMindApp 中包裹 MainWindow 的外层 frame）。
     ///
