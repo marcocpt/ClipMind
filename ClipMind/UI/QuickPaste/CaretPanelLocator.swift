@@ -14,6 +14,9 @@ import Foundation
 /// 3. 无权限 + 有上次关闭位置 → 上次关闭位置
 /// 4. 无权限 + 无上次关闭位置 → 屏幕中央
 ///
+/// 多屏支持：面板钳制时按 caret/鼠标所在屏幕的 frame 计算，避免在外置显示器
+/// 输入时面板被强制拉回主屏（F1.11 「全局快捷键弹出窗口没有跟随输入外置就近出现」）。
+///
 /// 遵循 PanelScreenLocating 协议（Phase 1 定义），替代 ScreenCenterPanelLocator。
 final class CaretPanelLocator: PanelScreenLocating
 {
@@ -22,23 +25,33 @@ final class CaretPanelLocator: PanelScreenLocating
 
     private let accessibilityService: PastePermissionChecking & CaretLocating & MousePositionProviding
     private let screenFrameProvider: () -> NSRect
+    private let screenFinder: (NSPoint) -> NSRect
 
     /// - Parameters:
     ///   - accessibilityService: 辅助功能服务（提供权限检测 + caret 定位 + 鼠标位置）
-    ///   - screenFrameProvider: 屏幕尺寸提供器（默认读取 NSScreen.main，便于测试注入固定屏幕尺寸）
+    ///   - screenFrameProvider: 主屏尺寸提供器（默认读取 NSScreen.main，便于测试注入固定屏幕尺寸；
+    ///     用于无权限无上次位置时的屏幕中央降级）
+    ///   - screenFinder: 根据坐标查找所在屏幕 frame 的闭包（默认遍历 NSScreen.screens，
+    ///     找不到时回退到主屏）。用于多屏钳制，确保面板留在 caret/鼠标所在屏幕内。
     init(
         accessibilityService: PastePermissionChecking & CaretLocating & MousePositionProviding,
-        screenFrameProvider: @escaping () -> NSRect = { NSScreen.main?.frame ?? .zero }
+        screenFrameProvider: @escaping () -> NSRect = { NSScreen.main?.frame ?? .zero },
+        screenFinder: @escaping (NSPoint) -> NSRect = { point in
+            NSScreen.screens.first { $0.frame.contains(point) }?.frame
+                ?? NSScreen.main?.frame
+                ?? .zero
+        }
     )
     {
         self.accessibilityService = accessibilityService
         self.screenFrameProvider = screenFrameProvider
+        self.screenFinder = screenFinder
     }
 
     func locatePosition(lastClosedPosition: NSPoint?) -> NSPoint
     {
         let panelSize = QuickPastePanelController.panelSize
-        let screenFrame = screenFrameProvider()
+        let mainScreenFrame = screenFrameProvider()
 
         // 有权限时尝试 caret 定位
         if accessibilityService.isAccessibilityGranted()
@@ -49,14 +62,16 @@ final class CaretPanelLocator: PanelScreenLocating
                     x: caret.x + Self.caretOffset,
                     y: caret.y - Self.caretOffset - panelSize.height
                 )
-                return clampToScreen(position: position, panelSize: panelSize, screenFrame: screenFrame)
+                // 多屏：以 caret 为锚点找到所在屏幕，再钳制到该屏可视范围
+                return clampToScreen(position: position, panelSize: panelSize, anchor: caret)
             } else {
                 let mouse = accessibilityService.currentMouseLocation()
                 let position = NSPoint(
                     x: mouse.x - panelSize.width / 2.0,
                     y: mouse.y - panelSize.height / 2.0
                 )
-                return clampToScreen(position: position, panelSize: panelSize, screenFrame: screenFrame)
+                // 多屏：以鼠标为锚点找到所在屏幕
+                return clampToScreen(position: position, panelSize: panelSize, anchor: mouse)
             }
         }
 
@@ -66,16 +81,23 @@ final class CaretPanelLocator: PanelScreenLocating
         }
 
         return NSPoint(
-            x: screenFrame.midX - panelSize.width / 2.0,
-            y: screenFrame.midY - panelSize.height / 2.0
+            x: mainScreenFrame.midX - panelSize.width / 2.0,
+            y: mainScreenFrame.midY - panelSize.height / 2.0
         )
     }
 
     // MARK: - 私有
 
-    /// 将面板位置限制在屏幕可视范围内（避免超出屏幕边界）。
-    private func clampToScreen(position: NSPoint, panelSize: NSSize, screenFrame: NSRect) -> NSPoint
+    /// 将面板位置限制在锚点所在屏幕的可视范围内（避免超出屏幕边界）。
+    ///
+    /// - Parameters:
+    ///   - position: 面板期望左下角坐标
+    ///   - panelSize: 面板尺寸
+    ///   - anchor: 锚点坐标（caret 或鼠标位置），用于查找所在屏幕
+    /// - Returns: 钳制后的面板左下角坐标，保持在锚点所在屏幕内
+    private func clampToScreen(position: NSPoint, panelSize: NSSize, anchor: NSPoint) -> NSPoint
     {
+        let screenFrame = screenFinder(anchor)
         let clampedX = max(screenFrame.minX, min(position.x, screenFrame.maxX - panelSize.width))
         let clampedY = max(screenFrame.minY, min(position.y, screenFrame.maxY - panelSize.height))
         return NSPoint(x: clampedX, y: clampedY)

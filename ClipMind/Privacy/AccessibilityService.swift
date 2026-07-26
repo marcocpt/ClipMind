@@ -117,8 +117,10 @@ final class AccessibilityService: PastePermissionChecking, CaretLocating, MouseP
         var caretBounds = CGRect.zero
         AXValueGetValue(boundsValue, .cgRect, &caretBounds)
 
-        // AXUIElement 返回的坐标是屏幕左上角原点，转换为 NSPoint（屏幕左下角原点）
-        let screenHeight = NSScreen.main?.frame.height ?? 0
+        // AXUIElement 全局坐标系原点是主屏左上角（NSScreen.screens[0]），Y 向下增加。
+        // 必须用 screens.first（主屏）做翻转，不能使用 NSScreen.main（当前键盘焦点所在屏），
+        // 否则在副屏输入时 Y 坐标会用副屏高度翻转，导致 caret 定位错误（F1.11 多屏修复）。
+        let screenHeight = NSScreen.screens.first?.frame.height ?? 0
         return NSPoint(x: caretBounds.origin.x, y: screenHeight - caretBounds.origin.y)
     }
 
@@ -221,8 +223,10 @@ final class AccessibilityService: PastePermissionChecking, CaretLocating, MouseP
         if let event = CGEvent(source: nil)
         {
             let location = event.location
-            // CGEvent 返回的是全局坐标（屏幕左上角原点），转换为 NSPoint（屏幕左下角原点）
-            let screenHeight = NSScreen.main?.frame.height ?? 0
+            // CGEvent 全局坐标系原点是主屏左上角（NSScreen.screens[0]），Y 向下增加。
+            // 必须用 screens.first（主屏）做翻转，不能使用 NSScreen.main（当前键盘焦点所在屏），
+            // 否则鼠标在副屏时 Y 坐标会用副屏高度翻转，导致面板定位错误（F1.11 多屏修复）。
+            let screenHeight = NSScreen.screens.first?.frame.height ?? 0
             return NSPoint(x: location.x, y: screenHeight - location.y)
         }
         return NSEvent.mouseLocation
