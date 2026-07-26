@@ -25,6 +25,7 @@ struct ClipRowView: View
             Text(contentPreview)
                 .font(.system(size: 13))
                 .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
                 .foregroundColor(.primary)
             HStack(spacing: 8)
             {
