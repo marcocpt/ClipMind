@@ -166,6 +166,7 @@
 		BBCAA50968C7E78CD4004187 /* SourceFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD2B156E617C2E858E5D370 /* SourceFilter.swift */; };
 		BD525A550EA715E1360AED90 /* GlobalHotkeyServiceNewDefaultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BEE678A88FE1F8F029BB24A /* GlobalHotkeyServiceNewDefaultTests.swift */; };
 		BD5D1B4DBB4F613CEF118C00 /* LoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B43AF8EF3AD28DDE8EDEEC7 /* LoggerTests.swift */; };
+		BF77C0259C97F088D7BD4507 /* ClipRowViewMultiLinePreviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F608BEDCC6B2685431758BA /* ClipRowViewMultiLinePreviewTests.swift */; };
 		BF7B5554AF5BAD86F89D5CF6 /* PopoverBottomToolbarUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D026077AC67B2E42DC5EDB4C /* PopoverBottomToolbarUITests.swift */; };
 		C115216B030D33D2B6BD84FC /* PollingHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D92C7E46B4693500FF63CB /* PollingHelperTests.swift */; };
 		C1A2B142A86C1648AE72BF28 /* ToastUITestLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AB21125ABD29CFCD0CCFD87 /* ToastUITestLauncher.swift */; };
@@ -289,6 +290,7 @@
 		3AFB70953AAE16C89101A34B /* ContentReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentReaderTests.swift; sourceTree = "<group>"; };
 		3B43AF8EF3AD28DDE8EDEEC7 /* LoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerTests.swift; sourceTree = "<group>"; };
 		3BEE678A88FE1F8F029BB24A /* GlobalHotkeyServiceNewDefaultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyServiceNewDefaultTests.swift; sourceTree = "<group>"; };
+		3F608BEDCC6B2685431758BA /* ClipRowViewMultiLinePreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipRowViewMultiLinePreviewTests.swift; sourceTree = "<group>"; };
 		40EB26C58B1F517AE16B2EAF /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		41CAABFDA44691DAFE1ECF36 /* APIKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyManager.swift; sourceTree = "<group>"; };
 		421D3EB05F0FD258672884C1 /* CaretPanelLocatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaretPanelLocatorTests.swift; sourceTree = "<group>"; };
@@ -889,6 +891,7 @@
 				77D331CEF56652ECC8282BE3 /* AutoSaveBehaviorUITests.swift */,
 				D35F0EA2C5EDFF6181390B24 /* AutoSaveSettingsUITests.swift */,
 				37023D2FCB531B633F999B04 /* ClipMindUITests.swift */,
+				3F608BEDCC6B2685431758BA /* ClipRowViewMultiLinePreviewTests.swift */,
 				FBE3CEC209DA4A78E7178025 /* FirstLaunchUITests.swift */,
 				954920134349D8FE3362DE33 /* GeneralSettingsHotkeyDisplayUITests.swift */,
 				94564086A489A3C69338F2E8 /* MainWindowUITests.swift */,
@@ -1419,6 +1422,7 @@
 				986749C996E6986A1FB997A7 /* AutoSaveBehaviorUITests.swift in Sources */,
 				FDD655EC5BF93601BC695A28 /* AutoSaveSettingsUITests.swift in Sources */,
 				BA7754C5642A7356E27B8C13 /* ClipMindUITests.swift in Sources */,
+				BF77C0259C97F088D7BD4507 /* ClipRowViewMultiLinePreviewTests.swift in Sources */,
 				9C86550BCEB7477EBDFF03AA /* FirstLaunchUITests.swift in Sources */,
 				20C77D27D4807BD822C94757 /* GeneralSettingsHotkeyDisplayUITests.swift in Sources */,
 				717234DECC4165CDA1062FBC /* MainWindowUITests.swift in Sources */,

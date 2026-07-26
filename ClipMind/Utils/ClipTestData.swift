@@ -72,6 +72,13 @@ enum ClipTestData {
             contentType: .other,
             sourceApp: "com.apple.Terminal",
             sourceAppName: "Terminal"
+        ),
+        // F1.16: 多行文本预览测试数据（验证列表行显示最多两行）
+        makeClip(
+            text: "多行剪贴内容第一行\n多行剪贴内容第二行",
+            contentType: .other,
+            sourceApp: "com.apple.Terminal",
+            sourceAppName: "Terminal"
         )
     ]
 
