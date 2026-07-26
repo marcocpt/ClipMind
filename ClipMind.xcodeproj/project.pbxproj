@@ -200,6 +200,7 @@
 		DFBB327E8F839281BF32E32E /* SettingsViewAutoSaveTabTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF59BCFA4CA2D2D8BCFA737F /* SettingsViewAutoSaveTabTests.swift */; };
 		E16263F9D40B217D1361988D /* ClipTestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD5B39F7DAEF07E5F2DAB3F /* ClipTestData.swift */; };
 		E1673812CB0303A76F1EDF24 /* MockLLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39FF982F24EBCA3F0FEEB0C7 /* MockLLMService.swift */; };
+		E169D9A4140FB266582D11E1 /* PasteCoordinatorMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4169A33A67333853E6EF53 /* PasteCoordinatorMocks.swift */; };
 		E197C9B2996392E601BAF0E7 /* PermissionIconSymbolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A320A2C325CDFC51979086 /* PermissionIconSymbolTests.swift */; };
 		E323B17597A465510DE54C29 /* ContentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1769A4084EFA0F4DEF90BA /* ContentType.swift */; };
 		EA3A8F1A3471B8CDFD51E391 /* SelfWriteSuppressorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F978F6E9E7196579808518 /* SelfWriteSuppressorTests.swift */; };
@@ -249,6 +250,7 @@
 		0158AFEC98DEF7010FF07BA5 /* APIKeyConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyConfigView.swift; sourceTree = "<group>"; };
 		052A1740B48ABE615B8D629B /* ClipMind.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClipMind.entitlements; sourceTree = "<group>"; };
 		07F5C41835A8A2DABAC39032 /* ClipboardReplacerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardReplacerTests.swift; sourceTree = "<group>"; };
+		0B4169A33A67333853E6EF53 /* PasteCoordinatorMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteCoordinatorMocks.swift; sourceTree = "<group>"; };
 		0F027F3147207AB32C96D7A1 /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
 		1020A60C34DB25CD1A43561C /* BottomToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomToolbarView.swift; sourceTree = "<group>"; };
 		11A18DC1E3566CBF0A8F9AB9 /* QuickPastePanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPastePanelController.swift; sourceTree = "<group>"; };
@@ -655,6 +657,7 @@
 				ED13F78D795292DB7194F5E9 /* ClipRowViewInteractionTests.swift */,
 				5F251B7AE980808D43161B6B /* HotkeyRecorderResetTests.swift */,
 				A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */,
+				0B4169A33A67333853E6EF53 /* PasteCoordinatorMocks.swift */,
 				7C5F705AEFA1D709C90AAE0E /* PasteCoordinatorTests.swift */,
 				9FC44E4CB94A7B3901DC67A0 /* PasteOverlayControllerTests.swift */,
 				78A2F713089403A42D9D1C36 /* PasteSimulatorTests.swift */,
@@ -1366,6 +1369,7 @@
 				F7BA652A80058AD2704733A7 /* MainWindowLayoutTests.swift in Sources */,
 				E1673812CB0303A76F1EDF24 /* MockLLMService.swift in Sources */,
 				C4B895B2B488B0C870E2B9F8 /* MultiProviderLLMServiceTests.swift in Sources */,
+				E169D9A4140FB266582D11E1 /* PasteCoordinatorMocks.swift in Sources */,
 				49E5A4CDFDAAD2B0154107D6 /* PasteCoordinatorTests.swift in Sources */,
 				3C5F85797CEA5F2E8060DA4E /* PasteOverlayControllerTests.swift in Sources */,
 				9C22144A2F30332302F7D684 /* PasteSimulatorTests.swift in Sources */,

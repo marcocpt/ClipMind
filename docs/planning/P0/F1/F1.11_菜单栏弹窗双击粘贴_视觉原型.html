@@ -2,13 +2,15 @@
 <html lang="zh-CN">
 <!--
   F1.11 菜单栏弹窗双击粘贴 - 视觉原型
-  版本：v1.0 | 最后更新：2026-07-25
+  版本：v1.2 | 最后更新：2026-07-26
   关联需求文档：F1.11_菜单栏弹窗双击粘贴_需求文档.md v1.0
-  关联设计文档：F1.11_菜单栏弹窗双击粘贴_设计文档.md v1.0
+  关联设计文档：F1.11_菜单栏弹窗双击粘贴_设计文档.md v1.2
   覆盖 AC：AC-F1.11-1 ~ AC-F1.11-14
   说明：本原型为静态视觉示意，用 macOS 原生浅色风格展示菜单栏弹窗、底部工具栏三按钮、
         双击/回车/方向键/Esc 交互、图片/文件路径提示、降级浮层、视图层合并（两场景对比）
         等关键场景，不包含真实交互逻辑。视觉风格与 F1.9 视觉原型一致。
+  v1.2 变更：Bug 2 修复——底部工具栏按钮由文字改为 SF Symbol 图标（list.bullet/gearshape/power），
+            快捷键场景补齐底部工具栏（showsBottomBar: true），两场景对齐。
 -->
 <head>
     <meta charset="UTF-8">
@@ -418,6 +420,23 @@
             text-align: center;
         }
 
+        /* v1.2：底部工具栏图标按钮（SF Symbol 视觉示意） */
+        .footer-btn-icon {
+            font-size: 16px;
+            line-height: 1;
+            min-width: 36px;
+            padding: 4px 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer-btn-icon.footer-btn-icon-label {
+            font-size: 10px;
+            color: #8a8a99;
+            margin-left: 2px;
+        }
+
         /* 底部工具栏（快捷键场景：仅提示，无按钮） */
         .panel-footer-quick {
             padding: 8px 12px;
@@ -725,8 +744,8 @@
     <div class="meta">
         <span>功能编号：F1.11</span>
         <span>优先级：P0</span>
-        <span>版本：v1.0</span>
-        <span>最后更新：2026-07-25</span>
+        <span>版本：v1.2</span>
+        <span>最后更新：2026-07-26</span>
         <span>覆盖 AC：AC-F1.11-1 ~ AC-F1.11-14</span>
         <span>视觉风格：与 F1.9 一致（macOS 原生浅色）</span>
     </div>
@@ -815,11 +834,11 @@
                     </div>
                 </div>
             </div>
-            <!-- 底部工具栏：菜单栏弹窗场景显示三按钮 -->
+            <!-- 底部工具栏：菜单栏弹窗场景显示三按钮（v1.2：SF Symbol 图标） -->
             <div class="panel-footer-popover">
-                <button class="footer-btn" aria-label="查看全部按钮">查看全部</button>
-                <button class="footer-btn" aria-label="配置按钮">配置</button>
-                <button class="footer-btn danger" aria-label="退出按钮">退出</button>
+                <button class="footer-btn footer-btn-icon" aria-label="查看全部按钮" title="查看全部">☰</button>
+                <button class="footer-btn footer-btn-icon" aria-label="配置按钮" title="配置">⚙</button>
+                <button class="footer-btn footer-btn-icon danger" aria-label="退出按钮" title="退出">⏻</button>
             </div>
         </div>
 
@@ -835,7 +854,7 @@
         ② 列表非空时第一行立即高亮（<code>#d4e8ff</code> 背景 + <code>#0a84ff</code> 左边框）；
         ③ 同一时刻最多一行高亮（单选模式）；
         ④ 高亮差异不仅依赖颜色（辅以左边框形状），满足 NFR-005 色盲用户可识别；
-        ⑤ 底部工具栏三按钮：左「查看全部」/ 中「配置」/ 右「退出」（菜单栏弹窗场景显示）；
+        ⑤ 底部工具栏三按钮（v1.2 改为 SF Symbol 图标）：左「查看全部」(☰ list.bullet) / 中「配置」(⚙ gearshape) / 右「退出」(⏻ power)（菜单栏弹窗场景显示，辅助功能标签保留中文文案）；
         ⑥ 弹窗尺寸 360×480（与快捷键面板视觉一致，视图层合并后共用同一视图）。
     </div>
 </div>
@@ -1115,9 +1134,9 @@
                         </div>
                     </div>
                     <div class="panel-footer-popover">
-                        <button class="footer-btn primary" aria-label="查看全部按钮">查看全部</button>
-                        <button class="footer-btn" aria-label="配置按钮">配置</button>
-                        <button class="footer-btn danger" aria-label="退出按钮">退出</button>
+                        <button class="footer-btn footer-btn-icon primary" aria-label="查看全部按钮" title="查看全部">☰</button>
+                        <button class="footer-btn footer-btn-icon" aria-label="配置按钮" title="配置">⚙</button>
+                        <button class="footer-btn footer-btn-icon danger" aria-label="退出按钮" title="退出">⏻</button>
                     </div>
                 </div>
             </div>
@@ -1172,9 +1191,9 @@
                         </div>
                     </div>
                     <div class="panel-footer-popover">
-                        <button class="footer-btn" aria-label="查看全部按钮">查看全部</button>
-                        <button class="footer-btn primary" aria-label="配置按钮">配置</button>
-                        <button class="footer-btn danger" aria-label="退出按钮">退出</button>
+                        <button class="footer-btn footer-btn-icon" aria-label="查看全部按钮" title="查看全部">☰</button>
+                        <button class="footer-btn footer-btn-icon primary" aria-label="配置按钮" title="配置">⚙</button>
+                        <button class="footer-btn footer-btn-icon danger" aria-label="退出按钮" title="退出">⏻</button>
                     </div>
                 </div>
             </div>
@@ -1219,13 +1238,13 @@
 <!-- 场景 8：底部「退出」按钮 -->
 <div class="scene">
     <div class="scene-title">
-        场景 8：底部「退出」按钮关闭弹窗（不退出应用）
+        场景 8：底部「退出」按钮退出整个应用
         <span class="ac-tag">AC-F1.11-8</span>
     </div>
     <div class="scene-desc">
-        点击底部「退出」按钮：立即关闭菜单栏弹窗，不打开其他窗口，不触发粘贴流程。
-        「退出」语义是「退出弹窗」（关闭弹窗回到原工作流），而非「退出应用」。
-        应用退出由系统菜单栏的「退出 ClipMind」入口承担（macOS 标准行为）。
+        点击底部「退出」按钮（v1.2 改为 SF Symbol 图标 ⏻ power）：立即退出整个应用（调用 <code>NSApp.terminate</code>），不打开其他窗口，不触发粘贴流程。
+        「退出」语义在 F1.11 Bug Fix（commit edb9688）后调整为「退出整个应用」（原 v1.0 为「关闭弹窗」）。
+        UITEST 模式下由 <code>PopoverPreviewWindowFactory</code> 注入 <code>window?.close()</code> 测试 stub，避免真的退出测试进程。
     </div>
     <div class="stage">
         <div class="stage-row">
@@ -1239,24 +1258,24 @@
                         </div>
                     </div>
                     <div class="panel-footer-popover">
-                        <button class="footer-btn" aria-label="查看全部按钮">查看全部</button>
-                        <button class="footer-btn" aria-label="配置按钮">配置</button>
-                        <button class="footer-btn danger" aria-label="退出按钮">退出</button>
+                        <button class="footer-btn footer-btn-icon" aria-label="查看全部按钮" title="查看全部">☰</button>
+                        <button class="footer-btn footer-btn-icon" aria-label="配置按钮" title="配置">⚙</button>
+                        <button class="footer-btn footer-btn-icon danger" aria-label="退出按钮" title="退出">⏻</button>
                     </div>
                 </div>
             </div>
 
             <div class="stage-item">
-                <div class="stage-item-label">8b. 点击后：弹窗关闭，无其他窗口</div>
+                <div class="stage-item-label">8b. 点击后：应用退出</div>
                 <div class="mock-app" style="min-height: 200px;">
-                    <div class="mock-app-title">备忘录（前台应用，弹窗已关闭）</div>
+                    <div class="mock-app-title">应用已退出</div>
                     <div class="mock-app-content" style="color: #8a8a99;">
-                        弹窗已关闭。<br>
+                        应用立即退出（生产环境调用 <code>NSApp.terminate</code>）。<br>
                         不打开主窗口、不打开设置窗口、不触发粘贴流程。<br>
-                        用户回到原工作流继续编辑备忘录。<br>
+                        菜单栏图标消失，应用进程结束。<br>
                         <br>
-                        应用仍在菜单栏运行（菜单栏图标仍可见）。<br>
-                        用户可再次点击菜单栏图标重新打开弹窗。
+                        UITEST 模式下注入 <code>window?.close()</code> stub，<br>
+                        仅关闭窗口不退出测试进程（配套 XCTest 见 TC-F1.11-C-07、TC-F1.11-C-08）。
                     </div>
                 </div>
             </div>
@@ -1264,10 +1283,11 @@
     </div>
     <div class="legend">
         <strong>视觉要点：</strong>
-        ① 「退出」按钮位于底部工具栏右侧，使用红色文字 <code>#d70015</code> 暗示「关闭」语义；
-        ② 点击后仅关闭弹窗，不退出应用（应用仍在菜单栏运行）；
-        ③ 关闭由状态栏图标控制器通过面板关闭协议接口处理（与 Esc 关闭共用同一关闭路径）；
-        ④ 「退出」语义是「退出弹窗」而非「退出应用」，按钮文案在菜单栏弹窗上下文中足够明确。
+        ① 「退出」按钮位于底部工具栏右侧，使用 SF Symbol 图标 ⏻ (power) + 红色 <code>#d70015</code> 暗示「退出」语义；
+        ② 点击后退出整个应用（F1.11 Bug Fix commit edb9688 后行为，原 v1.0 为「关闭弹窗」）；
+        ③ UITEST 模式下由 <code>PopoverPreviewWindowFactory</code> 注入 <code>window?.close()</code> 测试 stub；
+        ④ 配套 XCTest：TC-F1.11-C-07（<code>onExitApp</code> 默认 nil）、TC-F1.11-C-08（<code>onExitApp</code> 可被设置与触发）；
+        ⑤ 辅助功能标签保留中文文案「退出按钮」，满足 NFR-005 可访问性。
     </div>
 </div>
 
@@ -1311,9 +1331,9 @@
                 </div>
             </div>
             <div class="panel-footer-popover">
-                <button class="footer-btn" aria-label="查看全部按钮">查看全部</button>
-                <button class="footer-btn" aria-label="配置按钮">配置</button>
-                <button class="footer-btn danger" aria-label="退出按钮">退出</button>
+                <button class="footer-btn footer-btn-icon" aria-label="查看全部按钮" title="查看全部">☰</button>
+                <button class="footer-btn footer-btn-icon" aria-label="配置按钮" title="配置">⚙</button>
+                <button class="footer-btn footer-btn-icon danger" aria-label="退出按钮" title="退出">⏻</button>
             </div>
         </div>
     </div>
@@ -1405,20 +1425,20 @@
                             <div class="clip-meta"><span>Xcode</span><span>2 分钟前</span></div>
                         </div>
                     </div>
-                    <!-- 底部工具栏：菜单栏弹窗场景显示三按钮 -->
+                    <!-- 底部工具栏：菜单栏弹窗场景显示三按钮（v1.2：SF Symbol 图标） -->
                     <div class="panel-footer-popover">
-                        <button class="footer-btn" aria-label="查看全部按钮">查看全部</button>
-                        <button class="footer-btn" aria-label="配置按钮">配置</button>
-                        <button class="footer-btn danger" aria-label="退出按钮">退出</button>
+                        <button class="footer-btn footer-btn-icon" aria-label="查看全部按钮" title="查看全部">☰</button>
+                        <button class="footer-btn footer-btn-icon" aria-label="配置按钮" title="配置">⚙</button>
+                        <button class="footer-btn footer-btn-icon danger" aria-label="退出按钮" title="退出">⏻</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 子场景 11b：快捷键场景（底部工具栏隐藏） -->
+            <!-- 子场景 11b：快捷键场景（v1.2：底部工具栏可见，与菜单栏弹窗场景对齐） -->
             <div class="stage-item">
                 <div class="stage-item-label">
                     11b. 快捷键场景
-                    <span class="scene-badge">底部工具栏隐藏</span>
+                    <span class="scene-badge">底部工具栏可见（v1.2 对齐）</span>
                 </div>
                 <div class="paste-panel" style="position: relative; width: 100%; height: 360px;">
                     <div class="panel-search">
@@ -1437,10 +1457,11 @@
                             <div class="clip-meta"><span>Xcode</span><span>2 分钟前</span></div>
                         </div>
                     </div>
-                    <!-- 底部工具栏：快捷键场景隐藏，仅显示提示 -->
-                    <div class="panel-footer-quick">
-                        <button class="panel-footer-btn-quick">查看全部</button>
-                        <span class="panel-footer-hint-quick">双击粘贴 · 回车粘贴 · Esc 关闭</span>
+                    <!-- 底部工具栏：v1.2 Bug 2 修复后快捷键场景也显示三按钮（showsBottomBar: true） -->
+                    <div class="panel-footer-popover">
+                        <button class="footer-btn footer-btn-icon" aria-label="查看全部按钮" title="查看全部">☰</button>
+                        <button class="footer-btn footer-btn-icon" aria-label="配置按钮" title="配置">⚙</button>
+                        <button class="footer-btn footer-btn-icon danger" aria-label="退出按钮" title="退出">⏻</button>
                     </div>
                 </div>
             </div>
@@ -1448,9 +1469,9 @@
     </div>
     <div class="legend">
         <strong>视觉要点：</strong>
-        ① 两个场景共用同一统一粘贴面板视图（视图层合并），仅底部工具栏可见性不同；
-        ② 菜单栏弹窗场景：底部工具栏显示「查看全部/配置/退出」三按钮；
-        ③ 快捷键场景：底部工具栏隐藏，仅显示「查看全部」按钮 + 操作提示（沿用 F1.9 视觉）；
+        ① 两个场景共用同一统一粘贴面板视图（视图层合并），v1.2 Bug 2 修复后两场景底部工具栏均可见（对齐）；
+        ② 菜单栏弹窗场景与快捷键场景：底部工具栏均显示「查看全部」(☰) /「配置」(⚙) /「退出」(⏻) 三按钮（SF Symbol 图标）；
+        ③ v1.2 修正：原 v1.0 快捷键场景隐藏底部工具栏，Bug 2 修复后 <code>QuickPasteAssembly.showsBottomBar: true</code>，两场景对齐；
         ④ 底部工具栏可见性由包装控制器在初始化视图时通过外部参数注入，运行期间不切换；
         ⑤ 快捷键场景的所有 F1.9 已有行为保持不变：双击粘贴、回车粘贴、方向键导航、Esc 关闭、失焦关闭、粘贴后关闭、无权限降级浮层、超时配置；
         ⑥ F1.9 已有的辅助功能标识符保持不变（不重命名），自动化测试用例向后兼容。
@@ -1515,12 +1536,13 @@
 <!-- 场景 13：底部工具栏条件渲染 -->
 <div class="scene">
     <div class="scene-title">
-        场景 13：底部工具栏条件渲染（两场景对比）
+        场景 13：底部工具栏条件渲染（两场景对比，v1.2 后两场景对齐）
         <span class="ac-tag">AC-F1.11-13</span>
     </div>
     <div class="scene-desc">
         通过单元测试在菜单栏弹窗场景与快捷键场景下检查统一粘贴面板视图的底部工具栏可见性。
-        菜单栏弹窗场景下底部工具栏可见（显示「查看全部/配置/退出」三按钮）；快捷键场景下底部工具栏不可见。
+        v1.2 Bug 2 修复后，两场景底部工具栏均可见（显示「查看全部/配置/退出」三按钮，SF Symbol 图标），
+        原 v1.0「快捷键场景隐藏底部工具栏」的决策已 reversal。
         底部工具栏可见性由包装控制器在初始化视图时通过外部参数注入，运行期间不切换。
     </div>
     <div class="stage">
@@ -1535,18 +1557,18 @@
                         </div>
                     </div>
                     <div class="panel-footer-popover">
-                        <button class="footer-btn" aria-label="查看全部按钮">查看全部</button>
-                        <button class="footer-btn" aria-label="配置按钮">配置</button>
-                        <button class="footer-btn danger" aria-label="退出按钮">退出</button>
+                        <button class="footer-btn footer-btn-icon" aria-label="查看全部按钮" title="查看全部">☰</button>
+                        <button class="footer-btn footer-btn-icon" aria-label="配置按钮" title="配置">⚙</button>
+                        <button class="footer-btn footer-btn-icon danger" aria-label="退出按钮" title="退出">⏻</button>
                     </div>
                 </div>
                 <div style="text-align: center; margin-top: 8px; font-size: 11px; color: #34c759;">
-                    ✓ 底部工具栏可见（三按钮显示）
+                    ✓ 底部工具栏可见（三按钮显示，SF Symbol 图标）
                 </div>
             </div>
 
             <div class="stage-item">
-                <div class="stage-item-label">13b. 快捷键场景 → 底部工具栏不可见</div>
+                <div class="stage-item-label">13b. 快捷键场景 → 底部工具栏可见（v1.2 对齐）</div>
                 <div class="paste-panel" style="position: relative; width: 100%; height: 280px;">
                     <div class="panel-list">
                         <div class="clip-row default-highlight">
@@ -1554,24 +1576,26 @@
                             <div class="clip-content">会议纪要 2026-07-25</div>
                         </div>
                     </div>
-                    <div class="panel-footer-quick">
-                        <button class="panel-footer-btn-quick">查看全部</button>
-                        <span class="panel-footer-hint-quick">双击粘贴 · 回车粘贴 · Esc 关闭</span>
+                    <div class="panel-footer-popover">
+                        <button class="footer-btn footer-btn-icon" aria-label="查看全部按钮" title="查看全部">☰</button>
+                        <button class="footer-btn footer-btn-icon" aria-label="配置按钮" title="配置">⚙</button>
+                        <button class="footer-btn footer-btn-icon danger" aria-label="退出按钮" title="退出">⏻</button>
                     </div>
                 </div>
                 <div style="text-align: center; margin-top: 8px; font-size: 11px; color: #34c759;">
-                    ✓ 底部工具栏不可见（仅提示文案，沿用 F1.9）
+                    ✓ 底部工具栏可见（v1.2 Bug 2 修复后与菜单栏弹窗场景对齐）
                 </div>
             </div>
         </div>
     </div>
     <div class="legend">
         <strong>视觉要点：</strong>
-        ① 底部工具栏可见性由外部参数控制（菜单栏弹窗场景为可见，快捷键场景为隐藏）；
+        ① v1.2 Bug 2 修复后，两场景底部工具栏均可见（原 v1.0 快捷键场景隐藏，已 reversal）；
         ② 外部参数由包装控制器在初始化视图时注入，运行期间不切换（每个控制器实例对应一个固定场景）；
-        ③ 单元测试可通过检查底部工具栏可见性参数验证条件渲染正确性；
-        ④ 视图本身无需感知场景上下文，降低耦合（NFR-007 可维护性）；
-        ⑤ 若未来需要支持「运行时切换场景」，需重构为运行时切换（当前 Out of Scope 未提及，外部参数注入满足所有 FR）。
+        ③ 单元测试可通过检查底部工具栏可见性参数验证条件渲染正确性（TC-F1.11-13-01 ~ TC-F1.11-13-05）；
+        ④ v1.2 新增 TC-F1.11-13-04（SF Symbol 图标常量校验）、TC-F1.11-13-05（快捷键面板三按钮验证）；
+        ⑤ 视图本身无需感知场景上下文，降低耦合（NFR-007 可维护性）；
+        ⑥ 辅助功能标签保留中文文案「查看全部按钮/配置按钮/退出按钮」，满足 NFR-005 可访问性。
     </div>
 </div>
 
@@ -1693,13 +1717,13 @@ Closed ──无位置记忆（菜单栏弹窗绑定图标位置）──> Close
         <p>• 类型标签：文本蓝 <code>#0a84ff</code> · 图片橙 <code>#fb923c</code> · 文件路径绿 <code>#34c759</code></p>
         <p>• 提示条背景 <code>#fff3cd</code> · 提示左边框 <code>#ffc107</code></p>
         <p>• 降级浮层背景 <code>rgba(30,30,35,0.92)</code> + 毛玻璃模糊</p>
-        <p>• 底部按钮：主色 <code>#0a84ff</code> · 危险色 <code>#d70015</code>（退出按钮文字）</p>
+        <p>• 底部按钮：主色 <code>#0a84ff</code> · 危险色 <code>#d70015</code>（退出按钮图标颜色）</p>
         <p>• 文字主色 <code>#1d1d1f</code> · 次要 <code>#6e6e70</code> · 弱化 <code>#8a8a99</code></p>
         <br>
         <p><strong>尺寸规范：</strong></p>
         <p>• 统一粘贴面板视图：360×480（与 F1.9 快捷键面板视觉一致，固定尺寸不支持自定义）</p>
         <p>• 降级浮层：自适应内容（约 280×52），屏幕中央定位</p>
-        <p>• 底部工具栏按钮：min-height 24px，min-width 60px，间距 6px</p>
+        <p>• 底部工具栏按钮（v1.2 改为 SF Symbol 图标）：min-height 24px，min-width 36px，间距 6px，图标字号 16px</p>
         <p>• 列表行内边距 12px · 行间距 0（边框分隔）· 类型标签字号 10px</p>
         <br>
         <p><strong>交互键盘（与 F1.9 一致）：</strong></p>
@@ -1713,9 +1737,15 @@ Closed ──无位置记忆（菜单栏弹窗绑定图标位置）──> Close
         <p><strong>视图层合并（F1.11 核心架构决策）：</strong></p>
         <p>• 菜单栏弹窗视图与快捷键面板视图合并为<strong>统一粘贴面板视图</strong></p>
         <p>• 由状态栏图标控制器（菜单栏弹窗场景）和快捷键面板控制器（快捷键场景）分别包装</p>
-        <p>• 底部工具栏通过外部参数控制显隐（菜单栏弹窗场景显示三按钮，快捷键场景隐藏）</p>
+        <p>• 底部工具栏通过外部参数控制显隐（v1.2 Bug 2 修复后两场景均显示三按钮，对齐）</p>
         <p>• 视图本身不直接读取剪贴板存储，仅消费外部注入的列表（数据源统一）</p>
         <p>• 面板关闭协议被状态栏图标控制器与快捷键面板控制器共同实现（关闭接口统一）</p>
+        <br>
+        <p><strong>底部工具栏按钮（v1.2：SF Symbol 图标）：</strong></p>
+        <p>• 「查看全部」按钮：☰ (SF Symbol <code>list.bullet</code>)，辅助功能标签「查看全部按钮」</p>
+        <p>• 「配置」按钮：⚙ (SF Symbol <code>gearshape</code>)，辅助功能标签「配置按钮」</p>
+        <p>• 「退出」按钮：⏻ (SF Symbol <code>power</code>)，辅助功能标签「退出按钮」</p>
+        <p>• v1.2 Bug 2 修复后快捷键场景也显示三按钮（<code>QuickPasteAssembly.showsBottomBar: true</code>）</p>
         <br>
         <p><strong>可访问性（NFR-005）：</strong></p>
         <p>• 所有交互元素设置无障碍标签（如"剪贴项列表"、"搜索框"、"查看全部按钮"、"配置按钮"、"退出按钮"、"已复制提示"）</p>

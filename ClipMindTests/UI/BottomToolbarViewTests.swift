@@ -92,6 +92,16 @@ final class BottomToolbarViewTests: XCTestCase
         XCTAssertEqual(BottomToolbarView.exitButtonIdentifier, "popoverExitButton")
     }
 
+    // MARK: - F1.11 后续 bug 修复：按钮图标化
+
+    /// 验证三按钮的 SF Symbol 图标名称常量已定义（按钮从文字换为图标）。
+    func testButtonIconNameConstants_AreDefined()
+    {
+        XCTAssertEqual(BottomToolbarView.viewAllIconName, "list.bullet", "「查看全部」按钮应用 list.bullet 图标")
+        XCTAssertEqual(BottomToolbarView.settingsIconName, "gearshape", "「配置」按钮应用 gearshape 图标")
+        XCTAssertEqual(BottomToolbarView.exitIconName, "power", "「退出」按钮应用 power 图标")
+    }
+
     /// AC-F1.11-7：验证 openSettingsWindow 通知发送不崩溃（链路存在性）。
     /// 完整的窗口打开验证在 Phase 3 任务 5-7 的 XCUITest 中完成。
     func testOpenSettingsWindowNotification_DoesNotCrash()

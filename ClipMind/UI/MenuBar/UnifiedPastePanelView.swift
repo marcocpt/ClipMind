@@ -6,7 +6,7 @@ import SwiftUI
 /// 合并 F1.9 `QuickPasteView` 与 `PopoverView`，承载两个场景共用的列表渲染、键盘事件、
 /// 选中态逻辑。底部工具栏通过 `showsBottomBar` 外部参数控制显隐：
 /// - 菜单栏弹窗场景（StatusItemController 包装）：`showsBottomBar = true`
-/// - 快捷键面板场景（QuickPastePanelController 包装）：`showsBottomBar = false`
+/// - 快捷键面板场景（QuickPastePanelController 包装）：`showsBottomBar = true`（F1.11 后续 bug 修复对齐）
 ///
 /// 视图本身不读取剪贴板存储，剪贴项列表通过 `UnifiedPastePanelViewModel.clips` 注入。
 ///

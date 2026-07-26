@@ -83,13 +83,19 @@ final class EncryptedStore {
     }
 
     /// 加载全部 ClipItem：从 SQLite 读取 → AES-256-GCM 解密 → 反序列化为 ClipItem
+    ///
+    /// 反序列化后用数据库 `timestamp` 列覆盖 ClipItem.timestamp 字段，
+    /// 保证 `touchTimestamp(id:to:)` 更新后列表排序与显示时间一致
+    /// （ClipItem.timestamp 字段反映数据库列的当前值，而非加密 JSON 里的旧值）。
     func loadAll() throws -> [ClipItem] {
-        let query = clips.select(contentBlob).order(timestampColumn.desc)
+        let query = clips.select(contentBlob, timestampColumn).order(timestampColumn.desc)
         var items: [ClipItem] = []
         for row in try database.prepare(query) {
             let encrypted = row[contentBlob]
             let json = try decrypt(encrypted)
-            let item = try decodeJSON(ClipItem.self, from: json)
+            var item = try decodeJSON(ClipItem.self, from: json)
+            // 用数据库 timestamp 列覆盖，确保 touchTimestamp 更新生效
+            item.timestamp = Date(timeIntervalSince1970: row[timestampColumn])
             items.append(item)
         }
         return items
@@ -141,6 +147,27 @@ final class EncryptedStore {
         let cutoff = Date().addingTimeInterval(-Double(days) * 24 * 3600)
         let cutoffTimestamp = cutoff.timeIntervalSince1970
         try database.run(clips.filter(timestampColumn < cutoffTimestamp).delete())
+    }
+
+    /// 更新指定 ClipItem 的 timestamp（F1.11 Bug 4：双击粘贴后置顶）。
+    ///
+    /// - Parameters:
+    ///   - id: ClipItem 的 UUID
+    ///   - timestamp: 新的 timestamp，默认为当前时间
+    /// - Returns: 是否找到并更新了记录（false 表示该 id 不存在）
+    /// - Throws: SQLite 数据库错误
+    ///
+    /// 设计文档 v1.3 第 3.7 节：列表按 `timestamp DESC` 排序，
+    /// 双击粘贴成功后调用此方法把被粘贴项移到列表最前面，
+    /// 同时不修改原 ClipItem 的其他字段（content/embeddings 等）。
+    @discardableResult
+    func touchTimestamp(id: UUID, to timestamp: Date = Date()) throws -> Bool {
+        let timestampValue = timestamp.timeIntervalSince1970
+        let filtered = clips.filter(idColumn == id.uuidString)
+        let changes = try database.run(
+            filtered.update(timestampColumn <- timestampValue)
+        )
+        return changes > 0
     }
 
     /// 清空所有数据（测试辅助）

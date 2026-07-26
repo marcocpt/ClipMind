@@ -25,9 +25,7 @@ struct HistoryListView: View {
             .accessibilityIdentifier("historyEmptyState")
         } else {
             List(clips) { clip in
-                ClipRowView(clip: clip)
-                    .contentShape(Rectangle())
-                    .onTapGesture { selectedClip = clip }
+                ClipRowView(clip: clip, onSingleClick: { selectedClip = clip })
             }
             .accessibilityIdentifier("historyList")
         }

@@ -263,4 +263,90 @@ final class EncryptedStoreTests: XCTestCase {
         try store.deleteAll()
         XCTAssertTrue(try store.loadAll().isEmpty)
     }
+
+    // MARK: - F1.11 Bug 4：touchTimestamp 更新指定 clip 的 timestamp
+
+    /// 验证 `touchTimestamp(id:to:)` 更新指定 clip 的 timestamp，
+    /// `loadAll()` 返回的 ClipItem.timestamp 反映数据库列的新值。
+    func testTouchTimestamp_UpdatesTimestamp_LoadAllReflectsNewValue() throws {
+        let oldTimestamp = Date().addingTimeInterval(-3600) // 1 小时前
+        let item = ClipItem.makeText(
+            "touch-test-content",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test",
+            timestamp: oldTimestamp
+        )
+        try store.save(item)
+
+        let newTimestamp = Date().addingTimeInterval(-60) // 1 分钟前
+        let updated = try store.touchTimestamp(id: item.id, to: newTimestamp)
+
+        XCTAssertTrue(updated, "存在该 id 时应返回 true")
+        let loaded = try store.loadAll()
+        XCTAssertEqual(loaded.count, 1)
+        XCTAssertEqual(loaded.first?.id, item.id)
+        guard let loadedTimestamp = loaded.first?.timestamp.timeIntervalSince1970
+        else {
+            XCTFail("loaded.first 应存在且 timestamp 可读")
+            return
+        }
+        XCTAssertEqual(
+            loadedTimestamp,
+            newTimestamp.timeIntervalSince1970,
+            accuracy: 0.001,
+            "loadAll 返回的 timestamp 应为 touchTimestamp 设置的新值"
+        )
+    }
+
+    /// 验证 `touchTimestamp` 把 clip 移到列表最前面（按 timestamp DESC 排序）。
+    func testTouchTimestamp_MovesClipToTop_WhenNewerThanOthers() throws {
+        let baseTime = Date()
+        let oldest = ClipItem.makeText(
+            "oldest",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test",
+            timestamp: baseTime.addingTimeInterval(-300)
+        )
+        let middle = ClipItem.makeText(
+            "middle",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test",
+            timestamp: baseTime.addingTimeInterval(-200)
+        )
+        let newest = ClipItem.makeText(
+            "newest",
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test",
+            timestamp: baseTime.addingTimeInterval(-100)
+        )
+        try store.save(oldest)
+        try store.save(middle)
+        try store.save(newest)
+
+        // 初始排序：newest → middle → oldest
+        let initial = try store.loadAll()
+        XCTAssertEqual(initial.map(\.id), [newest.id, middle.id, oldest.id])
+
+        // 把 oldest 的 timestamp 更新为最新，应移到列表第一位
+        let updated = try store.touchTimestamp(id: oldest.id, to: baseTime)
+        XCTAssertTrue(updated)
+
+        let afterTouch = try store.loadAll()
+        XCTAssertEqual(
+            afterTouch.map(\.id),
+            [oldest.id, newest.id, middle.id],
+            "oldest 的 timestamp 更新为最新后应移到列表第一位"
+        )
+    }
+
+    /// 验证不存在的 id 返回 false。
+    func testTouchTimestamp_NonExistentId_ReturnsFalse() throws {
+        let randomId = UUID()
+        let updated = try store.touchTimestamp(id: randomId)
+        XCTAssertFalse(updated, "不存在的 id 应返回 false")
+    }
 }

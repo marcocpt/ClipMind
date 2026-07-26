@@ -97,6 +97,12 @@ extension AppDelegate
     }
 
     /// 构造粘贴协调器。ClipMind-Dev Scheme 注入 PasteSimulator 启用有权限路径模拟按键。
+    ///
+    /// F1.11 Bug 3：注入共享的 `selfWriteSuppressor` 到 `ClipboardWriter`，
+    /// 使 F1.9 粘贴路径与 F2.1 自动保存路径共用同一套自我写入抑制机制，
+    /// 避免双击粘贴后列表出现重复条目。
+    ///
+    /// F1.11 Bug 4：注入共享的 `clipToucher`，使快捷键面板双击粘贴后置顶被粘贴项。
     @MainActor
     private func makePasteCoordinator(
         permissionChecker: PastePermissionChecking,
@@ -107,17 +113,19 @@ extension AppDelegate
         #if CLIPMIND_DEV
         return PasteCoordinator(
             permissionChecker: permissionChecker,
-            clipboardWriter: ClipboardWriter(),
+            clipboardWriter: ClipboardWriter(suppressor: selfWriteSuppressor),
             panelCloser: panelController,
             overlayShower: overlayController,
-            pasteSimulator: PasteSimulator()
+            pasteSimulator: PasteSimulator(),
+            clipToucher: clipToucher
         )
         #else
         return PasteCoordinator(
             permissionChecker: permissionChecker,
-            clipboardWriter: ClipboardWriter(),
+            clipboardWriter: ClipboardWriter(suppressor: selfWriteSuppressor),
             panelCloser: panelController,
-            overlayShower: overlayController
+            overlayShower: overlayController,
+            clipToucher: clipToucher
         )
         #endif
     }
@@ -134,10 +142,13 @@ extension AppDelegate
         viewModel.onEscPressed = { [weak self] in
             self?.quickPastePanelController?.handleEscKey()
         }
-        // F1.11 Phase 1：切换到 UnifiedPastePanelView（快捷键场景：不显示底部工具栏）
+        // F1.11 后续 bug 修复：快捷键面板与菜单栏弹窗对齐，显示底部工具栏
+        viewModel.onExitApp = {
+            NSApp.terminate(nil)
+        }
         let view = UnifiedPastePanelView(
             viewModel: viewModel,
-            showsBottomBar: false,
+            showsBottomBar: true,
             accessibilityPrefix: "quickPaste"
         )
         return NSHostingController(rootView: view)
