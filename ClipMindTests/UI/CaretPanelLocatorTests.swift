@@ -226,6 +226,81 @@ final class CaretPanelLocatorTests: XCTestCase
         XCTAssertEqual(position.y, expectedY, accuracy: 1.0, "鼠标位置无效时应降级到屏幕中央")
     }
 
+    // MARK: - caret 坐标无效（位于屏幕原点）时降级到鼠标位置（修复 Trae CN 等 Electron 应用左下角 bug）
+
+    /// Bug 场景：在 Trae CN 等 Electron 应用中按全局热键，面板停在屏幕左下角。
+    ///
+    /// 真实根因：Electron 应用对 AXUIElement 支持有限，locateCaret() 可能返回
+    /// (0, 0) 这种无效坐标（而非 nil）。代码进入 caret 分支计算
+    /// position = (0+50, 0-50-panelHeight) = (50, -50-panelHeight)，
+    /// 经 clampToScreen(anchor: (0,0)) 后被钳制到 (50, 0)，即屏幕左下角。
+    ///
+    /// 期望：caret 坐标明显无效（位于屏幕原点）时，应降级到鼠标位置；
+    /// 若鼠标位置也无效，再降级到屏幕中央。不应停在左下角。
+    func testLocatePosition_InvalidCaretAtOrigin_FallsBackToMouseLocation()
+    {
+        // 模拟 Trae CN 场景：caret 返回 (0, 0) 无效坐标，鼠标位置有效
+        let caret = NSPoint(x: 0, y: 0)
+        let mouse = NSPoint(x: 700, y: 800)
+        let locator = CaretPanelLocator(
+            accessibilityService: MockAccessibilityService(
+                caret: caret,
+                mouse: mouse,
+                granted: true
+            ),
+            screenFrameProvider: { self.testScreenFrame }
+        )
+
+        let position = locator.locatePosition(lastClosedPosition: nil)
+        let panelSize = QuickPastePanelController.panelSize
+
+        // 不应停在左下角附近
+        XCTAssertFalse(
+            position.x <= 50 && position.y == 0,
+            "caret 无效时不应停在屏幕左下角，实际位置：\(position)"
+        )
+
+        // 应降级到鼠标位置附近
+        let distanceX = abs(position.x - mouse.x)
+        let distanceY = abs(position.y - mouse.y)
+        XCTAssertLessThanOrEqual(distanceX, panelSize.width, "caret 无效时应降级到鼠标位置附近")
+        XCTAssertLessThanOrEqual(distanceY, panelSize.height, "caret 无效时应降级到鼠标位置附近")
+    }
+
+    // MARK: - caret 与鼠标位置都无效时降级到屏幕中央
+
+    /// Bug 场景：Trae CN 中 caret 返回 (0,0)，鼠标位置也返回 (0,0)。
+    ///
+    /// 期望：双重无效时降级到屏幕中央，绝不停在左下角。
+    func testLocatePosition_InvalidCaretAndInvalidMouse_FallsBackToScreenCenter()
+    {
+        let caret = NSPoint(x: 0, y: 0)
+        let mouse = NSPoint(x: 0, y: 0)
+        let locator = CaretPanelLocator(
+            accessibilityService: MockAccessibilityService(
+                caret: caret,
+                mouse: mouse,
+                granted: true
+            ),
+            screenFrameProvider: { self.testScreenFrame }
+        )
+
+        let position = locator.locatePosition(lastClosedPosition: nil)
+        let panelSize = QuickPastePanelController.panelSize
+
+        // 不应停在左下角附近
+        XCTAssertFalse(
+            position.x <= 50 && position.y == 0,
+            "caret 与鼠标都无效时不应停在屏幕左下角，实际位置：\(position)"
+        )
+
+        // 应降级到屏幕中央
+        let expectedX = testScreenFrame.midX - panelSize.width / 2.0
+        let expectedY = testScreenFrame.midY - panelSize.height / 2.0
+        XCTAssertEqual(position.x, expectedX, accuracy: 1.0, "双重无效时应降级到屏幕中央")
+        XCTAssertEqual(position.y, expectedY, accuracy: 1.0, "双重无效时应降级到屏幕中央")
+    }
+
     // MARK: - 测试辅助 Mock
 
     private final class MockAccessibilityService: PastePermissionChecking, CaretLocating, MousePositionProviding

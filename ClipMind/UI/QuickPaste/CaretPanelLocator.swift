@@ -56,14 +56,21 @@ final class CaretPanelLocator: PanelScreenLocating
         // 有权限时尝试 caret 定位
         if accessibilityService.isAccessibilityGranted()
         {
-            if let caret = accessibilityService.locateCaret()
+            let caret = accessibilityService.locateCaret()
+
+            // caret 坐标有效性检测：Electron 应用（如 Trae CN）对 AXUIElement 支持有限，
+            // locateCaret() 可能返回 (0, 0) 这种无效坐标（而非 nil）。若直接进入 caret
+            // 分支计算 (0+50, 0-50-panelHeight) = (50, -50-panelHeight)，经 clampToScreen
+            // 后会被钳制到 (50, 0) 即屏幕左下角。当 caret 位于原点 (0, 0) 时视为无效，
+            // 降级到鼠标位置。
+            if let caretValid = caret, !isOriginPoint(caretValid)
             {
                 let position = NSPoint(
-                    x: caret.x + Self.caretOffset,
-                    y: caret.y - Self.caretOffset - panelSize.height
+                    x: caretValid.x + Self.caretOffset,
+                    y: caretValid.y - Self.caretOffset - panelSize.height
                 )
                 // 多屏：以 caret 为锚点找到所在屏幕，再钳制到该屏可视范围
-                return clampToScreen(position: position, panelSize: panelSize, anchor: caret)
+                return clampToScreen(position: position, panelSize: panelSize, anchor: caretValid)
             } else {
                 let mouse = accessibilityService.currentMouseLocation()
 
@@ -71,7 +78,7 @@ final class CaretPanelLocator: PanelScreenLocating
                 // NSEvent.mouseLocation 在未接收鼠标事件时返回 (0, 0)。经 clampToScreen
                 // 后面板会被钳制到屏幕左下角 (0, 0)，影响 Trae CN 等 Electron 应用。
                 // 当鼠标位置为原点 (0, 0) 时视为无效，降级到屏幕中央。
-                if mouse.x == 0 && mouse.y == 0
+                if isOriginPoint(mouse)
                 {
                     return NSPoint(
                         x: mainScreenFrame.midX - panelSize.width / 2.0,
@@ -100,6 +107,16 @@ final class CaretPanelLocator: PanelScreenLocating
     }
 
     // MARK: - 私有
+
+    /// 判断坐标是否为屏幕原点 (0, 0)。
+    ///
+    /// 屏幕原点视为无效坐标：AXUIElement 在 Electron 应用中可能返回 (0, 0) 的 caret，
+    /// CGEvent/NSEvent 在非激活面板应用中可能返回 (0, 0) 的鼠标位置。
+    /// 这些值经 clampToScreen 后会把面板钳制到屏幕左下角，需要识别并降级。
+    private func isOriginPoint(_ point: NSPoint) -> Bool
+    {
+        point.x == 0 && point.y == 0
+    }
 
     /// 将面板位置限制在锚点所在屏幕的可视范围内（避免超出屏幕边界）。
     ///
