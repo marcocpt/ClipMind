@@ -173,10 +173,17 @@ struct UnifiedPastePanelView: View
 
     private func startKeyMonitor()
     {
+        // F1.11 Bug Fix：通过 PanelKeyEventHandler 路由键盘事件。
+        // ESC 返回 nil 被消费，避免传播到 NSResponder.cancelOperation 触发 NSBeep。
+        let handler = PanelKeyEventHandler(
+            onEnter: { viewModel.handleEnterKey() },
+            onEsc: { viewModel.handleEscKey() },
+            onMoveDown: { viewModel.moveSelectionDown() },
+            onMoveUp: { viewModel.moveSelectionUp() }
+        )
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown)
         { event in
-            self.handleKeyEvent(event)
-            return event
+            handler.handle(event)
         }
     }
 
@@ -186,23 +193,6 @@ struct UnifiedPastePanelView: View
         {
             NSEvent.removeMonitor(monitor)
             keyMonitor = nil
-        }
-    }
-
-    private func handleKeyEvent(_ event: NSEvent)
-    {
-        switch event.keyCode
-        {
-        case 36: // Enter
-            viewModel.handleEnterKey()
-        case 53: // Esc
-            viewModel.handleEscKey()
-        case 125: // Down arrow
-            viewModel.moveSelectionDown()
-        case 126: // Up arrow
-            viewModel.moveSelectionUp()
-        default:
-            break
         }
     }
 }
