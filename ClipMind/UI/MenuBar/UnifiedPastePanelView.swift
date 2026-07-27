@@ -48,7 +48,14 @@ struct UnifiedPastePanelView: View
         .onDisappear { stopKeyMonitor() }
         .onChange(of: searchText)
         { _ in
-            if !filteredClips.isEmpty
+            if !searchFilteredClips.isEmpty
+            {
+                viewModel.selectedIndex = 0
+            }
+        }
+        .onChange(of: viewModel.sourceFilterSelection.selectedSources)
+        { _ in
+            if !searchFilteredClips.isEmpty
             {
                 viewModel.selectedIndex = 0
             }
@@ -66,17 +73,39 @@ struct UnifiedPastePanelView: View
             TextField("搜索剪贴内容...", text: $searchText)
                 .textFieldStyle(.plain)
                 .accessibilityIdentifier("\(accessibilityPrefix)SearchField")
+            Button
+            {
+                viewModel.showFilterOverlay.toggle()
+            } label: {
+                let iconName = viewModel.isSourceFilterActive
+                    ? "line.3.horizontal.decrease.circle.fill"
+                    : "line.3.horizontal.decrease.circle"
+                Image(systemName: iconName)
+                    .foregroundColor(viewModel.isSourceFilterActive ? .accentColor : .secondary)
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $viewModel.showFilterOverlay, arrowEdge: .bottom)
+            {
+                SourceFilterOverlay(
+                    selection: $viewModel.sourceFilterSelection,
+                    availableApps: viewModel.sourceApps
+                )
+            }
+            .accessibilityLabel("来源筛选")
+            .accessibilityAddTraits(.isButton)
         }
         .padding(8)
     }
 
     // MARK: - 列表
 
-    private var filteredClips: [ClipItem]
+    /// 先按来源过滤，再按搜索文本过滤。
+    private var searchFilteredClips: [ClipItem]
     {
+        let sourceFiltered = viewModel.filteredClips
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return viewModel.clips }
-        return viewModel.clips.filter { clip in
+        guard !trimmed.isEmpty else { return sourceFiltered }
+        return sourceFiltered.filter { clip in
             if case .text(let text) = clip.content
             {
                 return text.localizedCaseInsensitiveContains(trimmed)
@@ -89,15 +118,25 @@ struct UnifiedPastePanelView: View
     {
         Group
         {
-            if filteredClips.isEmpty
+            if searchFilteredClips.isEmpty
             {
                 VStack(spacing: 8)
                 {
-                    Image(systemName: "tray")
-                        .font(.system(size: 32))
-                        .foregroundColor(.secondary)
-                    Text("暂无剪贴内容")
-                        .foregroundColor(.secondary)
+                    if viewModel.isSourceFilterActive
+                    {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                        Text("无匹配的剪贴项")
+                            .foregroundColor(.secondary)
+                    } else
+                    {
+                        Image(systemName: "tray")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                        Text("暂无剪贴内容")
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else
@@ -106,7 +145,7 @@ struct UnifiedPastePanelView: View
                 {
                     LazyVStack(spacing: 0)
                     {
-                        ForEach(Array(filteredClips.enumerated()), id: \.element.id)
+                        ForEach(Array(searchFilteredClips.enumerated()), id: \.element.id)
                         { index, clip in
                             ClipRowView(
                                 clip: clip,
