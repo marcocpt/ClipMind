@@ -5,11 +5,16 @@ struct MainWindow: View {
     @State private var searchText = ""
     @State private var searchResults: [ClipItem] = []
     @State private var isSearching = false
-    @State private var selectedSourceApp: String?
+    @State private var sourceFilterSelection = SourceFilterSelection(allApps: [])
     @StateObject private var clipStore = ClipStore()
 
     private var allClips: [ClipItem] {
         ClipTestData.isUITesting ? ClipTestData.previewClips : clipStore.clips
+    }
+
+    private var sourceApps: [String]
+    {
+        SourceAppExtractor.extract(from: allClips)
     }
 
     var body: some View {
@@ -34,9 +39,13 @@ struct MainWindow: View {
         }
         .frame(minWidth: LayoutConstants.mainWindowMinWidth, minHeight: LayoutConstants.mainWindowMinHeight)
         .onAppear {
+            sourceFilterSelection = SourceFilterSelection(allApps: Set(sourceApps))
             if CommandLine.arguments.contains("--UITEST_AUTO_SELECT_FIRST") {
                 selectedClip = allClips.first
             }
+        }
+        .onChange(of: sourceApps) { newApps in
+            sourceFilterSelection = SourceFilterSelection(allApps: Set(newApps))
         }
     }
 
@@ -44,8 +53,8 @@ struct MainWindow: View {
         HStack(spacing: 12) {
             SearchBar(text: $searchText, onCommit: performSearch)
             SourceFilter(
-                selectedApp: $selectedSourceApp,
-                availableApps: ClipTestData.previewSourceApps
+                selection: $sourceFilterSelection,
+                availableApps: sourceApps
             )
         }
         .padding(12)
@@ -58,14 +67,18 @@ struct MainWindow: View {
                 selectedClip = clip
             }
         } else {
-            HistoryListView(selectedClip: $selectedClip)
+            HistoryListView(selectedClip: $selectedClip, sourceFilter: sourceFilterSelection.selectedSources)
         }
     }
 
     /// 搜索结果按来源 App 过滤
-    private var filteredSearchResults: [ClipItem] {
-        guard let sourceApp = selectedSourceApp else { return searchResults }
-        return searchResults.filter { $0.sourceAppName == sourceApp }
+    private var filteredSearchResults: [ClipItem]
+    {
+        if sourceFilterSelection.isAllSelected
+        {
+            return searchResults
+        }
+        return searchResults.filter { sourceFilterSelection.selectedSources.contains($0.sourceAppName) }
     }
 
     /// 执行搜索（UI 测试模式下为文本匹配；生产环境后续接入 SearchService）
