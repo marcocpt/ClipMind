@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1.13 来源过滤 视觉原型</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background: #1e1e2e; color: #cdd6f4; padding: 20px; }
+        .header { text-align: center; margin-bottom: 24px; }
+        .header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+        .header p { font-size: 13px; color: #7f849c; }
+        .container { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+        .panel { background: #313244; border-radius: 12px; overflow: hidden; width: 400px; }
+        .panel-title { font-size: 14px; font-weight: 600; padding: 12px 16px; background: #45475a; color: #cdd6f4; }
+        .search-bar { display: flex; align-items: center; padding: 8px 12px; gap: 8px; background: #313244; border-bottom: 1px solid #45475a; }
+        .search-input { flex: 1; background: #1e1e2e; border: 1px solid #585b70; border-radius: 6px; padding: 6px 10px; color: #cdd6f4; font-size: 13px; outline: none; }
+        .search-input:focus { border-color: #89b4fa; }
+        .filter-btn { background: none; border: 1px solid #585b70; border-radius: 6px; padding: 5px 8px; cursor: pointer; color: #a6adc8; font-size: 13px; display: flex; align-items: center; gap: 4px; }
+        .filter-btn.active { background: #89b4fa; color: #1e1e2e; border-color: #89b4fa; }
+        .filter-btn:hover { border-color: #89b4fa; }
+
+        /* SourceFilter dropdown (main window) */
+        .source-filter { padding: 8px 12px; border-bottom: 1px solid #45475a; }
+        .source-filter-toggle { background: #1e1e2e; border: 1px solid #585b70; border-radius: 6px; padding: 6px 10px; cursor: pointer; color: #a6adc8; font-size: 13px; display: flex; align-items: center; justify-content: space-between; }
+        .source-filter-toggle:hover { border-color: #89b4fa; }
+        .source-filter-dropdown { background: #1e1e2e; border: 1px solid #585b70; border-radius: 8px; margin-top: 4px; padding: 4px 0; display: none; }
+        .source-filter-dropdown.show { display: block; }
+        .source-filter-item { display: flex; align-items: center; padding: 6px 12px; gap: 8px; cursor: pointer; font-size: 13px; }
+        .source-filter-item:hover { background: #45475a; }
+        .source-filter-item input[type="checkbox"] { accent-color: #89b4fa; }
+
+        /* Popover filter overlay */
+        .filter-overlay { position: absolute; right: 12px; top: 44px; background: #1e1e2e; border: 1px solid #585b70; border-radius: 8px; padding: 4px 0; z-index: 10; min-width: 180px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .filter-overlay.show { display: block; }
+        .filter-overlay-item { display: flex; align-items: center; padding: 6px 12px; gap: 8px; cursor: pointer; font-size: 13px; }
+        .filter-overlay-item:hover { background: #45475a; }
+        .filter-overlay-item input[type="checkbox"] { accent-color: #89b4fa; }
+
+        /* Clip list */
+        .clip-list { max-height: 320px; overflow-y: auto; }
+        .clip-item { display: flex; align-items: center; padding: 10px 16px; gap: 10px; border-bottom: 1px solid #45475a; cursor: pointer; }
+        .clip-item:hover { background: #45475a; }
+        .clip-item.selected { background: #585b70; }
+        .clip-type { font-size: 10px; background: #89b4fa; color: #1e1e2e; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+        .clip-source { font-size: 11px; color: #7f849c; }
+        .clip-content { font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .clip-time { font-size: 11px; color: #585b70; }
+        .empty-state { text-align: center; padding: 40px 16px; color: #7f849c; font-size: 14px; }
+
+        /* Bottom toolbar */
+        .bottom-toolbar { display: flex; justify-content: space-around; padding: 8px 16px; background: #45475a; border-top: 1px solid #585b70; }
+        .bottom-toolbar button { background: none; border: none; color: #a6adc8; cursor: pointer; font-size: 13px; padding: 4px 8px; }
+        .bottom-toolbar button:hover { color: #89b4fa; }
+
+        .label { font-size: 11px; color: #7f849c; margin-top: 12px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>F1.13 来源过滤 视觉原型</h1>
+        <p>最后更新：2026-07-27 | 版本：v1.0</p>
+    </div>
+
+    <div class="container">
+        <!-- Main Window -->
+        <div class="panel">
+            <div class="panel-title">主窗口</div>
+
+            <div class="source-filter">
+                <div class="source-filter-toggle" onclick="toggleMainWindowFilter()">
+                    <span id="main-filter-label">来源过滤：全部</span>
+                    <span>▾</span>
+                </div>
+                <div id="main-filter-dropdown" class="source-filter-dropdown">
+                    <label class="source-filter-item">
+                        <input type="checkbox" id="main-all" checked onchange="mainFilterChange('all')"> 全部
+                    </label>
+                    <label class="source-filter-item">
+                        <input type="checkbox" class="main-app" value="Safari" checked onchange="mainFilterChange('app')"> Safari
+                    </label>
+                    <label class="source-filter-item">
+                        <input type="checkbox" class="main-app" value="Xcode" checked onchange="mainFilterChange('app')"> Xcode
+                    </label>
+                    <label class="source-filter-item">
+                        <input type="checkbox" class="main-app" value="备忘录" checked onchange="mainFilterChange('app')"> 备忘录
+                    </label>
+                    <label class="source-filter-item">
+                        <input type="checkbox" class="main-app" value="微信" checked onchange="mainFilterChange('app')"> 微信
+                    </label>
+                    <label class="source-filter-item">
+                        <input type="checkbox" class="main-app" value="终端" checked onchange="mainFilterChange('app')"> 终端
+                    </label>
+                </div>
+            </div>
+
+            <div class="search-bar">
+                <input class="search-input" placeholder="搜索剪贴项..." />
+            </div>
+
+            <div id="main-history-list" class="clip-list">
+                <!-- Populated by JS -->
+            </div>
+
+            <div id="main-empty-state" class="empty-state" style="display:none;">
+                无匹配的剪贴项
+            </div>
+        </div>
+
+        <!-- Popover Panel -->
+        <div class="panel" style="position: relative;">
+            <div class="panel-title">弹窗（菜单栏 / 快捷键）</div>
+
+            <div class="search-bar">
+                <input class="search-input" placeholder="搜索剪贴项..." />
+                <button class="filter-btn" id="popover-filter-btn" onclick="togglePopoverFilter()">
+                    🔍 来源筛选
+                </button>
+            </div>
+
+            <div id="popover-filter-overlay" class="filter-overlay">
+                <label class="filter-overlay-item">
+                    <input type="checkbox" id="popover-all" checked onchange="popoverFilterChange('all')"> 全部
+                </label>
+                <label class="filter-overlay-item">
+                    <input type="checkbox" class="popover-app" value="Safari" checked onchange="popoverFilterChange('app')"> Safari
+                </label>
+                <label class="filter-overlay-item">
+                    <input type="checkbox" class="popover-app" value="Xcode" checked onchange="popoverFilterChange('app')"> Xcode
+                </label>
+                <label class="filter-overlay-item">
+                    <input type="checkbox" class="popover-app" value="备忘录" checked onchange="popoverFilterChange('app')"> 备忘录
+                </label>
+                <label class="filter-overlay-item">
+                    <input type="checkbox" class="popover-app" value="微信" checked onchange="popoverFilterChange('app')"> 微信
+                </label>
+                <label class="filter-overlay-item">
+                    <input type="checkbox" class="popover-app" value="终端" checked onchange="popoverFilterChange('app')"> 终端
+                </label>
+            </div>
+
+            <div id="popover-clip-list" class="clip-list">
+                <!-- Populated by JS -->
+            </div>
+
+            <div id="popover-empty-state" class="empty-state" style="display:none;">
+                无匹配的剪贴项
+            </div>
+
+            <div class="bottom-toolbar">
+                <button>📋 查看全部</button>
+                <button>⚙️ 配置</button>
+                <button>⏻ 退出</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="label">左侧：主窗口来源过滤器（多选 Checkbox 下拉） | 右侧：弹窗来源筛选按钮 + App 多选浮层</div>
+
+    <script>
+        const clips = [
+            { type: '文本', source: 'Safari', content: 'Swift Concurrency 详解', time: '3 分钟前' },
+            { type: '文本', source: 'Xcode', content: 'func viewDidLoad() { ... }', time: '5 分钟前' },
+            { type: '文本', source: '备忘录', content: '周三下午 3 点产品评审会议', time: '10 分钟前' },
+            { type: '文本', source: '微信', content: '收到，我马上处理', time: '15 分钟前' },
+            { type: '文本', source: 'Safari', content: 'macOS App Sandbox 开发指南', time: '20 分钟前' },
+            { type: '文本', source: '终端', content: 'xcodegen generate && open *.xcodeproj', time: '25 分钟前' },
+            { type: '文本', source: 'Xcode', content: 'import SwiftUI', time: '30 分钟前' },
+            { type: '文本', source: '微信', content: '需求文档已更新，请查看', time: '35 分钟前' },
+            { type: '图片', source: '备忘录', content: '[截图] 白板设计稿', time: '40 分钟前' },
+            { type: '文本', source: '终端', content: 'swiftlint lint --strict', time: '45 分钟前' },
+        ];
+
+        function renderClips(containerId, emptyId, selectedSources) {
+            const container = document.getElementById(containerId);
+            const emptyState = document.getElementById(emptyId);
+            const filtered = selectedSources === null
+                ? clips
+                : clips.filter(c => selectedSources.has(c.source));
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            container.innerHTML = filtered.map(c => `
+                <div class="clip-item">
+                    <span class="clip-type">${c.type}</span>
+                    <span class="clip-content">${c.content}</span>
+                    <span class="clip-source">${c.source}</span>
+                    <span class="clip-time">${c.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function getSelectedApps(prefix) {
+            const allChecked = document.getElementById(prefix + '-all').checked;
+            if (allChecked) return null;
+            const apps = document.querySelectorAll('.' + prefix + '-app');
+            const selected = new Set();
+            apps.forEach(cb => { if (cb.checked) selected.add(cb.value); });
+            return selected;
+        }
+
+        function updateMainFilterLabel() {
+            const selected = getSelectedApps('main');
+            const label = document.getElementById('main-filter-label');
+            if (selected === null) {
+                label.textContent = '来源过滤：全部';
+            } else if (selected.size === 0) {
+                label.textContent = '来源过滤：无选中';
+            } else {
+                label.textContent = '来源过滤：' + [...selected].join('、');
+            }
+        }
+
+        // Main window filter logic
+        function toggleMainWindowFilter() {
+            document.getElementById('main-filter-dropdown').classList.toggle('show');
+        }
+
+        function mainFilterChange(type) {
+            if (type === 'all') {
+                const allChecked = document.getElementById('main-all').checked;
+                document.querySelectorAll('.main-app').forEach(cb => cb.checked = allChecked);
+            } else {
+                const apps = document.querySelectorAll('.main-app');
+                const allChecked = [...apps].every(cb => cb.checked);
+                document.getElementById('main-all').checked = allChecked;
+            }
+            updateMainFilterLabel();
+            renderClips('main-history-list', 'main-empty-state', getSelectedApps('main'));
+        }
+
+        // Popover filter logic
+        function togglePopoverFilter() {
+            const overlay = document.getElementById('popover-filter-overlay');
+            const btn = document.getElementById('popover-filter-btn');
+            overlay.classList.toggle('show');
+            const selected = getSelectedApps('popover');
+            btn.classList.toggle('active', selected !== null && selected.size < 5);
+        }
+
+        function popoverFilterChange(type) {
+            if (type === 'all') {
+                const allChecked = document.getElementById('popover-all').checked;
+                document.querySelectorAll('.popover-app').forEach(cb => cb.checked = allChecked);
+            } else {
+                const apps = document.querySelectorAll('.popover-app');
+                const allChecked = [...apps].every(cb => cb.checked);
+                document.getElementById('popover-all').checked = allChecked;
+            }
+            const selected = getSelectedApps('popover');
+            const btn = document.getElementById('popover-filter-btn');
+            btn.classList.toggle('active', selected !== null && selected.size < 5);
+            renderClips('popover-clip-list', 'popover-empty-state', selected);
+        }
+
+        // Close popover overlay when clicking outside
+        document.addEventListener('click', function(e) {
+            const overlay = document.getElementById('popover-filter-overlay');
+            const btn = document.getElementById('popover-filter-btn');
+            if (!overlay.contains(e.target) && !btn.contains(e.target)) {
+                overlay.classList.remove('show');
+            }
+        });
+
+        // Initial render
+        renderClips('main-history-list', 'main-empty-state', null);
+        renderClips('popover-clip-list', 'popover-empty-state', null);
+    </script>
+</body>
+</html>
