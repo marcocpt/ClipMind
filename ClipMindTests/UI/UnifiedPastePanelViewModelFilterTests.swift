@@ -117,6 +117,73 @@ final class UnifiedPastePanelViewModelFilterTests: XCTestCase
                       "重新初始化后 sourceFilterSelection 应为全部选中")
     }
 
+    // MARK: - 来源过滤与搜索联动
+
+    /// 来源过滤和搜索文本同时生效时，应先过滤来源再过滤搜索文本。
+    func testFilteredClips_withSourceFilterAndSearchText_bothApplied()
+    {
+        let clips = [
+            makeClip(sourceAppName: "Xcode", text: "Swift code"),
+            makeClip(sourceAppName: "Xcode", text: "Python code"),
+            makeClip(sourceAppName: "Safari", text: "Swift article")
+        ]
+        let viewModel = UnifiedPastePanelViewModel(clips: clips)
+
+        // 选中 Xcode 后，filteredClips 应只包含 Xcode 来源的 2 项
+        viewModel.sourceFilterSelection.toggleSource("Xcode")
+        XCTAssertEqual(viewModel.filteredClips.count, 2)
+
+        // 进一步在视图层按搜索文本过滤（模拟 searchFilteredClips 逻辑）
+        let searchFiltered = viewModel.filteredClips.filter { clip in
+            if case .text(let text) = clip.content
+            {
+                return text.localizedCaseInsensitiveContains("Swift")
+            }
+            return false
+        }
+        XCTAssertEqual(searchFiltered.count, 1,
+                       "来源过滤 + 搜索文本过滤后应只剩 1 项")
+        XCTAssertEqual(searchFiltered.first?.sourceAppName, "Xcode")
+    }
+
+    /// 来源过滤变更后，filteredClips 应立即更新。
+    func testFilteredClips_sourceFilterChange_updatesImmediately()
+    {
+        let clips = [
+            makeClip(sourceAppName: "Xcode", text: "a"),
+            makeClip(sourceAppName: "Safari", text: "b")
+        ]
+        let viewModel = UnifiedPastePanelViewModel(clips: clips)
+
+        XCTAssertEqual(viewModel.filteredClips.count, 2, "初始全部选中")
+
+        viewModel.sourceFilterSelection.toggleSource("Xcode")
+        XCTAssertEqual(viewModel.filteredClips.count, 1,
+                       "切换为单选后立即更新")
+
+        viewModel.sourceFilterSelection.toggleAll()
+        XCTAssertEqual(viewModel.filteredClips.count, 2,
+                       "切回全部后立即恢复")
+    }
+
+    /// isSourceFilterActive 在部分选中时为 true。
+    func testIsSourceFilterActive_trueWhenPartialSelected()
+    {
+        let clips = [
+            makeClip(sourceAppName: "Xcode", text: "a"),
+            makeClip(sourceAppName: "Safari", text: "b")
+        ]
+        let viewModel = UnifiedPastePanelViewModel(clips: clips)
+
+        XCTAssertFalse(viewModel.isSourceFilterActive, "全部选中时为 false")
+
+        viewModel.sourceFilterSelection.toggleSource("Xcode")
+        XCTAssertTrue(viewModel.isSourceFilterActive, "部分选中时为 true")
+
+        viewModel.sourceFilterSelection.toggleAll()
+        XCTAssertFalse(viewModel.isSourceFilterActive, "重置为全部后为 false")
+    }
+
     // MARK: - Helper
 
     private func makeClip(sourceAppName: String, text: String = "test") -> ClipItem
