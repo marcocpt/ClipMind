@@ -41,8 +41,13 @@ struct DetailPanel: View {
     private func detailContent(for clip: ClipItem) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text(contentPreview(for: clip))
-                    .font(.body)
+                EditableContentArea(
+                    clip: clip,
+                    onUpdateClip: onUpdateClip,
+                    onContentSaved: { savedClip in
+                        copyToClipboard(textContent(for: savedClip) ?? "")
+                    }
+                )
                 Divider()
                 metaSection(for: clip)
                 if textContent(for: clip) != nil {
