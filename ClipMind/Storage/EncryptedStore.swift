@@ -82,6 +82,39 @@ final class EncryptedStore {
         try database.run(insert)
     }
 
+    /// 更新已存储的 ClipItem：序列化为 JSON → AES-256-GCM 加密 → 写入 SQLite（INSERT OR REPLACE）
+    /// - Parameter item: 包含更新内容的 ClipItem，以 id 为主键匹配
+    /// - Throws: 数据库写入错误、加密错误
+    func update(_ item: ClipItem) throws {
+        let json = try encodeJSON(item)
+        let encryptedContent = try encrypt(json)
+
+        let embeddingsData: Data?
+        if let embeddings = item.embeddings, !embeddings.isEmpty {
+            let embJson = try encodeJSON(embeddings)
+            embeddingsData = try encrypt(embJson)
+        } else {
+            embeddingsData = nil
+        }
+
+        let id = item.id.uuidString
+        let contentType = item.contentType.rawValue
+        let timestamp = item.timestamp.timeIntervalSince1970
+        let sourceApp = item.sourceApp
+        let isSample = item.isSample
+
+        let insertOrReplace = clips.insert(or: .replace,
+            idColumn <- id,
+            contentBlob <- encryptedContent,
+            contentTypeColumn <- contentType,
+            timestampColumn <- timestamp,
+            sourceAppColumn <- sourceApp,
+            embeddingsBlob <- embeddingsData,
+            isSampleColumn <- isSample
+        )
+        try database.run(insertOrReplace)
+    }
+
     /// 加载全部 ClipItem：从 SQLite 读取 → AES-256-GCM 解密 → 反序列化为 ClipItem
     ///
     /// 反序列化后用数据库 `timestamp` 列覆盖 ClipItem.timestamp 字段，

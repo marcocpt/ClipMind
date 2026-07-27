@@ -11,13 +11,18 @@ final class ClipStore: ObservableObject {
     private var store: EncryptedStore?
     private var observer: NSObjectProtocol?
 
-    init() {
-        do {
-            store = try EncryptedStore()
+    init(store: EncryptedStore? = nil) {
+        if let store = store {
+            self.store = store
             loadClips()
-        } catch {
-            LogCategory.storage.error("EncryptedStore 初始化失败: \(error.localizedDescription)")
-            store = nil
+        } else {
+            do {
+                self.store = try EncryptedStore()
+                loadClips()
+            } catch {
+                LogCategory.storage.error("EncryptedStore 初始化失败: \(error.localizedDescription)")
+                self.store = nil
+            }
         }
         observer = NotificationCenter.default.addObserver(
             forName: ClipCaptureService.clipDidUpdateNotification,
@@ -45,6 +50,21 @@ final class ClipStore: ObservableObject {
         } catch {
             LogCategory.storage.error("加载剪贴历史失败: \(error.localizedDescription)")
             clips = []
+        }
+    }
+
+    /// 更新指定 ClipItem 到数据库并刷新 clips 列表
+    /// - Parameter item: 包含更新内容的 ClipItem
+    func updateClip(_ item: ClipItem) {
+        do {
+            try store?.update(item)
+            if let index = clips.firstIndex(where: { $0.id == item.id }) {
+                clips[index] = item
+            } else {
+                clips.insert(item, at: 0)
+            }
+        } catch {
+            LogCategory.storage.error("Failed to update clip: \(error.localizedDescription)")
         }
     }
 }
