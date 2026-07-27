@@ -56,7 +56,6 @@ struct EditableContentArea: View
         } else {
             Text(originalText)
                 .font(.body)
-                .textSelection(.enabled)
                 .onTapGesture {
                     isEditing = true
                     editableText = originalText
@@ -97,7 +96,6 @@ struct EditableContentArea: View
         } else {
             Text(pathText)
                 .font(.body)
-                .textSelection(.enabled)
                 .onTapGesture {
                     isEditing = true
                     editableText = pathText
