@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1.12 详细窗口内容可编辑 — 视觉原型</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #0f0f17;
+            --bg-tertiary: #14141f;
+            --bg-card: #1a1a2e;
+            --bg-input: #1e1e32;
+            --text-primary: #f5f5f7;
+            --text-secondary: #c7c7d1;
+            --text-tertiary: #8a8a99;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #22d3ee;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --accent-emerald: #10b981;
+            --border-color: #2a2a3e;
+            --error-color: #f43f5e;
+            --success-color: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, 'Noto Sans SC', 'SF Pro Text', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 32px 20px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+        .header h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .header .meta {
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin: 32px 0 16px;
+            padding-left: 12px;
+            border-left: 3px solid var(--accent-purple);
+        }
+
+        .prototype-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .prototype-grid { grid-template-columns: 1fr; }
+        }
+
+        .scenario-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .scenario-card .card-header {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .scenario-card .card-header .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .badge-text { background: var(--accent-purple); color: white; }
+        .badge-filepath { background: var(--accent-cyan); color: var(--bg-primary); }
+        .badge-image { background: var(--accent-amber); color: var(--bg-primary); }
+        .badge-readonly { background: var(--text-tertiary); color: var(--bg-primary); }
+        .badge-editing { background: var(--accent-emerald); color: white; }
+        .scenario-card .card-header .label {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        .scenario-card .card-body {
+            padding: 16px;
+        }
+
+        /* 模拟主窗口 */
+        .main-window {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            height: 400px;
+        }
+        .sidebar {
+            width: 220px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+        .sidebar-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .sidebar-item:hover { background: var(--bg-tertiary); }
+        .sidebar-item.active { background: var(--accent-purple); opacity: 0.2; }
+        .sidebar-item .item-type {
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+        .sidebar-item .item-preview {
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sidebar-item .item-time {
+            font-size: 10px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+
+        .detail-panel {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        .detail-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* 只读文本 */
+        .read-only-content {
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            min-height: 80px;
+        }
+        .read-only-content:hover {
+            border-color: var(--accent-purple);
+            background: var(--bg-input);
+        }
+
+        /* 编辑模式 */
+        .edit-content {
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 12px;
+            background: var(--bg-input);
+            border-radius: 8px;
+            border: 2px solid var(--accent-purple);
+            min-height: 80px;
+            outline: none;
+            resize: none;
+            font-family: inherit;
+            width: 100%;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+        }
+
+        /* 图片模式 */
+        .image-content {
+            text-align: center;
+            padding: 20px;
+        }
+        .image-placeholder {
+            width: 120px;
+            height: 120px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 36px;
+        }
+        .image-hint {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        /* 文件路径模式 */
+        .filepath-content {
+            font-size: 13px;
+            font-family: 'JetBrains Mono', 'SF Mono', monospace;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            line-height: 1.8;
+        }
+        .filepath-content:hover {
+            border-color: var(--accent-cyan);
+        }
+        .filepath-content.editing {
+            border: 2px solid var(--accent-cyan);
+            background: var(--bg-input);
+            cursor: text;
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+        }
+
+        /* AI 处理按钮 */
+        .ai-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .ai-btn {
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .ai-btn:hover {
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+        }
+        .ai-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* 保存状态 */
+        .save-status {
+            font-size: 11px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .save-status.saving { color: var(--accent-amber); }
+        .save-status.saved { color: var(--accent-emerald); }
+        .save-status.error { color: var(--error-color); }
+
+        /* 交互演示区 */
+        .demo-area {
+            margin-top: 24px;
+        }
+        .demo-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .demo-card h3 {
+            font-size: 15px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .interaction-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .flow-step .step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent-purple);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .flow-step .step-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .flow-step .step-text strong {
+            color: var(--text-primary);
+        }
+
+        /* 状态转换图 */
+        .state-diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+        .state-diagram h3 {
+            font-size: 15px;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+        .state-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .state-box {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+        }
+        .state-box.readonly {
+            border-color: var(--text-tertiary);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+        .state-box.editing {
+            border-color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--accent-purple);
+        }
+        .state-box.saving {
+            border-color: var(--accent-amber);
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-amber);
+        }
+        .state-box.saved {
+            border-color: var(--accent-emerald);
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-emerald);
+        }
+        .arrow {
+            color: var(--text-tertiary);
+            font-size: 18px;
+        }
+        .arrow-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* Tab 切换 */
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+        .tab-item {
+            padding: 10px 20px;
+            font-size: 13px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .tab-item:hover { color: var(--text-secondary); }
+        .tab-item.active {
+            color: var(--accent-purple);
+            border-bottom-color: var(--accent-purple);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* 动画 */
+        @keyframes pulse-border {
+            0%, 100% { border-color: var(--accent-purple); }
+            50% { border-color: rgba(139, 92, 246, 0.4); }
+        }
+        .editing-pulse {
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes blink-cursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .cursor-blink::after {
+            content: '|';
+            animation: blink-cursor 1s infinite;
+            color: var(--accent-purple);
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>F1.12 详细窗口内容可编辑 — 视觉原型</h1>
+    <div class="meta">最后更新：2026-07-27 | 版本：v1.0 | F1.12 详细窗口内容可编辑设计文档 v1.0</div>
+</div>
+
+<div class="container">
+
+    <!-- 场景 1: 文本类型 - 只读 → 编辑 -->
+    <h2 class="section-title">场景 1：文本类型 — 只读模式 → 编辑模式</h2>
+    <div class="prototype-grid">
+        <!-- 只读模式 -->
+        <div class="scenario-card">
+            <div class="card-header">
+                <span class="badge badge-text">TEXT</span>
+                <span class="badge badge-readonly">只读模式</span>
+                <span class="label">点击前</span>
+            </div>
+            <div class="card-body">
+                <div class="main-window">
+                    <div class="sidebar">
+                        <div class="sidebar-item active">
+                            <span class="item-type" style="background:var(--accent-purple);color:white;">CODE</span>
+                            <div class="item-preview">func viewDidLoad() {</div>
+                            <div class="item-time">2 分钟前 · Xcode</div>
+                        </div>
+                        <div class="sidebar-item">
+                            <span class="item-type" style="background:var(--accent-cyan);color:var(--bg-primary);">LINK</span>
+                            <div class="item-preview">https://developer.apple.com</div>
+                            <div class="item-time">5 分钟前 · Safari</div>
+                        </div>
+                        <div class="sidebar-item">
+                            <span class="item-type" style="background:var(--accent-rose);color:white;">ERROR</span>
+                            <div class="item-preview">Thread 1: Fatal error</div>
+                            <div class="item-time">10 分钟前 · Xcode</div>
+                        </div>
+                    </div>
+                    <div class="detail-panel">
+                        <div class="detail-meta">
+                            <span>📱 Xcode</span>
+                            <span>🕐 2 分钟前</span>
+                        </div>
+                        <div class="read-only-content">func viewDidLoad() {
+    super.viewDidLoad()
+    // TODO: 初始化配置
+    setupUI()
+}</div>
+                        <div class="ai-buttons">
+                            <button class="ai-btn">🧠 智能总结</button>
+                            <button class="ai-btn">🌐 即时翻译</button>
+                            <button class="ai-btn">✏️ 智能改写</button>
+                            <button class="ai-btn">📋 提取待办</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 编辑模式 -->
+        <div class="scenario-card">
+            <div class="card-header">
+                <span class="badge badge-text">TEXT</span>
+                <span class="badge badge-editing">编辑模式</span>
+                <span class="label">点击后</span>
+            </div>
+            <div class="card-body">
+                <div class="main-window">
+                    <div class="sidebar">
+                        <div class="sidebar-item active">
+                            <span class="item-type" style="background:var(--accent-purple);color:white;">CODE</span>
+                            <div class="item-preview">func viewDidLoad() {</div>
+                            <div class="item-time">2 分钟前 · Xcode</div>
+                        </div>
+                        <div class="sidebar-item">
+                            <span class="item-type" style="background:var(--accent-cyan);color:var(--bg-primary);">LINK</span>
+                            <div class="item-preview">https://developer.apple.com</div>
+                            <div class="item-time">5 分钟前 · Safari</div>
+                        </div>
+                        <div class="sidebar-item">
+                            <span class="item-type" style="background:var(--accent-rose);color:white;">ERROR</span>
+                            <div class="item-preview">Thread 1: Fatal error</div>
+                            <div class="item-time">10 分钟前 · Xcode</div>
+                        </div>
+                    </div>
+                    <div class="detail-panel">
+                        <div class="detail-meta">
+                            <span>📱 Xcode</span>
+                            <span>🕐 2 分钟前</span>
+                        </div>
+                        <textarea class="edit-content editing-pulse" rows="5">func viewDidLoad() {
+    super.viewDidLoad()
+    // TODO: 初始化配置
+    setupUI()
+}</textarea>
+                        <div class="save-status saved">✅ 已自动保存</div>
+                        <div class="ai-buttons">
+                            <button class="ai-btn">🧠 智能总结</button>
+                            <button class="ai-btn">🌐 即时翻译</button>
+                            <button class="ai-btn">✏️ 智能改写</button>
+                            <button class="ai-btn">📋 提取待办</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 场景 2: 文件路径类型 -->
+    <h2 class="section-title">场景 2：文件路径类型 — 只读模式 → 编辑模式</h2>
+    <div class="prototype-grid">
+        <!-- 只读模式 -->
+        <div class="scenario-card">
+            <div class="card-header">
+                <span class="badge badge-filepath">FILEPATH</span>
+                <span class="badge badge-readonly">只读模式</span>
+                <span class="label">点击前</span>
+            </div>
+            <div class="card-body">
+                <div class="detail-panel" style="background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;height:200px;">
+                    <div class="detail-meta">
+                        <span>📁 Finder</span>
+                        <span>🕐 3 分钟前</span>
+                    </div>
+                    <div class="filepath-content">
+                        /Users/dev/project/src/main.swift<br>
+                        /Users/dev/project/src/config.json
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 编辑模式 -->
+        <div class="scenario-card">
+            <div class="card-header">
+                <span class="badge badge-filepath">FILEPATH</span>
+                <span class="badge badge-editing">编辑模式</span>
+                <span class="label">点击后</span>
+            </div>
+            <div class="card-body">
+                <div class="detail-panel" style="background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;height:200px;">
+                    <div class="detail-meta">
+                        <span>📁 Finder</span>
+                        <span>🕐 3 分钟前</span>
+                    </div>
+                    <div class="filepath-content editing">
+                        /Users/dev/project/src/main.swift<br>
+                        /Users/dev/project/src/config.json
+                    </div>
+                    <div class="save-status saved">✅ 已自动保存</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 场景 3: 图片类型 -->
+    <h2 class="section-title">场景 3：图片类型 — 不可编辑提示</h2>
+    <div class="prototype-grid">
+        <div class="scenario-card" style="grid-column: 1 / -1; max-width: 500px; margin: 0 auto;">
+            <div class="card-header">
+                <span class="badge badge-image">IMAGE</span>
+                <span class="badge badge-readonly">只读模式</span>
+                <span class="label">图片类型条目</span>
+            </div>
+            <div class="card-body">
+                <div class="detail-panel" style="background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;height:260px;">
+                    <div class="detail-meta">
+                        <span>🖼️ 预览</span>
+                        <span>🕐 1 分钟前</span>
+                    </div>
+                    <div class="image-content">
+                        <div class="image-placeholder">🖼️</div>
+                        <div class="image-hint">⚠️ 图片内容不支持编辑</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 交互流程 -->
+    <h2 class="section-title">交互流程演示</h2>
+    <div class="tab-bar">
+        <div class="tab-item active" onclick="switchTab('flow-text')">文本编辑</div>
+        <div class="tab-item" onclick="switchTab('flow-switch')">切换条目</div>
+        <div class="tab-item" onclick="switchTab('flow-undo')">Cmd+Z 撤销</div>
+    </div>
+
+    <div id="flow-text" class="tab-content active">
+        <div class="demo-card">
+            <h3>文本编辑 → 自动保存 → 剪贴板同步</h3>
+            <div class="interaction-flow">
+                <div class="flow-step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">用户 <strong>点击</strong> 详情面板文本区域</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">只读 <code>Text</code> 切换为可编辑 <code>TextEditor</code>，<strong>光标出现</strong></div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">用户 <strong>输入/删除</strong> 文本内容</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">4</div>
+                    <div class="step-text"><strong>防抖 500ms</strong> 后自动保存到数据库（EncryptedStore.update）</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">5</div>
+                    <div class="step-text">保存成功后 <strong>同步到系统剪贴板</strong>（NSPasteboard.general）</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">6</div>
+                    <div class="step-text">AI 处理按钮 <strong>仍可使用</strong>，处理输入为编辑后内容</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="flow-switch" class="tab-content">
+        <div class="demo-card">
+            <h3>切换条目 → 自动保存当前编辑</h3>
+            <div class="interaction-flow">
+                <div class="flow-step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">用户正在 <strong>编辑模式</strong> 下修改某条目内容</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">用户在历史列表中 <strong>点击另一条目</strong></div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">系统检测到当前条目 <strong>内容已变化</strong>，立即保存（无防抖）</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">4</div>
+                    <div class="step-text">保存完成后 <strong>切换到新条目</strong>，详情面板展示新内容</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">5</div>
+                    <div class="step-text">编辑模式重置为新条目的 <strong>只读模式</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="flow-undo" class="tab-content">
+        <div class="demo-card">
+            <h3>Cmd+Z 撤销编辑</h3>
+            <div class="interaction-flow">
+                <div class="flow-step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">用户在编辑模式下 <strong>输入了若干字符</strong></div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">用户按下 <strong>Cmd+Z</strong></div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">TextEditor 内置 UndoManager <strong>撤销最近一次编辑</strong></div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">4</div>
+                    <div class="step-text">撤销操作触发 <strong>自动保存</strong>（与手动编辑一致）</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 状态转换图 -->
+    <div class="state-diagram">
+        <h3>编辑状态转换</h3>
+        <div class="state-flow">
+            <div>
+                <div class="state-box readonly">只读模式</div>
+                <div class="arrow-label">默认状态</div>
+            </div>
+            <div>
+                <div class="arrow">→ 点击内容 →</div>
+                <div class="arrow-label">文本/文件路径</div>
+            </div>
+            <div>
+                <div class="state-box editing">编辑模式</div>
+                <div class="arrow-label">光标出现</div>
+            </div>
+            <div>
+                <div class="arrow">→ 内容变化 →</div>
+                <div class="arrow-label">防抖 500ms</div>
+            </div>
+            <div>
+                <div class="state-box saving">自动保存中</div>
+                <div class="arrow-label">数据库写入</div>
+            </div>
+            <div>
+                <div class="arrow">→ 保存完成 →</div>
+                <div class="arrow-label">剪贴板同步</div>
+            </div>
+            <div>
+                <div class="state-box saved">已保存</div>
+                <div class="arrow-label">继续编辑</div>
+            </div>
+        </div>
+        <div style="margin-top:20px;text-align:center;">
+            <div class="state-flow">
+                <div>
+                    <div class="state-box editing" style="border-style:dashed;">编辑模式</div>
+                </div>
+                <div>
+                    <div class="arrow">→ 切换条目 / Esc →</div>
+                    <div class="arrow-label">保存当前编辑</div>
+                </div>
+                <div>
+                    <div class="state-box readonly">只读模式</div>
+                    <div class="arrow-label">新条目</div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:20px;text-align:center;">
+            <div class="state-flow">
+                <div>
+                    <div class="state-box" style="border-color:var(--accent-amber);background:rgba(245,158,11,0.1);color:var(--accent-amber);">图片类型</div>
+                </div>
+                <div>
+                    <div class="arrow">→ 点击 →</div>
+                    <div class="arrow-label">无响应</div>
+                </div>
+                <div>
+                    <div class="state-box readonly">只读 + 提示</div>
+                    <div class="arrow-label">「图片内容不支持编辑」</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存错误场景 -->
+    <h2 class="section-title">异常场景</h2>
+    <div class="prototype-grid">
+        <!-- 保存失败 -->
+        <div class="scenario-card">
+            <div class="card-header">
+                <span class="badge badge-text">TEXT</span>
+                <span class="badge" style="background:var(--error-color);color:white;">保存失败</span>
+                <span class="label">错误提示</span>
+            </div>
+            <div class="card-body">
+                <div class="detail-panel" style="background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;height:200px;">
+                    <div class="detail-meta">
+                        <span>📱 Safari</span>
+                        <span>🕐 刚刚</span>
+                    </div>
+                    <textarea class="edit-content" style="border-color:var(--error-color);" rows="3">编辑后的文本内容...</textarea>
+                    <div class="save-status error">❌ 保存失败，请重试</div>
+                    <div class="ai-buttons">
+                        <button class="ai-btn">🧠 智能总结</button>
+                        <button class="ai-btn">🌐 即时翻译</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 保存中 -->
+        <div class="scenario-card">
+            <div class="card-header">
+                <span class="badge badge-text">TEXT</span>
+                <span class="badge" style="background:var(--accent-amber);color:var(--bg-primary);">保存中</span>
+                <span class="label">自动保存进行中</span>
+            </div>
+            <div class="card-body">
+                <div class="detail-panel" style="background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;height:200px;">
+                    <div class="detail-meta">
+                        <span>📱 Safari</span>
+                        <span>🕐 刚刚</span>
+                    </div>
+                    <textarea class="edit-content editing-pulse" rows="3">编辑后的文本内容...</textarea>
+                    <div class="save-status saving">⏳ 正在保存...</div>
+                    <div class="ai-buttons">
+                        <button class="ai-btn">🧠 智能总结</button>
+                        <button class="ai-btn">🌐 即时翻译</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
