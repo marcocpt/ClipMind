@@ -58,7 +58,7 @@ final class SourceFilterTests: XCTestCase {
 
     func testSearchWithMatchingSourceAppReturnsFilteredResults() throws {
         let results = try searchService.search(
-            query: "programming", limit: 5, sourceApp: Self.xcodeApp
+            query: "programming", limit: 5, sourceApps: [Self.xcodeApp]
         )
         XCTAssertFalse(results.isEmpty, "应返回 Xcode 来源的条目")
         for item in results {
@@ -68,7 +68,7 @@ final class SourceFilterTests: XCTestCase {
 
     func testSearchWithNonMatchingSourceAppReturnsEmpty() throws {
         let results = try searchService.search(
-            query: "programming", limit: 5, sourceApp: "com.nonexistent.app"
+            query: "programming", limit: 5, sourceApps: ["com.nonexistent.app"]
         )
         XCTAssertTrue(results.isEmpty, "不匹配的 sourceApp 应返回空结果")
     }
@@ -80,7 +80,7 @@ final class SourceFilterTests: XCTestCase {
 
     func testSearchWithScoresRespectsSourceAppFilter() throws {
         let results = try searchService.searchWithScores(
-            query: "programming", limit: 5, sourceApp: Self.xcodeApp
+            query: "programming", limit: 5, sourceApps: [Self.xcodeApp]
         )
         XCTAssertFalse(results.isEmpty, "searchWithScores 也应支持 sourceApp 过滤")
         for result in results {
