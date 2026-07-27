@@ -63,7 +63,10 @@ struct MainWindow: View {
     @ViewBuilder
     private var contentArea: some View {
         if isSearching {
-            SearchResultsView(results: filteredSearchResults) { clip in
+            SearchResultsView(
+                results: filteredSearchResults,
+                isSourceFilterActive: !sourceFilterSelection.isAllSelected
+            ) { clip in
                 selectedClip = clip
             }
         } else {
