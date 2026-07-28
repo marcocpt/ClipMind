@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F1.14 用户自定义标签视觉原型 v2.2</title>
+    <title>F1.14 用户自定义标签视觉原型 v2.3</title>
     <style>
         :root {
             color-scheme: dark;
@@ -955,7 +955,7 @@
             <p>覆盖三个条目入口、标签选择与创建、系统标签移除/恢复、组合筛选、设置页只读权限、失败回滚和旧数据迁移可用状态。</p>
         </div>
         <div class="version-card">
-            <strong>Visual Prototype v2.2</strong>
+            <strong>Visual Prototype v2.3</strong>
             <div class="meta">最后更新：2026-07-29</div>
             <div class="meta">Requirements v1.2</div>
             <div class="meta">Design v2.2</div>
@@ -1118,7 +1118,7 @@
 
         <div class="state-panel" data-menu-state="removed">
             <div class="tag-menu">
-                <div class="menu-header">选择标签 · 已移除系统标签</div>
+                <div class="menu-header">选择标签 · 已移除系统标签（隔离样例）</div>
                 <div class="menu-search"><input class="input" value="" placeholder="搜索标签" aria-label="搜索已移除系统标签状态"></div>
                 <div class="menu-list">
                     <button type="button" class="menu-item" id="restore-system-tag" role="checkbox" aria-checked="false">
@@ -1198,7 +1198,7 @@
 
         <div class="state-panel" data-menu-state="limit">
             <div class="tag-menu">
-                <div class="menu-header">选择标签 · 5 个名额已满</div>
+                <div class="menu-header">选择标签 · 5 个名额已满（隔离样例）</div>
                 <div class="callout warning" style="margin: 10px;">
                     <strong>每条条目最多 5 个标签</strong>
                     先移除一个用户标签，才能恢复 CODE。
@@ -1296,6 +1296,7 @@
             <div class="filter-selector" id="filter-selector" role="region" aria-labelledby="filter-selector-title" hidden>
                 <strong id="filter-selector-title">选择标签筛选 · 多选交集</strong>
                 <div class="filter-selector-options" id="filter-selector-options"></div>
+                <p class="caption">全部 11 个自动分类标签与用户标签均可参与筛选；选择非当前条目的系统标签会进入真实交集空态。</p>
                 <div class="button-row">
                     <button type="button" class="btn" id="close-filter-selector">完成</button>
                 </div>
@@ -1347,7 +1348,7 @@
             </div>
 
             <div class="filter-shell">
-                <div class="result-column-title">空状态 B · 当前组合筛选无结果</div>
+                <div class="result-column-title">空状态 B · 独立组合筛选样例</div>
                 <div class="empty-state" id="filtered-empty-content">
                     <div>
                         <div class="empty-icon">⌕</div>
@@ -1715,6 +1716,13 @@
         return userTags.find((tag) => tag.name === name);
     }
 
+    function filterTagDefinition(name) {
+        if (systemTags[name]) {
+            return { name, color: systemTags[name].color, source: "system" };
+        }
+        return userTags.find((tag) => tag.name === name);
+    }
+
     function tagColor(name, context) {
         const definition = tagDefinition(name, context);
         return definition ? definition.color : "gray";
@@ -1776,9 +1784,7 @@
         const activeContainer = document.getElementById("active-filter-tags");
         activeContainer.replaceChildren();
         [...selectedFilterTags].forEach((name) => {
-            const definition = name === entryContexts.shared.systemTag
-                ? { name, color: systemTags[name].color }
-                : userTags.find((tag) => tag.name === name);
+            const definition = filterTagDefinition(name);
             if (!definition) {
                 selectedFilterTags.delete(name);
                 return;
@@ -1801,8 +1807,12 @@
         const selectorOptions = document.getElementById("filter-selector-options");
         selectorOptions.replaceChildren();
         const options = [
-            { name: entryContexts.shared.systemTag, color: systemTags[entryContexts.shared.systemTag].color },
-            ...userTags
+            ...Object.entries(systemTags).map(([name, definition]) => ({
+                name,
+                color: definition.color,
+                source: "system"
+            })),
+            ...userTags.map((tag) => ({ ...tag, source: "user" }))
         ];
         options.forEach((option) => {
             const selected = selectedFilterTags.has(option.name);
@@ -1810,9 +1820,12 @@
             button.type = "button";
             button.className = "tag";
             button.style.setProperty("--tag-color", `var(--${option.color})`);
-            button.textContent = `${selected ? "✓ " : ""}${option.name}`;
+            button.textContent = `${selected ? "✓ " : ""}${option.name}${option.source === "system" ? " · 系统" : ""}`;
             button.setAttribute("aria-pressed", String(selected));
-            button.setAttribute("aria-label", `${option.name}标签筛选${selected ? "，已选择" : ""}`);
+            button.setAttribute(
+                "aria-label",
+                `${option.name}${option.source === "system" ? "自动分类" : "用户"}标签筛选${selected ? "，已选择" : ""}`
+            );
             button.addEventListener("click", () => {
                 if (selectedFilterTags.has(option.name)) {
                     selectedFilterTags.delete(option.name);
@@ -2397,12 +2410,10 @@
         document.getElementById("open-filter-selector").focus();
     });
     document.getElementById("clear-tag-filters").addEventListener("click", () => {
-        selectedFilterTags.clear();
-        renderFilterState();
-        showFilterRestored("标签条件已清除；搜索“需求”和来源“Xcode”保持不变。");
+        showFilterRestored("独立样例的标签条件已清除；搜索“需求”和来源“Xcode”保持不变。");
     });
     document.getElementById("switch-source-filter").addEventListener("click", () => {
-        showFilterRestored("来源已切换为 Pages；搜索“需求”和两个标签条件保持不变。");
+        showFilterRestored("独立样例的来源已切换为 Pages；搜索“需求”和两个标签条件保持不变。");
     });
 
     document.getElementById("settings-user-rows").addEventListener("click", (event) => {
