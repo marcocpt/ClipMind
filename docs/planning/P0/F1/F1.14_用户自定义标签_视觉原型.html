@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F1.14 用户自定义标签视觉原型 v2.0</title>
+    <title>F1.14 用户自定义标签视觉原型 v2.1</title>
     <style>
         :root {
             color-scheme: dark;
@@ -41,6 +41,10 @@
 
         * {
             box-sizing: border-box;
+        }
+
+        [hidden] {
+            display: none !important;
         }
 
         body {
@@ -306,7 +310,6 @@
 
         .input:focus,
         button:focus-visible,
-        .clip-card[role="button"]:focus-visible,
         .focus-demo {
             outline: 2px solid var(--info);
             outline-offset: 2px;
@@ -325,19 +328,26 @@
             background: var(--panel);
             color: inherit;
             text-align: left;
-            cursor: pointer;
+            cursor: default;
         }
 
         .clip-card:hover {
             border-color: var(--border-strong);
         }
 
-        .clip-card.static {
-            cursor: default;
+        .clip-content {
+            display: grid;
+            min-width: 0;
         }
 
-        .clip-content {
-            min-width: 0;
+        .clip-primary-action {
+            width: 100%;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
         }
 
         .clip-title {
@@ -499,17 +509,23 @@
             grid-template-columns: 18px 11px minmax(0, 1fr) auto;
             gap: 8px;
             align-items: center;
+            width: 100%;
             padding: 8px 9px;
+            border: 0;
             border-radius: 8px;
+            background: transparent;
             color: var(--text-secondary);
             font-size: 12px;
+            text-align: left;
+            cursor: pointer;
         }
 
         .menu-item:hover {
             background: var(--card-strong);
         }
 
-        .menu-item.disabled {
+        .menu-item[aria-disabled="true"] {
+            cursor: not-allowed;
             opacity: 0.44;
         }
 
@@ -679,6 +695,26 @@
             font-size: 11px;
         }
 
+        .filter-chip.filter-tag {
+            border-color: transparent;
+            color: white;
+            cursor: pointer;
+        }
+
+        .filter-results {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .result-column-title {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 650;
+        }
+
         .empty-state {
             display: grid;
             place-items: center;
@@ -757,6 +793,23 @@
 
         .dialog-preview {
             padding: 18px;
+        }
+
+        .dialog-host {
+            min-height: 310px;
+            padding: 14px;
+            border: 1px dashed var(--border-strong);
+            border-radius: 14px;
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        .dialog-placeholder {
+            display: grid;
+            place-items: center;
+            min-height: 280px;
+            color: var(--muted);
+            font-size: 12px;
+            text-align: center;
         }
 
         .dialog-preview h3 {
@@ -874,7 +927,7 @@
             <p>覆盖三个条目入口、标签选择与创建、系统标签移除/恢复、组合筛选、设置页只读权限、失败回滚和旧数据迁移可用状态。</p>
         </div>
         <div class="version-card">
-            <strong>Visual Prototype v2.0</strong>
+            <strong>Visual Prototype v2.1</strong>
             <div class="meta">最后更新：2026-07-29</div>
             <div class="meta">Requirements v1.2</div>
             <div class="meta">Design v2.2</div>
@@ -913,25 +966,20 @@
                         <div class="toolbar-control">标签：全部</div>
                     </div>
 
-                    <div class="clip-card" role="button" tabindex="0" data-row-action="主窗口：选择并打开详情">
-                        <span class="clip-content">
-                            <span class="clip-title">func viewDidLoad() { super.viewDidLoad() }</span>
-                            <span class="clip-meta">Xcode · 2 分钟前</span>
-                        </span>
-                        <span class="tag-list">
-                            <button class="tag" style="--tag-color: var(--violet)" aria-label="CODE 自动分类标签" onclick="openTagMenu(event, '主窗口')">CODE</button>
-                            <button class="tag" style="--tag-color: var(--amber)" aria-label="重要 用户标签" onclick="openTagMenu(event, '主窗口')">重要</button>
-                        </span>
+                    <div class="clip-card">
+                        <button type="button" class="clip-content clip-primary-action" data-row-action="主窗口：选择并打开详情" aria-label="打开 Q3 产品需求条目详情">
+                            <span class="clip-title">Q3 产品需求 · 待评审</span>
+                            <span class="clip-meta">Pages · 3 小时前 · 跨入口样本</span>
+                        </button>
+                        <span class="tag-list" data-entry-preview="shared" data-surface="主窗口"></span>
                     </div>
 
-                    <div class="clip-card" role="button" tabindex="0" data-row-action="主窗口：选择并打开详情">
-                        <span class="clip-content">
-                            <span class="clip-title">没有任何标签的临时文本</span>
-                            <span class="clip-meta">Notes · 8 分钟前</span>
-                        </span>
-                        <span class="tag-list">
-                            <button class="add-tag" aria-label="添加标签" onclick="openTagMenu(event, '主窗口无标签条目')">+</button>
-                        </span>
+                    <div class="clip-card">
+                        <button type="button" class="clip-content clip-primary-action" data-row-action="主窗口：选择并打开详情" aria-label="打开无标签临时文本详情">
+                            <span class="clip-title">无标签临时文本</span>
+                            <span class="clip-meta">Notes · 8 分钟前 · CODE 已由用户移除</span>
+                        </button>
+                        <span class="tag-list" data-entry-preview="empty" data-surface="主窗口"></span>
                     </div>
                 </div>
             </div>
@@ -944,16 +992,20 @@
                         <span>双击粘贴</span>
                     </div>
                     <div class="window-body">
-                        <div class="entry-label">条目单击选中 · 双击粘贴</div>
-                        <div class="clip-card" role="button" tabindex="0" data-row-action="菜单栏弹窗：选择条目">
-                            <span class="clip-content">
-                                <span class="clip-title">https://developer.apple.com</span>
-                                <span class="clip-meta">Safari · 15 分钟前</span>
-                            </span>
-                            <span class="tag-list">
-                                <button class="tag light" style="--tag-color: var(--cyan)" onclick="openTagMenu(event, '菜单栏弹窗')">LINK</button>
-                                <button class="tag" style="--tag-color: var(--emerald)" onclick="openTagMenu(event, '菜单栏弹窗')">待处理</button>
-                            </span>
+                        <div class="entry-label">同一条目、同一顺序；条目单击选中，双击粘贴</div>
+                        <div class="clip-card">
+                            <button type="button" class="clip-content clip-primary-action" data-row-action="菜单栏弹窗：选择条目" aria-label="选择 Q3 产品需求条目">
+                                <span class="clip-title">Q3 产品需求 · 待评审</span>
+                                <span class="clip-meta">Pages · 3 小时前</span>
+                            </button>
+                            <span class="tag-list" data-entry-preview="shared" data-surface="菜单栏弹窗"></span>
+                        </div>
+                        <div class="clip-card">
+                            <button type="button" class="clip-content clip-primary-action" data-row-action="菜单栏弹窗：选择条目" aria-label="选择无标签临时文本">
+                                <span class="clip-title">无标签临时文本</span>
+                                <span class="clip-meta">Notes · 8 分钟前</span>
+                            </button>
+                            <span class="tag-list" data-entry-preview="empty" data-surface="菜单栏弹窗"></span>
                         </div>
                     </div>
                 </div>
@@ -965,16 +1017,20 @@
                         <span>↑ ↓ ↵</span>
                     </div>
                     <div class="window-body">
-                        <div class="entry-label">方向键选择 · 回车粘贴</div>
-                        <div class="clip-card" role="button" tabindex="0" data-row-action="快捷粘贴面板：选择并准备粘贴">
-                            <span class="clip-content">
-                                <span class="clip-title">Q3 产品需求文档 v2.1</span>
+                        <div class="entry-label">同一条目、同一顺序；方向键选择，回车粘贴</div>
+                        <div class="clip-card">
+                            <button type="button" class="clip-content clip-primary-action" data-row-action="快捷粘贴面板：选择并准备粘贴" aria-label="选择 Q3 产品需求并准备粘贴">
+                                <span class="clip-title">Q3 产品需求 · 待评审</span>
                                 <span class="clip-meta">Pages · 3 小时前</span>
-                            </span>
-                            <span class="tag-list">
-                                <button class="tag" style="--tag-color: var(--orange)" onclick="openTagMenu(event, '快捷粘贴面板')">REQ</button>
-                                <button class="tag" style="--tag-color: var(--blue)" onclick="openTagMenu(event, '快捷粘贴面板')">项目 B</button>
-                            </span>
+                            </button>
+                            <span class="tag-list" data-entry-preview="shared" data-surface="快捷粘贴面板"></span>
+                        </div>
+                        <div class="clip-card">
+                            <button type="button" class="clip-content clip-primary-action" data-row-action="快捷粘贴面板：选择并准备粘贴" aria-label="选择无标签临时文本并准备粘贴">
+                                <span class="clip-title">无标签临时文本</span>
+                                <span class="clip-meta">Notes · 8 分钟前</span>
+                            </button>
+                            <span class="tag-list" data-entry-preview="empty" data-surface="快捷粘贴面板"></span>
                         </div>
                     </div>
                 </div>
@@ -1008,27 +1064,12 @@
 
         <div class="state-panel active" data-menu-state="browse">
             <div class="tag-menu">
-                <div class="menu-header">选择标签 · CODE 条目</div>
-                <div class="menu-search"><input class="input" value="" placeholder="搜索标签"></div>
-                <div class="menu-list">
-                    <div class="menu-item">
-                        <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--violet)"></span>
-                        <span>CODE</span><span class="source-badge system">自动分类 · 自身</span>
-                    </div>
-                    <div class="menu-item">
-                        <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--amber)"></span>
-                        <span>重要</span><span class="source-badge user">用户创建</span>
-                    </div>
-                    <div class="menu-item">
-                        <span class="check"></span><span class="dot" style="--dot-color: var(--emerald)"></span>
-                        <span>待处理</span><span class="source-badge user">用户创建</span>
-                    </div>
-                    <div class="menu-item">
-                        <span class="check"></span><span class="dot" style="--dot-color: var(--blue)"></span>
-                        <span>项目 B</span><span class="source-badge user">用户创建</span>
-                    </div>
+                <div class="menu-header" id="menu-context-title">选择标签 · Q3 产品需求 · REQ 条目</div>
+                <div class="menu-search">
+                    <input class="input" id="menu-search-input" value="" placeholder="搜索标签" aria-label="搜索当前条目的可选标签">
                 </div>
-                <div class="menu-footer caption">LINK、ERROR 等其他系统标签不出现在此条目的候选列表中。</div>
+                <div class="menu-list" id="browse-menu-list" aria-live="polite"></div>
+                <div class="menu-footer caption" id="menu-context-footer">其他系统标签不出现在此条目的候选列表中。</div>
             </div>
             <div class="detail-list">
                 <div class="callout success">
@@ -1040,7 +1081,7 @@
                     系统标签带“自动分类 · 自身”标识，只能恢复当前条目的分类结果。
                 </div>
                 <ul>
-                    <li>当前共 2 个标签，距离上限还有 3 个名额。</li>
+                    <li id="menu-count-summary">当前共 2 个标签，距离上限还有 3 个名额。</li>
                     <li>系统标签固定排在用户标签之前。</li>
                     <li>重启后保持最近一次成功的勾选状态。</li>
                 </ul>
@@ -1050,16 +1091,16 @@
         <div class="state-panel" data-menu-state="removed">
             <div class="tag-menu">
                 <div class="menu-header">选择标签 · 已移除系统标签</div>
-                <div class="menu-search"><input class="input" value="" placeholder="搜索标签"></div>
+                <div class="menu-search"><input class="input" value="" placeholder="搜索标签" aria-label="搜索已移除系统标签状态"></div>
                 <div class="menu-list">
-                    <div class="menu-item">
+                    <button type="button" class="menu-item" id="restore-system-tag" role="checkbox" aria-checked="false">
                         <span class="check"></span><span class="dot" style="--dot-color: var(--violet)"></span>
                         <span>CODE</span><span class="source-badge system">用户已移除</span>
-                    </div>
-                    <div class="menu-item">
+                    </button>
+                    <button type="button" class="menu-item" role="checkbox" aria-checked="true">
                         <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--amber)"></span>
                         <span>重要</span><span class="source-badge user">用户创建</span>
-                    </div>
+                    </button>
                 </div>
             </div>
             <div class="detail-list">
@@ -1078,35 +1119,36 @@
         <div class="state-panel" data-menu-state="create">
             <div class="tag-menu">
                 <div class="menu-header">创建新标签</div>
-                <div class="menu-search"><input class="input" value="工作笔记" aria-label="搜索或创建标签名称"></div>
+                <div class="menu-search"><input class="input" id="create-search-mirror" value="工作笔记" aria-label="搜索或创建标签名称" readonly></div>
                 <div class="create-form">
                     <div class="callout info">
                         <strong>无匹配标签</strong>
-                        创建“工作笔记”
+                        <span id="create-entry-label">创建“工作笔记”</span>
                     </div>
                     <label>
                         <span class="field-label">标签名称</span>
-                        <input class="input" value="工作笔记">
+                        <input class="input" id="create-name-input" value="工作笔记">
                     </label>
                     <div>
                         <span class="field-label">预设颜色 · 颜色名可朗读</span>
-                        <div class="palette">
-                            <button class="swatch" style="--dot-color: var(--violet); background: var(--violet)">紫罗兰</button>
-                            <button class="swatch light" style="background: var(--cyan)">青色</button>
-                            <button class="swatch" style="background: var(--rose)">玫红</button>
-                            <button class="swatch" style="background: var(--blue)">蓝色</button>
-                            <button class="swatch light" style="background: var(--amber)">琥珀</button>
-                            <button class="swatch" style="background: var(--emerald)">翡翠</button>
-                            <button class="swatch selected" style="background: var(--purple)">紫色 ✓</button>
-                            <button class="swatch" style="background: var(--orange)">橙色</button>
-                            <button class="swatch" style="background: var(--teal)">青绿</button>
-                            <button class="swatch" style="background: var(--slate)">石板灰</button>
-                            <button class="swatch" style="background: var(--gray)">灰色</button>
+                        <div class="palette" aria-label="预设标签颜色">
+                            <button type="button" class="swatch" data-color="violet" aria-pressed="false" aria-label="紫罗兰色" style="background: var(--violet)">紫罗兰</button>
+                            <button type="button" class="swatch light" data-color="cyan" aria-pressed="false" aria-label="青色" style="background: var(--cyan)">青色</button>
+                            <button type="button" class="swatch" data-color="rose" aria-pressed="false" aria-label="玫红色" style="background: var(--rose)">玫红</button>
+                            <button type="button" class="swatch" data-color="blue" aria-pressed="false" aria-label="蓝色" style="background: var(--blue)">蓝色</button>
+                            <button type="button" class="swatch light" data-color="amber" aria-pressed="false" aria-label="琥珀色" style="background: var(--amber)">琥珀</button>
+                            <button type="button" class="swatch" data-color="emerald" aria-pressed="false" aria-label="翡翠色" style="background: var(--emerald)">翡翠</button>
+                            <button type="button" class="swatch selected" data-color="purple" aria-pressed="true" aria-label="紫色，已选择" style="background: var(--purple)">紫色 ✓</button>
+                            <button type="button" class="swatch" data-color="orange" aria-pressed="false" aria-label="橙色" style="background: var(--orange)">橙色</button>
+                            <button type="button" class="swatch" data-color="teal" aria-pressed="false" aria-label="青绿色" style="background: var(--teal)">青绿</button>
+                            <button type="button" class="swatch" data-color="slate" aria-pressed="false" aria-label="石板灰色" style="background: var(--slate)">石板灰</button>
+                            <button type="button" class="swatch" data-color="gray" aria-pressed="false" aria-label="灰色" style="background: var(--gray)">灰色</button>
                         </div>
                     </div>
+                    <div class="inline-error" id="create-validation-error" role="alert" hidden></div>
                     <div class="button-row">
-                        <button class="btn">取消</button>
-                        <button class="btn primary">创建并勾选</button>
+                        <button type="button" class="btn" id="cancel-create">取消</button>
+                        <button type="button" class="btn primary" id="confirm-create">创建并勾选</button>
                     </div>
                 </div>
             </div>
@@ -1134,30 +1176,30 @@
                     先移除一个用户标签，才能恢复 CODE。
                 </div>
                 <div class="menu-list">
-                    <div class="menu-item disabled">
+                    <button type="button" class="menu-item" id="limit-system-restore" role="checkbox" aria-checked="false" aria-disabled="true">
                         <span class="check"></span><span class="dot" style="--dot-color: var(--violet)"></span>
                         <span>CODE</span><span class="source-badge system">等待名额</span>
-                    </div>
-                    <div class="menu-item">
+                    </button>
+                    <button type="button" class="menu-item limit-user-choice" role="checkbox" aria-checked="true" data-limit-tag="重要">
                         <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--amber)"></span>
                         <span>重要</span><span class="source-badge user">用户创建</span>
-                    </div>
-                    <div class="menu-item">
+                    </button>
+                    <button type="button" class="menu-item limit-user-choice" role="checkbox" aria-checked="true" data-limit-tag="待处理">
                         <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--emerald)"></span>
                         <span>待处理</span><span class="source-badge user">用户创建</span>
-                    </div>
-                    <div class="menu-item">
+                    </button>
+                    <button type="button" class="menu-item limit-user-choice" role="checkbox" aria-checked="true" data-limit-tag="项目 B">
                         <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--blue)"></span>
                         <span>项目 B</span><span class="source-badge user">用户创建</span>
-                    </div>
-                    <div class="menu-item">
+                    </button>
+                    <button type="button" class="menu-item limit-user-choice" role="checkbox" aria-checked="true" data-limit-tag="工作笔记">
                         <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--rose)"></span>
                         <span>工作笔记</span><span class="source-badge user">用户创建</span>
-                    </div>
-                    <div class="menu-item">
+                    </button>
+                    <button type="button" class="menu-item limit-user-choice" role="checkbox" aria-checked="true" data-limit-tag="面试准备">
                         <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--purple)"></span>
                         <span>面试准备</span><span class="source-badge user">用户创建</span>
-                    </div>
+                    </button>
                 </div>
                 <div class="menu-footer"><button class="btn primary" disabled>创建并勾选</button></div>
             </div>
@@ -1182,22 +1224,22 @@
                     已恢复之前的标签状态。请稍后重试。
                 </div>
                 <div class="menu-list">
-                    <div class="menu-item">
-                        <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--violet)"></span>
-                        <span>CODE</span><span class="source-badge system">自动分类 · 自身</span>
-                    </div>
-                    <div class="menu-item">
+                    <button type="button" class="menu-item" role="checkbox" aria-checked="true">
+                        <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--orange)"></span>
+                        <span>REQ</span><span class="source-badge system">自动分类 · 自身</span>
+                    </button>
+                    <button type="button" class="menu-item" role="checkbox" aria-checked="true">
                         <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--amber)"></span>
                         <span>重要</span><span class="source-badge user">用户创建</span>
-                    </div>
-                    <div class="menu-item">
+                    </button>
+                    <button type="button" class="menu-item" id="error-pending-tag" role="checkbox" aria-checked="false">
                         <span class="check"></span><span class="dot" style="--dot-color: var(--emerald)"></span>
                         <span>待处理</span><span class="source-badge user">用户创建</span>
-                    </div>
+                    </button>
                 </div>
                 <div class="menu-footer button-row">
-                    <button class="btn">关闭</button>
-                    <button class="btn primary">重试</button>
+                    <button type="button" class="btn" id="close-error-state">关闭</button>
+                    <button type="button" class="btn primary" id="retry-error-state">重试</button>
                 </div>
             </div>
             <div class="detail-list">
@@ -1223,53 +1265,87 @@
             <span class="requirement-badge">FR-009 · NFR-004 · NFR-007</span>
         </div>
 
-        <div class="grid-2">
+        <div class="filter-shell">
+            <div class="toolbar">
+                <div class="toolbar-control">搜索：需求</div>
+                <div class="toolbar-control" id="active-source-filter">来源：Pages</div>
+                <div class="toolbar-control">标签 · 交集</div>
+            </div>
+            <div class="filter-summary">
+                <span class="filter-chip">搜索：需求</span>
+                <span class="filter-chip">来源：Pages</span>
+                <button type="button" class="filter-chip filter-tag" data-filter-tag="重要" aria-label="移除重要标签筛选" style="background: var(--amber)">重要 ×</button>
+                <button type="button" class="filter-chip filter-tag" data-filter-tag="待处理" aria-label="移除待处理标签筛选" style="background: var(--emerald)">待处理 ×</button>
+                <button type="button" class="add-tag" aria-label="添加标签筛选">+</button>
+            </div>
+
+            <div class="filter-results" aria-label="历史与搜索结果一致性">
+                <div>
+                    <div class="result-column-title">历史列表 · resultId: clip-f114-demo</div>
+                    <div class="clip-card">
+                        <span class="clip-content">
+                            <span class="clip-title">Q3 产品需求 · 待评审</span>
+                            <span class="clip-meta">Pages · 同时匹配搜索、来源和两个标签</span>
+                        </span>
+                        <span class="tag-list">
+                            <span class="tag" style="--tag-color: var(--orange)">REQ</span>
+                            <span class="tag" style="--tag-color: var(--amber)">重要</span>
+                            <span class="tag" style="--tag-color: var(--emerald)">待处理</span>
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <div class="result-column-title">搜索结果 · resultId: clip-f114-demo</div>
+                    <div class="clip-card">
+                        <span class="clip-content">
+                            <span class="clip-title">Q3 产品需求 · 待评审</span>
+                            <span class="clip-meta">Pages · 与历史列表返回同一条目标识</span>
+                        </span>
+                        <span class="tag-list">
+                            <span class="tag" style="--tag-color: var(--orange)">REQ</span>
+                            <span class="tag" style="--tag-color: var(--amber)">重要</span>
+                            <span class="tag" style="--tag-color: var(--emerald)">待处理</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <span class="observable">观察点：两处可见 resultId 与条目标签完全一致</span>
+        </div>
+
+        <div class="grid-2" style="margin-top: 18px;">
             <div class="filter-shell">
-                <div class="toolbar">
-                    <div class="toolbar-control">搜索：需求</div>
-                    <div class="toolbar-control">来源：Pages</div>
-                    <div class="toolbar-control">标签</div>
+                <div class="result-column-title">空状态 A · 存储中没有任何剪贴历史</div>
+                <div class="empty-state">
+                    <div>
+                        <div class="empty-icon">□</div>
+                        <h3>还没有剪贴历史</h3>
+                        <p>复制内容后会显示在这里。此状态不提供“清除筛选”操作。</p>
+                    </div>
                 </div>
-                <div class="filter-summary">
-                    <span class="filter-chip">搜索：需求</span>
-                    <span class="filter-chip">来源：Pages</span>
-                    <span class="tag" style="--tag-color: var(--amber)">重要 <span class="x">×</span></span>
-                    <span class="tag" style="--tag-color: var(--emerald)">待处理 <span class="x">×</span></span>
-                    <button class="add-tag" aria-label="添加标签筛选">+</button>
-                </div>
-                <div class="clip-card static">
-                    <span class="clip-content">
-                        <span class="clip-title">Q3 产品需求 · 待评审</span>
-                        <span class="clip-meta">Pages · 同时匹配搜索、来源和两个标签</span>
-                    </span>
-                    <span class="tag-list">
-                        <span class="tag" style="--tag-color: var(--orange)">REQ</span>
-                        <span class="tag" style="--tag-color: var(--amber)">重要</span>
-                        <span class="tag" style="--tag-color: var(--emerald)">待处理</span>
-                    </span>
-                </div>
-                <span class="observable">观察点：resultIds 在历史与搜索结果中一致</span>
+                <span class="observable">观察点：historyEmptyState</span>
             </div>
 
             <div class="filter-shell">
-                <div class="filter-summary">
-                    <span class="filter-chip">搜索：需求</span>
-                    <span class="filter-chip">来源：Xcode</span>
-                    <span class="tag" style="--tag-color: var(--purple)">面试准备 <span class="x">×</span></span>
-                    <span class="tag" style="--tag-color: var(--emerald)">待处理 <span class="x">×</span></span>
-                </div>
-                <div class="empty-state">
+                <div class="result-column-title">空状态 B · 当前组合筛选无结果</div>
+                <div class="empty-state" id="filtered-empty-content">
                     <div>
                         <div class="empty-icon">⌕</div>
                         <h3>没有符合当前条件的剪贴项</h3>
-                        <p>当前是“筛选无结果”，不是“没有任何剪贴历史”。可移除标签或切换来源。</p>
+                        <p>当前仍保留搜索“需求”和来源“Xcode”，可只清除标签或切换来源。</p>
                         <div class="button-row" style="justify-content: center;">
-                            <button class="btn">清除标签筛选</button>
-                            <button class="btn primary">切换来源</button>
+                            <button type="button" class="btn" id="clear-tag-filters">清除标签筛选</button>
+                            <button type="button" class="btn primary" id="switch-source-filter">切换来源</button>
                         </div>
                     </div>
                 </div>
-                <span class="observable">观察点：filteredEmptyState</span>
+                <div class="empty-state" id="filter-restored-content" hidden>
+                    <div>
+                        <div class="empty-icon">✓</div>
+                        <h3>列表已恢复</h3>
+                        <p id="filter-restored-copy">标签条件已清除；搜索与来源条件保持不变。</p>
+                    </div>
+                </div>
+                <span class="observable">观察点：filteredEmptyState / clearKeepsSearchAndSource</span>
             </div>
         </div>
 
@@ -1312,60 +1388,63 @@
                         </div>
 
                         <div class="settings-section-title">用户自定义标签 · 可全局管理</div>
-                        <div class="settings-item">
+                        <div id="settings-user-rows">
+                        <div class="settings-item" data-user-tag-row="重要">
                             <span class="dot" style="--dot-color: var(--amber)"></span>
-                            <span><span class="settings-name">重要</span><br><span class="settings-meta">用户创建 · 颜色不可修改</span></span>
+                            <span><span class="settings-name" data-settings-name="重要">重要</span><br><span class="settings-meta">用户创建 · 颜色不可修改</span></span>
                             <span></span>
                             <span class="settings-actions">
-                                <button class="btn">重命名</button>
-                                <button class="btn ghost-danger">删除</button>
+                                <button type="button" class="btn" data-settings-action="rename" data-tag-name="重要">重命名</button>
+                                <button type="button" class="btn ghost-danger" data-settings-action="delete" data-tag-name="重要">删除</button>
                             </span>
                         </div>
-                        <div class="settings-item">
+                        <div class="settings-item" data-user-tag-row="待处理">
                             <span class="dot" style="--dot-color: var(--emerald)"></span>
-                            <span><span class="settings-name">待处理</span><br><span class="settings-meta">用户创建 · 颜色不可修改</span></span>
+                            <span><span class="settings-name" data-settings-name="待处理">待处理</span><br><span class="settings-meta">用户创建 · 颜色不可修改</span></span>
                             <span></span>
                             <span class="settings-actions">
-                                <button class="btn">重命名</button>
-                                <button class="btn ghost-danger">删除</button>
+                                <button type="button" class="btn" data-settings-action="rename" data-tag-name="待处理">重命名</button>
+                                <button type="button" class="btn ghost-danger" data-settings-action="delete" data-tag-name="待处理">删除</button>
                             </span>
+                        </div>
                         </div>
                     </div>
                     <span class="observable">观察点：systemReadOnly / userGlobalActions / noColorEdit</span>
                 </div>
             </div>
 
-            <div class="stack">
-                <div class="dialog-preview">
-                    <h3 style="color: #ff8da1;">删除标签</h3>
-                    <p>删除标签“工作笔记”？该标签将从所有条目中移除，此操作不可撤销。</p>
-                    <div class="button-row">
-                        <button class="btn">取消</button>
-                        <button class="btn danger">确认删除</button>
+            <div class="dialog-host" id="settings-dialog-host">
+                <div class="dialog-placeholder" id="settings-dialog-placeholder">
+                    <div>
+                        <strong>选择任一用户标签的“重命名”或“删除”</strong><br>
+                        对话框会获得焦点；取消或完成后焦点返回触发按钮。
                     </div>
                 </div>
 
-                <div class="dialog-preview">
-                    <h3>重命名标签</h3>
-                    <p>将标签“面试准备”重命名为“面试素材”？此操作将影响所有关联条目。</p>
-                    <div class="button-row">
-                        <button class="btn">取消</button>
-                        <button class="btn primary">确认重命名</button>
-                    </div>
-                </div>
-
-                <div class="dialog-preview">
-                    <h3>名称校验</h3>
+                <div class="dialog-preview" id="rename-dialog" role="dialog" aria-modal="true" aria-labelledby="rename-dialog-title" hidden>
+                    <h3 id="rename-dialog-title">重命名标签</h3>
+                    <p id="rename-dialog-copy">修改名称后确认；此操作将影响所有关联条目。</p>
                     <label>
                         <span class="field-label">新名称</span>
-                        <input class="input" value=" code ">
+                        <input class="input" id="rename-input" value="">
                     </label>
-                    <div class="inline-error">已存在同名标签“CODE”，名称不区分大小写。</div>
+                    <div class="inline-error" id="rename-validation-error" role="alert" hidden></div>
                     <div class="button-row" style="margin-top: 12px;">
-                        <button class="btn">取消</button>
-                        <button class="btn primary" disabled>保存</button>
+                        <button type="button" class="btn" data-dialog-cancel>取消</button>
+                        <button type="button" class="btn primary" id="confirm-rename">确认重命名</button>
                     </div>
                 </div>
+
+                <div class="dialog-preview" id="delete-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" hidden>
+                    <h3 id="delete-dialog-title" style="color: #ff8da1;">删除标签</h3>
+                    <p id="delete-dialog-copy">该标签将从所有条目中移除，此操作不可撤销。</p>
+                    <div class="button-row">
+                        <button type="button" class="btn" data-dialog-cancel>取消</button>
+                        <button type="button" class="btn danger" id="confirm-delete">确认删除</button>
+                    </div>
+                </div>
+
+                <div class="dialog-placeholder" id="settings-dialog-result" role="status" hidden></div>
             </div>
         </div>
 
@@ -1396,19 +1475,19 @@
                         正在整理已有条目的自动分类标签 · 68 / 100
                         <div class="progress" style="margin-top: 8px;"><span></span></div>
                     </div>
-                    <div class="clip-card static">
-                        <span class="clip-content">
+                    <div class="clip-card">
+                        <button type="button" class="clip-content clip-primary-action" data-row-action="迁移期间：打开已有代码片段" aria-label="迁移期间打开已有代码片段">
                             <span class="clip-title">已有代码片段</span>
                             <span class="clip-meta">迁移成功状态立即可用</span>
-                        </span>
-                        <span class="tag-list"><span class="tag" style="--tag-color: var(--violet)">CODE</span></span>
+                        </button>
+                        <span class="tag-list" data-entry-preview="migration" data-surface="迁移期间主窗口"></span>
                     </div>
-                    <div class="clip-card static">
-                        <span class="clip-content">
+                    <div class="clip-card">
+                        <button type="button" class="clip-content clip-primary-action" data-row-action="迁移期间：打开用户已移除自动标签的条目" aria-label="迁移期间打开用户已移除自动标签的条目">
                             <span class="clip-title">用户已移除自动标签的条目</span>
                             <span class="clip-meta">迁移不会重新附加</span>
-                        </span>
-                        <span class="tag-list"><span class="add-tag">+</span></span>
+                        </button>
+                        <span class="tag-list" data-entry-preview="empty" data-surface="迁移期间主窗口"></span>
                     </div>
                     <span class="observable">观察点：migrationProgress / mainUIInteractive / noDuplicate</span>
                 </div>
@@ -1447,7 +1526,7 @@
                 <h2>可访问性与可观察证据</h2>
                 <p>颜色不是唯一信息；交互元素具有名称、角色、状态和键盘焦点，关键 UI 状态可被自动化定位。</p>
             </div>
-            <span class="requirement-badge">NFR-005 · AC-22 · AC-24</span>
+            <span class="requirement-badge">NFR-005 · NFR-006 · AC-22～AC-24</span>
         </div>
 
         <div class="accessibility-grid">
@@ -1486,6 +1565,10 @@
                 <h3>跨入口一致</h3>
                 <p>相同条目的标签名称、颜色、顺序和关联状态在三个入口一致。</p>
             </div>
+            <div class="state-card">
+                <h3>权限与发布边界</h3>
+                <p>F1.14 不新增权限提示或 entitlement；继续复用既有剪贴板、沙盒与加密存储边界。</p>
+            </div>
         </div>
 
         <div class="callout info" style="margin-top: 18px;">
@@ -1504,27 +1587,79 @@
     const scenes = document.querySelectorAll("[data-scene]");
     const menuButtons = document.querySelectorAll("[data-menu-target]");
     const menuStates = document.querySelectorAll("[data-menu-state]");
-    const rowActionCards = document.querySelectorAll("[data-row-action]");
     const toast = document.getElementById("toast");
     const eventLog = document.getElementById("event-log");
+    const menuSearchInput = document.getElementById("menu-search-input");
+    const browseMenuList = document.getElementById("browse-menu-list");
+    const systemTags = {
+        CODE: { color: "violet" },
+        LINK: { color: "cyan" },
+        ERROR: { color: "rose" },
+        ARTICLE: { color: "blue" },
+        TODO: { color: "amber" },
+        MEETING: { color: "emerald" },
+        TRANS: { color: "purple" },
+        REQ: { color: "orange" },
+        API: { color: "teal" },
+        DOC: { color: "slate" },
+        OTHER: { color: "gray" }
+    };
+    const entryContexts = {
+        shared: {
+            label: "Q3 产品需求",
+            systemTag: "REQ",
+            tags: new Set(["REQ", "重要"])
+        },
+        empty: {
+            label: "无标签临时文本",
+            systemTag: "CODE",
+            tags: new Set()
+        },
+        migration: {
+            label: "已有代码片段",
+            systemTag: "CODE",
+            tags: new Set(["CODE"])
+        }
+    };
+    const userTags = [
+        { name: "重要", color: "amber" },
+        { name: "待处理", color: "emerald" },
+        { name: "项目 B", color: "blue" }
+    ];
+    let activeEntryId = "shared";
+    let selectedColor = "purple";
+    let activeDialog = null;
+    let activeDialogTag = null;
+    let dialogTrigger = null;
 
     function showScene(name) {
         sceneButtons.forEach((button) => {
             button.classList.toggle("active", button.dataset.sceneTarget === name);
+            button.setAttribute("aria-pressed", String(button.dataset.sceneTarget === name));
         });
         scenes.forEach((scene) => {
             scene.classList.toggle("active", scene.dataset.scene === name);
         });
+        if (name === "menu") {
+            renderBrowseMenu();
+        }
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function showMenuState(name) {
         menuButtons.forEach((button) => {
             button.classList.toggle("active", button.dataset.menuTarget === name);
+            button.setAttribute("aria-pressed", String(button.dataset.menuTarget === name));
         });
         menuStates.forEach((state) => {
             state.classList.toggle("active", state.dataset.menuState === name);
         });
+        if (name === "browse") {
+            renderBrowseMenu();
+        }
+        if (name === "create") {
+            window.setTimeout(() => document.getElementById("create-name-input").focus(), 0);
+        }
     }
 
     function showToast(message) {
@@ -1539,13 +1674,403 @@
         showToast(action);
     }
 
-    function openTagMenu(event, entry) {
+    function tagDefinition(name, context) {
+        if (name === context.systemTag) {
+            return { name, color: systemTags[name].color, source: "system" };
+        }
+        return userTags.find((tag) => tag.name === name);
+    }
+
+    function tagColor(name, context) {
+        const definition = tagDefinition(name, context);
+        return definition ? definition.color : "gray";
+    }
+
+    function makeSpan(className, text) {
+        const span = document.createElement("span");
+        if (className) {
+            span.className = className;
+        }
+        span.textContent = text;
+        return span;
+    }
+
+    function renderEntryPreviews() {
+        document.querySelectorAll("[data-entry-preview]").forEach((container) => {
+            const entryId = container.dataset.entryPreview;
+            const surface = container.dataset.surface;
+            const context = entryContexts[entryId];
+            container.replaceChildren();
+
+            if (context.tags.size === 0) {
+                const addButton = document.createElement("button");
+                addButton.type = "button";
+                addButton.className = "add-tag";
+                addButton.textContent = "+";
+                addButton.setAttribute("aria-label", `${surface}：为${context.label}添加标签`);
+                addButton.addEventListener("click", (event) => openTagMenu(event, surface, entryId));
+                container.appendChild(addButton);
+                return;
+            }
+
+            const orderedNames = [
+                context.systemTag,
+                ...userTags.map((tag) => tag.name)
+            ].filter((name) => context.tags.has(name));
+
+            orderedNames.forEach((name) => {
+                const definition = tagDefinition(name, context);
+                if (!definition) {
+                    return;
+                }
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "tag";
+                button.style.setProperty("--tag-color", `var(--${definition.color})`);
+                button.textContent = name;
+                button.setAttribute(
+                    "aria-label",
+                    `${surface}：${name}，${name === context.systemTag ? "自动分类标签" : "用户标签"}，打开标签菜单`
+                );
+                button.addEventListener("click", (event) => openTagMenu(event, surface, entryId));
+                container.appendChild(button);
+            });
+        });
+    }
+
+    function renderBrowseMenu() {
+        const context = entryContexts[activeEntryId];
+        const query = menuSearchInput.value.trim().toLocaleLowerCase();
+        const candidates = [
+            { name: context.systemTag, color: systemTags[context.systemTag].color, source: "system" },
+            ...userTags.map((tag) => ({ ...tag, source: "user" }))
+        ];
+        const matches = candidates.filter((tag) => tag.name.toLocaleLowerCase().includes(query));
+        browseMenuList.replaceChildren();
+
+        matches.forEach((tag) => {
+            const selected = context.tags.has(tag.name);
+            const disabled = !selected && context.tags.size >= 5;
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "menu-item";
+            button.setAttribute("role", "checkbox");
+            button.setAttribute("aria-checked", String(selected));
+            button.setAttribute("aria-disabled", String(disabled));
+            button.dataset.tagName = tag.name;
+
+            const check = makeSpan(`check${selected ? " checked" : ""}`, selected ? "✓" : "");
+            const dot = makeSpan("dot", "");
+            dot.style.setProperty("--dot-color", `var(--${tag.color})`);
+            const source = makeSpan(
+                `source-badge ${tag.source === "system" ? "system" : "user"}`,
+                tag.source === "system"
+                    ? (selected ? "自动分类 · 自身" : "用户已移除")
+                    : "用户创建"
+            );
+            button.append(check, dot, makeSpan("", tag.name), source);
+            button.addEventListener("click", () => toggleTag(tag.name, disabled));
+            browseMenuList.appendChild(button);
+        });
+
+        if (matches.length === 0 && query) {
+            const createButton = document.createElement("button");
+            createButton.type = "button";
+            createButton.className = "menu-item";
+            createButton.append(
+                makeSpan("", "+"),
+                makeSpan("dot", ""),
+                makeSpan("", `创建“${menuSearchInput.value.trim()}”`),
+                makeSpan("source-badge user", "新标签")
+            );
+            createButton.addEventListener("click", () => prepareCreate(menuSearchInput.value.trim()));
+            browseMenuList.appendChild(createButton);
+        }
+
+        document.getElementById("menu-context-title").textContent =
+            `选择标签 · ${context.label} · ${context.systemTag} 条目`;
+        document.getElementById("menu-context-footer").textContent =
+            `仅 ${context.systemTag} 是当前条目的系统标签；其他 10 个系统标签不进入候选列表。`;
+        document.getElementById("menu-count-summary").textContent =
+            `当前共 ${context.tags.size} 个标签，距离上限还有 ${5 - context.tags.size} 个名额。`;
+    }
+
+    function toggleTag(name, disabled) {
+        const context = entryContexts[activeEntryId];
+        if (disabled) {
+            showToast("每条条目最多 5 个标签");
+            return;
+        }
+        if (context.tags.has(name)) {
+            context.tags.delete(name);
+            showToast(`已从当前条目移除 ${name}`);
+        } else {
+            context.tags.add(name);
+            showToast(`已关联 ${name}`);
+        }
+        renderEntryPreviews();
+        renderBrowseMenu();
+        eventLog.textContent = `${context.label}：标签状态已在三个入口同步`;
+    }
+
+    function openTagMenu(event, surface, entryId) {
         event.preventDefault();
         event.stopPropagation();
-        eventLog.textContent = entry + "：标签区域已消费事件，未触发条目动作";
+        activeEntryId = entryId;
+        menuSearchInput.value = "";
+        eventLog.textContent = `${surface}：标签区域已消费事件，未触发条目动作`;
         showScene("menu");
         showMenuState("browse");
-        showToast(entry + "：已打开标签菜单");
+        showToast(`${surface}：已打开 ${entryContexts[entryId].systemTag} 条目的标签菜单`);
+        window.setTimeout(() => menuSearchInput.focus(), 0);
+    }
+
+    function prepareCreate(name) {
+        const proposedName = name || "工作笔记";
+        document.getElementById("create-search-mirror").value = proposedName;
+        document.getElementById("create-name-input").value = proposedName;
+        document.getElementById("create-entry-label").textContent = `创建“${proposedName}”`;
+        document.getElementById("create-validation-error").hidden = true;
+        showMenuState("create");
+    }
+
+    function syncSwatches() {
+        document.querySelectorAll("[data-color]").forEach((button) => {
+            const selected = button.dataset.color === selectedColor;
+            const colorName = button.textContent.replace(" ✓", "");
+            button.classList.toggle("selected", selected);
+            button.setAttribute("aria-pressed", String(selected));
+            button.textContent = `${colorName}${selected ? " ✓" : ""}`;
+            button.setAttribute("aria-label", `${colorName}色${selected ? "，已选择" : ""}`);
+        });
+    }
+
+    function createTag() {
+        const input = document.getElementById("create-name-input");
+        const error = document.getElementById("create-validation-error");
+        const name = input.value.trim();
+        const existingNames = [...Object.keys(systemTags), ...userTags.map((tag) => tag.name)];
+        if (!name) {
+            error.textContent = "标签名称不能为空。";
+            error.hidden = false;
+            input.focus();
+            return;
+        }
+        if (existingNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+            error.textContent = "已存在同名标签，名称比较不区分大小写。";
+            error.hidden = false;
+            input.focus();
+            return;
+        }
+        const context = entryContexts[activeEntryId];
+        if (context.tags.size >= 5) {
+            error.textContent = "每条条目最多 5 个标签；未创建孤立标签。";
+            error.hidden = false;
+            return;
+        }
+        userTags.push({ name, color: selectedColor });
+        context.tags.add(name);
+        menuSearchInput.value = "";
+        renderEntryPreviews();
+        renderSettingsUserRows();
+        showMenuState("browse");
+        showToast("新标签已创建并关联当前条目");
+        eventLog.textContent = `${context.label}：创建与关联共同成功`;
+    }
+
+    function restoreRemovedSystemTag() {
+        activeEntryId = "empty";
+        entryContexts.empty.tags.add(entryContexts.empty.systemTag);
+        renderEntryPreviews();
+        showMenuState("browse");
+        showToast("CODE 已恢复到当前条目");
+    }
+
+    function resetLimitDemo() {
+        document.querySelectorAll(".limit-user-choice").forEach((button) => {
+            button.setAttribute("aria-checked", "true");
+            button.querySelector(".check").classList.add("checked");
+            button.querySelector(".check").textContent = "✓";
+        });
+        const systemButton = document.getElementById("limit-system-restore");
+        systemButton.setAttribute("aria-checked", "false");
+        systemButton.setAttribute("aria-disabled", "true");
+        systemButton.querySelector(".check").classList.remove("checked");
+        systemButton.querySelector(".check").textContent = "";
+    }
+
+    function releaseLimitSlot(button) {
+        if (button.getAttribute("aria-checked") === "false") {
+            return;
+        }
+        button.setAttribute("aria-checked", "false");
+        button.querySelector(".check").classList.remove("checked");
+        button.querySelector(".check").textContent = "";
+        const systemButton = document.getElementById("limit-system-restore");
+        systemButton.setAttribute("aria-disabled", "false");
+        showToast(`已移除 ${button.dataset.limitTag}，CODE 现在可恢复`);
+    }
+
+    function restoreLimitSystemTag() {
+        const button = document.getElementById("limit-system-restore");
+        if (button.getAttribute("aria-disabled") === "true") {
+            showToast("每条条目最多 5 个标签");
+            return;
+        }
+        button.setAttribute("aria-checked", "true");
+        button.querySelector(".check").classList.add("checked");
+        button.querySelector(".check").textContent = "✓";
+        showToast("CODE 已在释放名额后恢复");
+    }
+
+    function showFilterRestored(message) {
+        document.getElementById("filtered-empty-content").hidden = true;
+        document.getElementById("filter-restored-content").hidden = false;
+        document.getElementById("filter-restored-copy").textContent = message;
+    }
+
+    function renderSettingsUserRows() {
+        const container = document.getElementById("settings-user-rows");
+        container.replaceChildren();
+        userTags.forEach((tag) => {
+            const row = document.createElement("div");
+            row.className = "settings-item";
+            row.dataset.userTagRow = tag.name;
+            const dot = makeSpan("dot", "");
+            dot.style.setProperty("--dot-color", `var(--${tag.color})`);
+            const identity = document.createElement("span");
+            const name = makeSpan("settings-name", tag.name);
+            name.dataset.settingsName = tag.name;
+            identity.append(
+                name,
+                document.createElement("br"),
+                makeSpan("settings-meta", "用户创建 · 颜色不可修改")
+            );
+            const spacer = document.createElement("span");
+            const actions = makeSpan("settings-actions", "");
+            ["rename", "delete"].forEach((action) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = `btn${action === "delete" ? " ghost-danger" : ""}`;
+                button.dataset.settingsAction = action;
+                button.dataset.tagName = tag.name;
+                button.textContent = action === "rename" ? "重命名" : "删除";
+                actions.appendChild(button);
+            });
+            row.append(dot, identity, spacer, actions);
+            container.appendChild(row);
+        });
+    }
+
+    function closeSettingsDialog(restoreFocus = true) {
+        document.getElementById("rename-dialog").hidden = true;
+        document.getElementById("delete-dialog").hidden = true;
+        document.getElementById("settings-dialog-result").hidden = true;
+        document.getElementById("settings-dialog-placeholder").hidden = false;
+        activeDialog = null;
+        activeDialogTag = null;
+        if (restoreFocus && dialogTrigger && document.contains(dialogTrigger)) {
+            dialogTrigger.focus();
+        }
+    }
+
+    function openSettingsDialog(action, tagName, trigger) {
+        closeSettingsDialog(false);
+        activeDialog = action;
+        activeDialogTag = tagName;
+        dialogTrigger = trigger;
+        document.getElementById("settings-dialog-placeholder").hidden = true;
+        if (action === "rename") {
+            const dialog = document.getElementById("rename-dialog");
+            const input = document.getElementById("rename-input");
+            document.getElementById("rename-dialog-copy").textContent =
+                `将标签“${tagName}”重命名后确认；此操作将影响所有关联条目。`;
+            document.getElementById("rename-validation-error").hidden = true;
+            input.value = tagName;
+            dialog.hidden = false;
+            input.focus();
+            input.select();
+        } else {
+            const dialog = document.getElementById("delete-dialog");
+            document.getElementById("delete-dialog-copy").textContent =
+                `删除标签“${tagName}”？该标签将从所有条目中移除，此操作不可撤销。`;
+            dialog.hidden = false;
+            dialog.querySelector("[data-dialog-cancel]").focus();
+        }
+    }
+
+    function showSettingsResult(message, preferredFocus) {
+        document.getElementById("rename-dialog").hidden = true;
+        document.getElementById("delete-dialog").hidden = true;
+        document.getElementById("settings-dialog-placeholder").hidden = true;
+        const result = document.getElementById("settings-dialog-result");
+        result.textContent = message;
+        result.hidden = false;
+        activeDialog = null;
+        if (preferredFocus) {
+            preferredFocus.focus();
+        }
+    }
+
+    function confirmRename() {
+        const input = document.getElementById("rename-input");
+        const error = document.getElementById("rename-validation-error");
+        const nextName = input.value.trim();
+        const duplicateNames = [
+            ...Object.keys(systemTags),
+            ...userTags.filter((tag) => tag.name !== activeDialogTag).map((tag) => tag.name)
+        ];
+        if (!nextName) {
+            error.textContent = "标签名称不能为空。";
+            error.hidden = false;
+            input.focus();
+            return;
+        }
+        if (duplicateNames.some((name) => name.toLocaleLowerCase() === nextName.toLocaleLowerCase())) {
+            error.textContent = "已存在同名标签，名称比较不区分大小写。";
+            error.hidden = false;
+            input.focus();
+            return;
+        }
+
+        const previousName = activeDialogTag;
+        const tag = userTags.find((candidate) => candidate.name === previousName);
+        tag.name = nextName;
+        Object.values(entryContexts).forEach((context) => {
+            context.tags = new Set([...context.tags].map((name) => name === previousName ? nextName : name));
+        });
+        document.querySelectorAll("[data-filter-tag]").forEach((button) => {
+            if (button.dataset.filterTag === previousName) {
+                button.dataset.filterTag = nextName;
+                button.textContent = `${nextName} ×`;
+                button.setAttribute("aria-label", `移除${nextName}标签筛选`);
+            }
+        });
+        renderEntryPreviews();
+        renderBrowseMenu();
+        renderSettingsUserRows();
+        const nextFocus = [...document.querySelectorAll('[data-settings-action="rename"]')]
+            .find((button) => button.dataset.tagName === nextName);
+        showSettingsResult(`已将用户标签重命名为“${nextName}”，三个入口同步更新。`, nextFocus);
+    }
+
+    function confirmDelete() {
+        const deletedName = activeDialogTag;
+        const index = userTags.findIndex((tag) => tag.name === deletedName);
+        if (index >= 0) {
+            userTags.splice(index, 1);
+        }
+        Object.values(entryContexts).forEach((context) => context.tags.delete(deletedName));
+        document.querySelectorAll("[data-filter-tag]").forEach((button) => {
+            if (button.dataset.filterTag === deletedName) {
+                button.hidden = true;
+            }
+        });
+        renderEntryPreviews();
+        renderBrowseMenu();
+        renderSettingsUserRows();
+        const nextFocus = document.querySelector("[data-settings-action]");
+        showSettingsResult(`已删除用户标签；所有入口与关联状态同步更新。`, nextFocus);
     }
 
     sceneButtons.forEach((button) => {
@@ -1553,18 +2078,109 @@
     });
 
     menuButtons.forEach((button) => {
-        button.addEventListener("click", () => showMenuState(button.dataset.menuTarget));
-    });
-
-    rowActionCards.forEach((card) => {
-        card.addEventListener("click", () => recordRowAction(card.dataset.rowAction));
-        card.addEventListener("keydown", (event) => {
-            if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                recordRowAction(card.dataset.rowAction);
+        button.addEventListener("click", () => {
+            const target = button.dataset.menuTarget;
+            if (target === "create") {
+                prepareCreate(menuSearchInput.value.trim() || "工作笔记");
+                return;
             }
+            if (target === "removed") {
+                activeEntryId = "empty";
+            }
+            if (target === "limit") {
+                resetLimitDemo();
+            }
+            if (target === "error") {
+                activeEntryId = "shared";
+                entryContexts.shared.tags.delete("待处理");
+                renderEntryPreviews();
+                document.getElementById("error-pending-tag").setAttribute("aria-checked", "false");
+                document.getElementById("error-pending-tag").querySelector(".check").classList.remove("checked");
+                document.getElementById("error-pending-tag").querySelector(".check").textContent = "";
+            }
+            showMenuState(target);
         });
     });
+
+    document.querySelectorAll("[data-row-action]").forEach((button) => {
+        button.addEventListener("click", () => recordRowAction(button.dataset.rowAction));
+    });
+
+    menuSearchInput.addEventListener("input", renderBrowseMenu);
+    document.querySelectorAll("[data-color]").forEach((button) => {
+        button.addEventListener("click", () => {
+            selectedColor = button.dataset.color;
+            syncSwatches();
+        });
+    });
+    document.getElementById("cancel-create").addEventListener("click", () => showMenuState("browse"));
+    document.getElementById("confirm-create").addEventListener("click", createTag);
+    document.getElementById("restore-system-tag").addEventListener("click", restoreRemovedSystemTag);
+    document.querySelectorAll(".limit-user-choice").forEach((button) => {
+        button.addEventListener("click", () => releaseLimitSlot(button));
+    });
+    document.getElementById("limit-system-restore").addEventListener("click", restoreLimitSystemTag);
+    document.getElementById("close-error-state").addEventListener("click", () => showMenuState("browse"));
+    document.getElementById("retry-error-state").addEventListener("click", () => {
+        activeEntryId = "shared";
+        entryContexts.shared.tags.add("待处理");
+        renderEntryPreviews();
+        showMenuState("browse");
+        showToast("重试成功，待处理已关联");
+    });
+
+    document.querySelectorAll("[data-filter-tag]").forEach((button) => {
+        button.addEventListener("click", () => {
+            button.hidden = true;
+            showToast(`已移除 ${button.dataset.filterTag} 标签筛选，搜索与来源保持不变`);
+        });
+    });
+    document.getElementById("clear-tag-filters").addEventListener("click", () => {
+        document.querySelectorAll("[data-filter-tag]").forEach((button) => {
+            button.hidden = true;
+        });
+        showFilterRestored("标签条件已清除；搜索“需求”和来源“Xcode”保持不变。");
+    });
+    document.getElementById("switch-source-filter").addEventListener("click", () => {
+        showFilterRestored("来源已切换为 Pages；搜索“需求”和两个标签条件保持不变。");
+    });
+
+    document.getElementById("settings-user-rows").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-settings-action]");
+        if (button) {
+            openSettingsDialog(button.dataset.settingsAction, button.dataset.tagName, button);
+        }
+    });
+    document.querySelectorAll("[data-dialog-cancel]").forEach((button) => {
+        button.addEventListener("click", () => closeSettingsDialog(true));
+    });
+    document.getElementById("confirm-rename").addEventListener("click", confirmRename);
+    document.getElementById("confirm-delete").addEventListener("click", confirmDelete);
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && activeDialog) {
+            event.preventDefault();
+            closeSettingsDialog(true);
+            return;
+        }
+        if (event.key === "Tab" && activeDialog) {
+            const dialog = document.getElementById(`${activeDialog}-dialog`);
+            const focusable = [...dialog.querySelectorAll("button:not(:disabled), input:not(:disabled)")];
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+    });
+
+    renderEntryPreviews();
+    renderSettingsUserRows();
+    syncSwatches();
+    renderBrowseMenu();
 </script>
 </body>
 </html>
