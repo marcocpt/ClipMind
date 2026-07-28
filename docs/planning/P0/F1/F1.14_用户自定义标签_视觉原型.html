@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F1.14 用户自定义标签视觉原型 v2.1</title>
+    <title>F1.14 用户自定义标签视觉原型 v2.2</title>
     <style>
         :root {
             color-scheme: dark;
@@ -45,6 +45,11 @@
 
         [hidden] {
             display: none !important;
+        }
+
+        [inert] {
+            pointer-events: none;
+            opacity: 0.58;
         }
 
         body {
@@ -395,6 +400,10 @@
             color: #101018;
         }
 
+        .tag.static {
+            cursor: default;
+        }
+
         .tag .x {
             opacity: 0.72;
         }
@@ -683,6 +692,10 @@
             margin-bottom: 14px;
         }
 
+        #active-filter-tags {
+            display: contents;
+        }
+
         .filter-chip {
             display: inline-flex;
             align-items: center;
@@ -706,6 +719,21 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 12px;
             margin-bottom: 14px;
+        }
+
+        .filter-selector {
+            margin-bottom: 14px;
+            padding: 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: 12px;
+            background: var(--card);
+        }
+
+        .filter-selector-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
         }
 
         .result-column-title {
@@ -927,7 +955,7 @@
             <p>覆盖三个条目入口、标签选择与创建、系统标签移除/恢复、组合筛选、设置页只读权限、失败回滚和旧数据迁移可用状态。</p>
         </div>
         <div class="version-card">
-            <strong>Visual Prototype v2.1</strong>
+            <strong>Visual Prototype v2.2</strong>
             <div class="meta">最后更新：2026-07-29</div>
             <div class="meta">Requirements v1.2</div>
             <div class="meta">Design v2.2</div>
@@ -1097,7 +1125,7 @@
                         <span class="check"></span><span class="dot" style="--dot-color: var(--violet)"></span>
                         <span>CODE</span><span class="source-badge system">用户已移除</span>
                     </button>
-                    <button type="button" class="menu-item" role="checkbox" aria-checked="true">
+                    <button type="button" class="menu-item" role="checkbox" aria-checked="true" aria-disabled="true" disabled>
                         <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--amber)"></span>
                         <span>重要</span><span class="source-badge user">用户创建</span>
                     </button>
@@ -1223,20 +1251,7 @@
                     <strong>未能保存标签操作</strong>
                     已恢复之前的标签状态。请稍后重试。
                 </div>
-                <div class="menu-list">
-                    <button type="button" class="menu-item" role="checkbox" aria-checked="true">
-                        <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--orange)"></span>
-                        <span>REQ</span><span class="source-badge system">自动分类 · 自身</span>
-                    </button>
-                    <button type="button" class="menu-item" role="checkbox" aria-checked="true">
-                        <span class="check checked">✓</span><span class="dot" style="--dot-color: var(--amber)"></span>
-                        <span>重要</span><span class="source-badge user">用户创建</span>
-                    </button>
-                    <button type="button" class="menu-item" id="error-pending-tag" role="checkbox" aria-checked="false">
-                        <span class="check"></span><span class="dot" style="--dot-color: var(--emerald)"></span>
-                        <span>待处理</span><span class="source-badge user">用户创建</span>
-                    </button>
-                </div>
+                <div class="menu-list" id="error-menu-list"></div>
                 <div class="menu-footer button-row">
                     <button type="button" class="btn" id="close-error-state">关闭</button>
                     <button type="button" class="btn primary" id="retry-error-state">重试</button>
@@ -1245,7 +1260,7 @@
             <div class="detail-list">
                 <div class="callout success">
                     <strong>不显示虚假成功</strong>
-                    “待处理”仍未勾选；条目呈现同步恢复到最近一次持久化状态。
+                    <span id="error-target-copy">失败目标仍未勾选；条目呈现同步恢复到最近一次持久化状态。</span>
                 </div>
                 <div class="callout info">
                     <strong>安全错误文案</strong>
@@ -1274,12 +1289,19 @@
             <div class="filter-summary">
                 <span class="filter-chip">搜索：需求</span>
                 <span class="filter-chip">来源：Pages</span>
-                <button type="button" class="filter-chip filter-tag" data-filter-tag="重要" aria-label="移除重要标签筛选" style="background: var(--amber)">重要 ×</button>
-                <button type="button" class="filter-chip filter-tag" data-filter-tag="待处理" aria-label="移除待处理标签筛选" style="background: var(--emerald)">待处理 ×</button>
-                <button type="button" class="add-tag" aria-label="添加标签筛选">+</button>
+                <span id="active-filter-tags"></span>
+                <button type="button" class="add-tag" id="open-filter-selector" aria-label="添加标签筛选" aria-expanded="false" aria-controls="filter-selector">+</button>
             </div>
 
-            <div class="filter-results" aria-label="历史与搜索结果一致性">
+            <div class="filter-selector" id="filter-selector" role="region" aria-labelledby="filter-selector-title" hidden>
+                <strong id="filter-selector-title">选择标签筛选 · 多选交集</strong>
+                <div class="filter-selector-options" id="filter-selector-options"></div>
+                <div class="button-row">
+                    <button type="button" class="btn" id="close-filter-selector">完成</button>
+                </div>
+            </div>
+
+            <div class="filter-results" id="filter-results" aria-label="历史与搜索结果一致性">
                 <div>
                     <div class="result-column-title">历史列表 · resultId: clip-f114-demo</div>
                     <div class="clip-card">
@@ -1287,11 +1309,7 @@
                             <span class="clip-title">Q3 产品需求 · 待评审</span>
                             <span class="clip-meta">Pages · 同时匹配搜索、来源和两个标签</span>
                         </span>
-                        <span class="tag-list">
-                            <span class="tag" style="--tag-color: var(--orange)">REQ</span>
-                            <span class="tag" style="--tag-color: var(--amber)">重要</span>
-                            <span class="tag" style="--tag-color: var(--emerald)">待处理</span>
-                        </span>
+                        <span class="tag-list" data-filter-result-tags></span>
                     </div>
                 </div>
                 <div>
@@ -1301,12 +1319,15 @@
                             <span class="clip-title">Q3 产品需求 · 待评审</span>
                             <span class="clip-meta">Pages · 与历史列表返回同一条目标识</span>
                         </span>
-                        <span class="tag-list">
-                            <span class="tag" style="--tag-color: var(--orange)">REQ</span>
-                            <span class="tag" style="--tag-color: var(--amber)">重要</span>
-                            <span class="tag" style="--tag-color: var(--emerald)">待处理</span>
-                        </span>
+                        <span class="tag-list" data-filter-result-tags></span>
                     </div>
+                </div>
+            </div>
+            <div class="empty-state" id="filter-live-empty" hidden>
+                <div>
+                    <div class="empty-icon">⌕</div>
+                    <h3>当前交集没有匹配条目</h3>
+                    <p>刚选择的标签已加入筛选；搜索和来源条件保持不变。</p>
                 </div>
             </div>
             <span class="observable">观察点：两处可见 resultId 与条目标签完全一致</span>
@@ -1417,20 +1438,29 @@
                 <div class="dialog-placeholder" id="settings-dialog-placeholder">
                     <div>
                         <strong>选择任一用户标签的“重命名”或“删除”</strong><br>
-                        对话框会获得焦点；取消或完成后焦点返回触发按钮。
+                        重命名先编辑再确认；modal 会隔离背景，取消或完成后焦点返回。
                     </div>
                 </div>
 
-                <div class="dialog-preview" id="rename-dialog" role="dialog" aria-modal="true" aria-labelledby="rename-dialog-title" hidden>
-                    <h3 id="rename-dialog-title">重命名标签</h3>
-                    <p id="rename-dialog-copy">修改名称后确认；此操作将影响所有关联条目。</p>
+                <div class="dialog-preview" id="rename-editor" role="group" aria-labelledby="rename-editor-title" hidden>
+                    <h3 id="rename-editor-title">编辑标签名称</h3>
+                    <p>先编辑并提交新名称，下一步再确认全局影响。</p>
                     <label>
                         <span class="field-label">新名称</span>
                         <input class="input" id="rename-input" value="">
                     </label>
                     <div class="inline-error" id="rename-validation-error" role="alert" hidden></div>
                     <div class="button-row" style="margin-top: 12px;">
-                        <button type="button" class="btn" data-dialog-cancel>取消</button>
+                        <button type="button" class="btn" id="cancel-rename-edit">取消编辑</button>
+                        <button type="button" class="btn primary" id="submit-rename">提交新名称</button>
+                    </div>
+                </div>
+
+                <div class="dialog-preview" id="rename-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="rename-confirm-title" hidden>
+                    <h3 id="rename-confirm-title">确认重命名标签</h3>
+                    <p id="rename-confirm-copy">确认从旧名称改为新名称；此操作将影响所有关联条目。</p>
+                    <div class="button-row">
+                        <button type="button" class="btn" data-dialog-cancel>取消并保留原名称</button>
                         <button type="button" class="btn primary" id="confirm-rename">确认重命名</button>
                     </div>
                 </div>
@@ -1608,7 +1638,7 @@
         shared: {
             label: "Q3 产品需求",
             systemTag: "REQ",
-            tags: new Set(["REQ", "重要"])
+            tags: new Set(["REQ", "重要", "待处理"])
         },
         empty: {
             label: "无标签临时文本",
@@ -1626,11 +1656,15 @@
         { name: "待处理", color: "emerald" },
         { name: "项目 B", color: "blue" }
     ];
+    const selectedFilterTags = new Set(["重要", "待处理"]);
     let activeEntryId = "shared";
     let selectedColor = "purple";
     let activeDialog = null;
     let activeDialogTag = null;
     let dialogTrigger = null;
+    let pendingRename = null;
+    let errorRetryTag = "待处理";
+    let limitRestoreEntryId = null;
 
     function showScene(name) {
         sceneButtons.forEach((button) => {
@@ -1738,6 +1772,130 @@
         });
     }
 
+    function renderFilterState() {
+        const activeContainer = document.getElementById("active-filter-tags");
+        activeContainer.replaceChildren();
+        [...selectedFilterTags].forEach((name) => {
+            const definition = name === entryContexts.shared.systemTag
+                ? { name, color: systemTags[name].color }
+                : userTags.find((tag) => tag.name === name);
+            if (!definition) {
+                selectedFilterTags.delete(name);
+                return;
+            }
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "filter-chip filter-tag";
+            button.dataset.filterTag = name;
+            button.style.background = `var(--${definition.color})`;
+            button.textContent = `${name} ×`;
+            button.setAttribute("aria-label", `移除${name}标签筛选`);
+            button.addEventListener("click", () => {
+                selectedFilterTags.delete(name);
+                renderFilterState();
+                showToast(`已移除 ${name} 标签筛选，搜索与来源保持不变`);
+            });
+            activeContainer.appendChild(button);
+        });
+
+        const selectorOptions = document.getElementById("filter-selector-options");
+        selectorOptions.replaceChildren();
+        const options = [
+            { name: entryContexts.shared.systemTag, color: systemTags[entryContexts.shared.systemTag].color },
+            ...userTags
+        ];
+        options.forEach((option) => {
+            const selected = selectedFilterTags.has(option.name);
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "tag";
+            button.style.setProperty("--tag-color", `var(--${option.color})`);
+            button.textContent = `${selected ? "✓ " : ""}${option.name}`;
+            button.setAttribute("aria-pressed", String(selected));
+            button.setAttribute("aria-label", `${option.name}标签筛选${selected ? "，已选择" : ""}`);
+            button.addEventListener("click", () => {
+                if (selectedFilterTags.has(option.name)) {
+                    selectedFilterTags.delete(option.name);
+                } else {
+                    selectedFilterTags.add(option.name);
+                }
+                renderFilterState();
+            });
+            selectorOptions.appendChild(button);
+        });
+
+        document.querySelectorAll("[data-filter-result-tags]").forEach((container) => {
+            container.replaceChildren();
+            const context = entryContexts.shared;
+            const orderedNames = [
+                context.systemTag,
+                ...userTags.map((tag) => tag.name)
+            ].filter((name) => context.tags.has(name));
+            orderedNames.forEach((name) => {
+                const tag = makeSpan("tag static", name);
+                tag.style.setProperty("--tag-color", `var(--${tagColor(name, context)})`);
+                container.appendChild(tag);
+            });
+        });
+
+        const hasMatch = [...selectedFilterTags].every((name) => entryContexts.shared.tags.has(name));
+        document.getElementById("filter-results").hidden = !hasMatch;
+        document.getElementById("filter-live-empty").hidden = hasMatch;
+    }
+
+    function renderErrorState() {
+        const context = entryContexts.shared;
+        const list = document.getElementById("error-menu-list");
+        list.replaceChildren();
+        const selectedNames = [
+            context.systemTag,
+            ...userTags.map((tag) => tag.name)
+        ].filter((name) => context.tags.has(name));
+        const rows = [
+            ...selectedNames.map((name) => ({ name, selected: true })),
+            ...(errorRetryTag && !context.tags.has(errorRetryTag)
+                ? [{ name: errorRetryTag, selected: false }]
+                : [])
+        ];
+        rows.forEach(({ name, selected }) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "menu-item";
+            button.disabled = true;
+            button.setAttribute("role", "checkbox");
+            button.setAttribute("aria-checked", String(selected));
+            button.setAttribute("aria-disabled", "true");
+            const check = makeSpan(`check${selected ? " checked" : ""}`, selected ? "✓" : "");
+            const dot = makeSpan("dot", "");
+            dot.style.setProperty("--dot-color", `var(--${tagColor(name, context)})`);
+            const system = name === context.systemTag;
+            button.append(
+                check,
+                dot,
+                makeSpan("", name),
+                makeSpan(`source-badge ${system ? "system" : "user"}`, system ? "自动分类 · 自身" : "用户创建")
+            );
+            list.appendChild(button);
+        });
+        document.getElementById("error-target-copy").textContent =
+            `“${errorRetryTag}”仍未勾选；条目呈现同步恢复到最近一次持久化状态。`;
+    }
+
+    function prepareErrorState() {
+        activeEntryId = "shared";
+        const context = entryContexts.shared;
+        const retryCandidate = userTags.find((tag) => tag.name === "待处理")
+            || userTags.find((tag) => !context.tags.has(tag.name))
+            || userTags[0];
+        errorRetryTag = retryCandidate ? retryCandidate.name : null;
+        if (errorRetryTag) {
+            context.tags.delete(errorRetryTag);
+        }
+        renderEntryPreviews();
+        renderFilterState();
+        renderErrorState();
+    }
+
     function renderBrowseMenu() {
         const context = entryContexts[activeEntryId];
         const query = menuSearchInput.value.trim().toLocaleLowerCase();
@@ -1809,6 +1967,7 @@
             showToast(`已关联 ${name}`);
         }
         renderEntryPreviews();
+        renderFilterState();
         renderBrowseMenu();
         eventLog.textContent = `${context.label}：标签状态已在三个入口同步`;
     }
@@ -1873,6 +2032,7 @@
         menuSearchInput.value = "";
         renderEntryPreviews();
         renderSettingsUserRows();
+        renderFilterState();
         showMenuState("browse");
         showToast("新标签已创建并关联当前条目");
         eventLog.textContent = `${context.label}：创建与关联共同成功`;
@@ -1880,28 +2040,71 @@
 
     function restoreRemovedSystemTag() {
         activeEntryId = "empty";
+        if (entryContexts.empty.tags.size >= 5) {
+            prepareLimitForContext("empty");
+            showToast("每条条目最多 5 个标签；请先释放名额");
+            return;
+        }
         entryContexts.empty.tags.add(entryContexts.empty.systemTag);
         renderEntryPreviews();
+        renderFilterState();
         showMenuState("browse");
         showToast("CODE 已恢复到当前条目");
     }
 
-    function resetLimitDemo() {
-        document.querySelectorAll(".limit-user-choice").forEach((button) => {
+    function configureLimitRows(names) {
+        const buttons = [...document.querySelectorAll(".limit-user-choice")];
+        buttons.forEach((button, index) => {
+            const name = names[index];
+            button.hidden = !name;
+            if (!name) {
+                return;
+            }
+            button.dataset.limitTag = name;
+            button.children[2].textContent = name;
+            button.querySelector(".dot").style.setProperty(
+                "--dot-color",
+                `var(--${tagColor(name, entryContexts[limitRestoreEntryId || "empty"])})`
+            );
             button.setAttribute("aria-checked", "true");
             button.querySelector(".check").classList.add("checked");
             button.querySelector(".check").textContent = "✓";
         });
+    }
+
+    function resetLimitDemo() {
+        limitRestoreEntryId = null;
+        configureLimitRows(["重要", "待处理", "项目 B", "工作笔记", "面试准备"]);
         const systemButton = document.getElementById("limit-system-restore");
+        systemButton.children[2].textContent = "CODE";
         systemButton.setAttribute("aria-checked", "false");
         systemButton.setAttribute("aria-disabled", "true");
         systemButton.querySelector(".check").classList.remove("checked");
         systemButton.querySelector(".check").textContent = "";
     }
 
+    function prepareLimitForContext(entryId) {
+        limitRestoreEntryId = entryId;
+        const context = entryContexts[entryId];
+        const userNames = [...context.tags].filter((name) => name !== context.systemTag);
+        configureLimitRows(userNames);
+        const systemButton = document.getElementById("limit-system-restore");
+        systemButton.children[2].textContent = context.systemTag;
+        systemButton.setAttribute("aria-checked", String(context.tags.has(context.systemTag)));
+        systemButton.setAttribute("aria-disabled", String(context.tags.size >= 5));
+        systemButton.querySelector(".check").classList.toggle("checked", context.tags.has(context.systemTag));
+        systemButton.querySelector(".check").textContent = context.tags.has(context.systemTag) ? "✓" : "";
+        showMenuState("limit");
+    }
+
     function releaseLimitSlot(button) {
         if (button.getAttribute("aria-checked") === "false") {
             return;
+        }
+        if (limitRestoreEntryId) {
+            entryContexts[limitRestoreEntryId].tags.delete(button.dataset.limitTag);
+            renderEntryPreviews();
+            renderFilterState();
         }
         button.setAttribute("aria-checked", "false");
         button.querySelector(".check").classList.remove("checked");
@@ -1915,6 +2118,22 @@
         const button = document.getElementById("limit-system-restore");
         if (button.getAttribute("aria-disabled") === "true") {
             showToast("每条条目最多 5 个标签");
+            return;
+        }
+        if (limitRestoreEntryId) {
+            const entryId = limitRestoreEntryId;
+            const context = entryContexts[entryId];
+            if (context.tags.size >= 5) {
+                showToast("每条条目最多 5 个标签");
+                return;
+            }
+            context.tags.add(context.systemTag);
+            activeEntryId = entryId;
+            limitRestoreEntryId = null;
+            renderEntryPreviews();
+            renderFilterState();
+            showMenuState("browse");
+            showToast(`${context.systemTag} 已在释放名额后恢复`);
             return;
         }
         button.setAttribute("aria-checked", "true");
@@ -1962,13 +2181,31 @@
         });
     }
 
+    function setModalIsolation(enabled) {
+        const targets = [
+            document.querySelector(".page-header"),
+            document.querySelector(".scene-nav"),
+            document.querySelector(".footer-note"),
+            ...document.querySelectorAll('.scene:not([data-scene="settings"])'),
+            document.querySelector('[data-scene="settings"] > .scene-heading'),
+            document.querySelector('[data-scene="settings"] .prototype-window'),
+            document.querySelector('[data-scene="settings"] > .callout')
+        ].filter(Boolean);
+        targets.forEach((target) => {
+            target.inert = enabled;
+        });
+    }
+
     function closeSettingsDialog(restoreFocus = true) {
-        document.getElementById("rename-dialog").hidden = true;
+        document.getElementById("rename-editor").hidden = true;
+        document.getElementById("rename-confirm-dialog").hidden = true;
         document.getElementById("delete-dialog").hidden = true;
         document.getElementById("settings-dialog-result").hidden = true;
         document.getElementById("settings-dialog-placeholder").hidden = false;
+        setModalIsolation(false);
         activeDialog = null;
         activeDialogTag = null;
+        pendingRename = null;
         if (restoreFocus && dialogTrigger && document.contains(dialogTrigger)) {
             dialogTrigger.focus();
         }
@@ -1976,43 +2213,46 @@
 
     function openSettingsDialog(action, tagName, trigger) {
         closeSettingsDialog(false);
-        activeDialog = action;
         activeDialogTag = tagName;
         dialogTrigger = trigger;
         document.getElementById("settings-dialog-placeholder").hidden = true;
         if (action === "rename") {
-            const dialog = document.getElementById("rename-dialog");
+            const editor = document.getElementById("rename-editor");
             const input = document.getElementById("rename-input");
-            document.getElementById("rename-dialog-copy").textContent =
-                `将标签“${tagName}”重命名后确认；此操作将影响所有关联条目。`;
             document.getElementById("rename-validation-error").hidden = true;
             input.value = tagName;
-            dialog.hidden = false;
+            editor.hidden = false;
             input.focus();
             input.select();
         } else {
+            activeDialog = "delete";
             const dialog = document.getElementById("delete-dialog");
             document.getElementById("delete-dialog-copy").textContent =
                 `删除标签“${tagName}”？该标签将从所有条目中移除，此操作不可撤销。`;
             dialog.hidden = false;
+            setModalIsolation(true);
             dialog.querySelector("[data-dialog-cancel]").focus();
         }
     }
 
     function showSettingsResult(message, preferredFocus) {
-        document.getElementById("rename-dialog").hidden = true;
+        document.getElementById("rename-editor").hidden = true;
+        document.getElementById("rename-confirm-dialog").hidden = true;
         document.getElementById("delete-dialog").hidden = true;
         document.getElementById("settings-dialog-placeholder").hidden = true;
         const result = document.getElementById("settings-dialog-result");
         result.textContent = message;
         result.hidden = false;
+        setModalIsolation(false);
         activeDialog = null;
+        activeDialogTag = null;
+        pendingRename = null;
         if (preferredFocus) {
             preferredFocus.focus();
         }
     }
 
-    function confirmRename() {
+    function submitRename() {
         const input = document.getElementById("rename-input");
         const error = document.getElementById("rename-validation-error");
         const nextName = input.value.trim();
@@ -2033,25 +2273,36 @@
             return;
         }
 
+        pendingRename = nextName;
+        document.getElementById("rename-editor").hidden = true;
+        const dialog = document.getElementById("rename-confirm-dialog");
+        document.getElementById("rename-confirm-copy").textContent =
+            `将标签“${activeDialogTag}”重命名为“${pendingRename}”？此操作将影响所有关联条目。`;
+        dialog.hidden = false;
+        activeDialog = "rename-confirm";
+        setModalIsolation(true);
+        dialog.querySelector("[data-dialog-cancel]").focus();
+    }
+
+    function confirmRename() {
         const previousName = activeDialogTag;
+        const nextName = pendingRename;
         const tag = userTags.find((candidate) => candidate.name === previousName);
         tag.name = nextName;
         Object.values(entryContexts).forEach((context) => {
             context.tags = new Set([...context.tags].map((name) => name === previousName ? nextName : name));
         });
-        document.querySelectorAll("[data-filter-tag]").forEach((button) => {
-            if (button.dataset.filterTag === previousName) {
-                button.dataset.filterTag = nextName;
-                button.textContent = `${nextName} ×`;
-                button.setAttribute("aria-label", `移除${nextName}标签筛选`);
-            }
-        });
+        if (selectedFilterTags.has(previousName)) {
+            selectedFilterTags.delete(previousName);
+            selectedFilterTags.add(nextName);
+        }
         renderEntryPreviews();
         renderBrowseMenu();
         renderSettingsUserRows();
+        renderFilterState();
         const nextFocus = [...document.querySelectorAll('[data-settings-action="rename"]')]
             .find((button) => button.dataset.tagName === nextName);
-        showSettingsResult(`已将用户标签重命名为“${nextName}”，三个入口同步更新。`, nextFocus);
+        showSettingsResult(`已将用户标签重命名为“${nextName}”，三个入口、历史与搜索结果同步更新。`, nextFocus);
     }
 
     function confirmDelete() {
@@ -2061,16 +2312,13 @@
             userTags.splice(index, 1);
         }
         Object.values(entryContexts).forEach((context) => context.tags.delete(deletedName));
-        document.querySelectorAll("[data-filter-tag]").forEach((button) => {
-            if (button.dataset.filterTag === deletedName) {
-                button.hidden = true;
-            }
-        });
+        selectedFilterTags.delete(deletedName);
         renderEntryPreviews();
         renderBrowseMenu();
         renderSettingsUserRows();
+        renderFilterState();
         const nextFocus = document.querySelector("[data-settings-action]");
-        showSettingsResult(`已删除用户标签；所有入口与关联状态同步更新。`, nextFocus);
+        showSettingsResult(`已删除用户标签；所有入口、历史与搜索结果同步更新。`, nextFocus);
     }
 
     sceneButtons.forEach((button) => {
@@ -2091,12 +2339,7 @@
                 resetLimitDemo();
             }
             if (target === "error") {
-                activeEntryId = "shared";
-                entryContexts.shared.tags.delete("待处理");
-                renderEntryPreviews();
-                document.getElementById("error-pending-tag").setAttribute("aria-checked", "false");
-                document.getElementById("error-pending-tag").querySelector(".check").classList.remove("checked");
-                document.getElementById("error-pending-tag").querySelector(".check").textContent = "";
+                prepareErrorState();
             }
             showMenuState(target);
         });
@@ -2123,22 +2366,39 @@
     document.getElementById("close-error-state").addEventListener("click", () => showMenuState("browse"));
     document.getElementById("retry-error-state").addEventListener("click", () => {
         activeEntryId = "shared";
-        entryContexts.shared.tags.add("待处理");
+        if (!errorRetryTag || !userTags.some((tag) => tag.name === errorRetryTag)) {
+            showToast("重试目标已不存在，保持最近成功状态");
+            showMenuState("browse");
+            return;
+        }
+        if (entryContexts.shared.tags.size >= 5) {
+            resetLimitDemo();
+            showMenuState("limit");
+            showToast("每条条目最多 5 个标签；请先释放名额");
+            return;
+        }
+        entryContexts.shared.tags.add(errorRetryTag);
         renderEntryPreviews();
+        renderFilterState();
         showMenuState("browse");
-        showToast("重试成功，待处理已关联");
+        showToast(`重试成功，${errorRetryTag}已关联`);
     });
 
-    document.querySelectorAll("[data-filter-tag]").forEach((button) => {
-        button.addEventListener("click", () => {
-            button.hidden = true;
-            showToast(`已移除 ${button.dataset.filterTag} 标签筛选，搜索与来源保持不变`);
-        });
+    document.getElementById("open-filter-selector").addEventListener("click", () => {
+        const selector = document.getElementById("filter-selector");
+        selector.hidden = false;
+        document.getElementById("open-filter-selector").setAttribute("aria-expanded", "true");
+        renderFilterState();
+        selector.querySelector("button").focus();
+    });
+    document.getElementById("close-filter-selector").addEventListener("click", () => {
+        document.getElementById("filter-selector").hidden = true;
+        document.getElementById("open-filter-selector").setAttribute("aria-expanded", "false");
+        document.getElementById("open-filter-selector").focus();
     });
     document.getElementById("clear-tag-filters").addEventListener("click", () => {
-        document.querySelectorAll("[data-filter-tag]").forEach((button) => {
-            button.hidden = true;
-        });
+        selectedFilterTags.clear();
+        renderFilterState();
         showFilterRestored("标签条件已清除；搜索“需求”和来源“Xcode”保持不变。");
     });
     document.getElementById("switch-source-filter").addEventListener("click", () => {
@@ -2154,10 +2414,13 @@
     document.querySelectorAll("[data-dialog-cancel]").forEach((button) => {
         button.addEventListener("click", () => closeSettingsDialog(true));
     });
+    document.getElementById("cancel-rename-edit").addEventListener("click", () => closeSettingsDialog(true));
+    document.getElementById("submit-rename").addEventListener("click", submitRename);
     document.getElementById("confirm-rename").addEventListener("click", confirmRename);
     document.getElementById("confirm-delete").addEventListener("click", confirmDelete);
     document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && activeDialog) {
+        const renameEditorVisible = !document.getElementById("rename-editor").hidden;
+        if (event.key === "Escape" && (activeDialog || renameEditorVisible)) {
             event.preventDefault();
             closeSettingsDialog(true);
             return;
@@ -2180,7 +2443,10 @@
     renderEntryPreviews();
     renderSettingsUserRows();
     syncSwatches();
+    renderFilterState();
     renderBrowseMenu();
+    showScene("entries");
+    showMenuState("browse");
 </script>
 </body>
 </html>
