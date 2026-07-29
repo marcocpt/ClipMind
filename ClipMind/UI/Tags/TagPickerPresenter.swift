@@ -79,18 +79,46 @@ final class TagPickerPresenter
             ? NSRect(x: 0, y: 0, width: 1, height: 1)
             : anchor.bounds
 
-        // 计算 picker 窗口在屏幕上的位置：锚点正下方
         let contentSize = NSSize(width: 320, height: 360)
+        let panelOrigin = calculatePanelOrigin(
+            anchor: anchor, bounds: bounds, contentSize: contentSize
+        )
+
+        let newPanel = makePanel(
+            contentSize: contentSize, hosting: hosting, panelOrigin: panelOrigin
+        )
+
+        // 先赋值 panel 再 makeKeyAndOrderFront：
+        // makeKeyAndOrderFront 会同步触发 quick paste panel 的 didResignKey，
+        // 此时 QuickPastePanelController 需要通过 TagPickerPresenter.isShowing
+        // 判断是否因 picker 抢占 key 而失焦，避免误关闭快速粘贴面板。
+        panel = newPanel
+        newPanel.makeKeyAndOrderFront(nil)
+        newPanel.orderFrontRegardless()
+        newPanel.contentView?.layoutSubtreeIfNeeded()
+
+        NSLog("[DIAG] TagPickerPresenter.show: panel.isVisible=\(newPanel.isVisible)")
+    }
+
+    /// 计算 picker 窗口在屏幕上的位置（锚点正下方）。
+    private func calculatePanelOrigin(
+        anchor: NSView, bounds: NSRect, contentSize: NSSize
+    ) -> NSPoint
+    {
         let boundsInWindow = anchor.convert(bounds, to: nil)
         let boundsInScreen = anchor.window?.convertToScreen(boundsInWindow) ?? boundsInWindow
-        let panelOrigin = NSPoint(
+        NSLog("[DIAG] TagPickerPresenter.show: bounds=\(bounds)")
+        return NSPoint(
             x: boundsInScreen.origin.x,
             y: boundsInScreen.origin.y - contentSize.height
         )
+    }
 
-        NSLog("[DIAG] TagPickerPresenter.show: bounds=\(bounds), panelOrigin=\(panelOrigin)")
-
-        // 创建 NSPanel：非激活面板，能接收键盘事件但不抢焦点
+    /// 创建 NSPanel 并配置 hosting view 布局。
+    private func makePanel(
+        contentSize: NSSize, hosting: NSHostingController<TagPickerView>, panelOrigin: NSPoint
+    ) -> NSPanel
+    {
         let newPanel = NSPanel(
             contentRect: NSRect(origin: .zero, size: contentSize),
             styleMask: [.nonactivatingPanel, .titled, .fullSizeContentView],
@@ -102,17 +130,11 @@ final class TagPickerPresenter
         newPanel.isMovableByWindowBackground = false
         newPanel.level = .floating
         newPanel.contentViewController = hosting
+        // 确保 hosting view 填满 panel content area，避免 ScrollView 高度为 0
+        hosting.view.frame = NSRect(origin: .zero, size: contentSize)
+        hosting.view.autoresizingMask = [.width, .height]
         newPanel.setFrameOrigin(panelOrigin)
-
-        // 先赋值 panel 再 makeKeyAndOrderFront：
-        // makeKeyAndOrderFront 会同步触发 quick paste panel 的 didResignKey，
-        // 此时 QuickPastePanelController 需要通过 TagPickerPresenter.isShowing
-        // 判断是否因 picker 抢占 key 而失焦，避免误关闭快速粘贴面板。
-        panel = newPanel
-        newPanel.makeKeyAndOrderFront(nil)
-        newPanel.orderFrontRegardless()
-
-        NSLog("[DIAG] TagPickerPresenter.show: panel.isVisible=\(newPanel.isVisible)")
+        return newPanel
     }
 
     /// 关闭标签选择器（若正在展示）。
