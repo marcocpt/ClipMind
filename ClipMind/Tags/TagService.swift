@@ -138,9 +138,14 @@ actor TagService: TagServicing
     {
         if let contentType = SystemTagCatalog.contentType(for: tagID)
         {
-            // 系统标签必须匹配条目 contentType
+            // 系统标签必须匹配条目 contentType。
+            // 但 `currentContentType` 从 snapshot 中已关联的系统标签推断 contentType，
+            // 当系统标签被用户移除后（disposition=.removed），orderedTagIDs 中不再有
+            // 系统标签，`currentContentType` 返回 nil。此时无法在 TagService 层验证，
+            // 由 `EncryptedStore.attachTagToClip` 中的 `contentType == item.contentType`
+            // 检查兜底：不匹配时不设 associated。
             let clipContentType = currentContentType(for: clipID, in: snapshot)
-            if clipContentType != contentType
+            if clipContentType != nil && clipContentType != contentType
             {
                 logger.record(operation: .attach, result: .failure, error: .systemTagNotEligible, count: 0)
                 throw TagError.systemTagNotEligible

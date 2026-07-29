@@ -74,9 +74,11 @@ enum PopoverPreviewWindowFactory
             guard let becameKey = note.object as? NSWindow, becameKey !== window else { return }
             // 仅当 popover 窗口仍然可见时才关闭其他窗口，避免 popover 关闭后触发循环
             guard window?.isVisible == true else { return }
-            // 跳过 NSPanel：系统 popover（F1.14 标签选择菜单）是 NSPanel，
-            // 不应被关闭。只关闭 SwiftUI WindowGroup 创建的主 NSWindow。
-            if becameKey is NSPanel { return }
+            // 跳过系统 popover（F1.14 标签选择菜单）：
+            // - NSPanel 类型（SwiftUI .popover() 创建的 _NSPopoverWindow 通常是 NSPanel 子类）
+            // - 有 parent 的子窗口（sheet/attached window）
+            // 只关闭 SwiftUI WindowGroup 创建的主 NSWindow。
+            if becameKey is NSPanel || becameKey.parent != nil { return }
             becameKey.orderOut(nil)
             window?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
