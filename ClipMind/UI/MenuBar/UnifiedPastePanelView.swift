@@ -186,6 +186,16 @@ struct UnifiedPastePanelView: View
                         }
                     }
                 }
+                // F1.14：暴露 searchFilteredClips.count 给 UI 测试。
+                // LazyVStack 懒加载导致 typeTag_ 计数只返回可见行，
+                // 用隐藏 Text 暴露准确数量，测试通过 accessibilityValue 读取。
+                .background(
+                    Text("\(searchFilteredClips.count)")
+                        .accessibilityIdentifier("\(accessibilityPrefix)ListCount")
+                        .accessibilityValue("\(searchFilteredClips.count)")
+                        .frame(width: 0, height: 0)
+                        .opacity(0)
+                )
                 Text(viewModel.lastTriggeredClipIdForTesting ?? "")
                     .accessibilityIdentifier("\(accessibilityPrefix)TestTriggeredClipId")
                     .frame(width: 0, height: 0)

@@ -26,6 +26,20 @@ final class ClipRowViewMultiLinePreviewTests: XCTestCase
         super.tearDown()
     }
 
+    /// 计算 app 中的剪贴条目数。
+    ///
+    /// F1.14：HistoryListView 用 ScrollView+LazyVStack，LazyVStack 懒加载导致
+    /// typeTag_ 前缀计数只返回可见行。HistoryListView/UnifiedPastePanelView 暴露
+    /// 隐藏元素（filteredClips.count），通过 accessibilityValue 读取准确数量。
+    /// - 主窗口：historyListCount
+    /// - 菜单栏弹窗：popoverListCount
+    private func clipCount(in app: XCUIApplication, identifier: String = "historyListCount") -> Int
+    {
+        let countElement = app.descendants(matching: .any)[identifier].firstMatch
+        guard countElement.exists else { return 0 }
+        return Int(countElement.value as? String ?? "0") ?? 0
+    }
+
     // MARK: - AC-F1.16-1 主窗口列表渲染多行 cell
 
     /// 验证主窗口列表能渲染含多行文本的 cell（第 12 条 previewClip）。
@@ -48,9 +62,9 @@ final class ClipRowViewMultiLinePreviewTests: XCTestCase
             "主窗口历史列表应出现"
         )
 
-        // previewClips 有 12 条，验证列表 cell 数量 >= 12
-        // 确保含多行文本的最后一条 cell 被渲染
-        let cellCount = historyList.cells.count
+        // previewClips 有 12 条，验证列表条目数 >= 12
+        // 确保含多行文本的最后一条被渲染
+        let cellCount = clipCount(in: app)
         XCTAssertGreaterThanOrEqual(
             cellCount,
             12,
@@ -79,9 +93,8 @@ final class ClipRowViewMultiLinePreviewTests: XCTestCase
         )
 
         // 弹窗列表中应渲染全部 12 条 previewClips
-        // 通过查找弹窗内的列表 cell 验证多行 cell 被渲染
-        let popoverListCells = app.scrollViews.cells
-        let cellCount = popoverListCells.count
+        // 通过 popoverListCount 隐藏元素读取准确数量
+        let cellCount = clipCount(in: app, identifier: "popoverListCount")
         XCTAssertGreaterThanOrEqual(
             cellCount,
             12,
