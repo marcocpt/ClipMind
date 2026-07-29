@@ -84,6 +84,13 @@ enum PopoverPreviewWindowFactory
             NSApp.activate(ignoringOtherApps: true)
         }
 
+        // F1.14：主动遍历关闭主窗口。
+        // didBecomeKeyNotification 观察器仅在主窗口成为 key 时触发，但 popover NSPanel
+        // 已经是 key，主窗口永远不会成为 key，观察器不触发。因此在下一运行循环主动
+        // 遍历 NSApp.windows，对 SwiftUI AppKitWindow 调用 orderOut（不用 close 避免
+        // 触发 NSApplication.terminate），确保 popover 窗口是唯一可见且可交互的窗口。
+        closeSwiftUIMainWindow(popoverWindow: window)
+
         // 监听 popover 窗口关闭事件，移除 didBecomeKey 监听器。
         // 无论是 Esc 键、底部工具栏按钮点击、还是双击粘贴触发 close，都会通过此监听器清理。
         // 避免窗口关闭后仍有延迟的 didBecomeKey 事件触发监听器，导致主窗口被误 orderOut。
@@ -98,6 +105,30 @@ enum PopoverPreviewWindowFactory
                 NotificationCenter.default.removeObserver(observer)
                 keyWindowObserver = nil
             }
+        }
+    }
+
+    /// 主动关闭 SwiftUI WindowGroup 创建的主窗口。
+    ///
+    /// `didBecomeKeyNotification` 观察器仅在主窗口成为 key 时触发，但 popover NSPanel
+    /// 已经是 key，主窗口永远不会成为 key。因此在下一运行循环主动遍历 `NSApp.windows`，
+    /// 对 SwiftUI `AppKitWindow` 调用 `orderOut`（不用 `close` 避免 terminate），
+    /// 确保 popover 窗口是唯一可见且可交互的窗口。
+    private static func closeSwiftUIMainWindow(popoverWindow: NSPanel)
+    {
+        DispatchQueue.main.async
+        {
+            for otherWindow in NSApp.windows where otherWindow !== popoverWindow
+            {
+                // 仅关闭 SwiftUI WindowGroup 创建的 AppKitWindow，
+                // 不影响 NSPanel（tag picker）、NSStatusBarWindow 等
+                if otherWindow.className.contains("AppKitWindow")
+                {
+                    otherWindow.orderOut(nil)
+                }
+            }
+            popoverWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
 
