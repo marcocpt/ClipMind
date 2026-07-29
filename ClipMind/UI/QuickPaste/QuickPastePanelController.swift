@@ -137,9 +137,19 @@ final class QuickPastePanelController: PanelClosing
     }
 
     /// 失焦处理（由 NSPanel.didResignKeyNotification 触发）。
+    ///
+    /// F1.14：当 `TagPickerPresenter` 创建 NSPanel 并 `makeKeyAndOrderFront` 时，
+    /// 快速粘贴面板会同步 resign key。若此时关闭面板，标签 picker 的锚点视图
+    /// 会失效且面板内容被销毁，导致 picker 无法正常展示。
+    /// 通过检查 `TagPickerPresenter.isShowing` 跳过因 picker 抢占 key 而触发的关闭。
     @objc func handleDidResignKey()
     {
         guard isPanelVisible else { return }
+        if TagPickerPresenter.shared.isShowing
+        {
+            LogCategory.ui.info("QuickPaste panel resign key ignored (tag picker showing)")
+            return
+        }
         LogCategory.ui.info("QuickPaste panel closed by resign key")
         closePanelInternal()
     }

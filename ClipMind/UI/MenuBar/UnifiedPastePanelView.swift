@@ -167,6 +167,7 @@ struct UnifiedPastePanelView: View
                                 onDoubleClick: { viewModel.handleDoubleClick(clip: clip) },
                                 tagStore: tagStore
                             )
+                            .accessibilityElement(children: .contain)
                             .accessibilityIdentifier(
                                 "\(accessibilityPrefix)Row_\(index)"
                                 + "\(viewModel.isSelected(index: index) ? "_selected" : "")"

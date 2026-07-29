@@ -29,6 +29,12 @@ extension AppDelegate
         {
             UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         }
+        // F1.14：--UITEST_QUICK_PASTE_PANEL 也需要 hasCompletedOnboarding=true，
+        // 否则 configureActivationPolicy 走 onboarding 分支，不创建 quick paste panel。
+        if CommandLine.arguments.contains("--UITEST_QUICK_PASTE_PANEL")
+        {
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        }
         UserDefaults.standard.synchronize()
     }
 

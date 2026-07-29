@@ -269,6 +269,7 @@
 		FD9932F1F76CA30BEDCEBB3F /* FileWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1384EDE999B95458DBDA5FF /* FileWriterTests.swift */; };
 		FDD655EC5BF93601BC695A28 /* AutoSaveSettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F0EA2C5EDFF6181390B24 /* AutoSaveSettingsUITests.swift */; };
 		FDFD1191DD1C38DB7463F418 /* ClipMindTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02565C80C4D708A05FFDD99 /* ClipMindTests.swift */; };
+		FE78FB0526EBDCAB61FB9AA1 /* TagPickerPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FE832470799EDED3ED25F8A /* TagPickerPresenter.swift */; };
 		FEAE2AA87C5421CADECA748A /* TagMigrationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABB7A8E10C8D537B1C5138F /* TagMigrationCoordinator.swift */; };
 		FFF639C4DCF1AEF9E1077C30 /* NewClipTagIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E677B63CDDD2B0076F278F5A /* NewClipTagIntegrationTests.swift */; };
 /* End PBXBuildFile section */
@@ -328,6 +329,7 @@
 		2E45398F36D9B149271B1E5E /* BlacklistManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlacklistManagementView.swift; sourceTree = "<group>"; };
 		2E75A4AB12472E0016164F8D /* SampleDataUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataUITests.swift; sourceTree = "<group>"; };
 		2FCAFC3071E65D408B142E36 /* SourceFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceFilterTests.swift; sourceTree = "<group>"; };
+		2FE832470799EDED3ED25F8A /* TagPickerPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagPickerPresenter.swift; sourceTree = "<group>"; };
 		30F5D83740818B17A0B2AB53 /* ClassificationAccuracyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassificationAccuracyTests.swift; sourceTree = "<group>"; };
 		315A86B4F822D3E6EE87C09A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		31D16D23D4D3E0C2463FCED3 /* TagUITestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagUITestSupport.swift; sourceTree = "<group>"; };
@@ -1116,6 +1118,7 @@
 			isa = PBXGroup;
 			children = (
 				3490C86C754A26C02F0B68C9 /* ClipTagStripView.swift */,
+				2FE832470799EDED3ED25F8A /* TagPickerPresenter.swift */,
 				1D77218BA5D4CAF126E88E05 /* TagPickerView.swift */,
 				186F4309CEBEE040FEBDE936 /* TagPillView.swift */,
 				81B73EB6F94EBEC5D277BF57 /* TagStore.swift */,
@@ -1472,6 +1475,7 @@
 				FEAE2AA87C5421CADECA748A /* TagMigrationCoordinator.swift in Sources */,
 				53F93E7EAA10241E4629847F /* TagNameValidator.swift in Sources */,
 				4BA45A7DE6B0F521B1086CFF /* TagOperationLogger.swift in Sources */,
+				FE78FB0526EBDCAB61FB9AA1 /* TagPickerPresenter.swift in Sources */,
 				FD52ED5C05AC8E4973B07800 /* TagPickerView.swift in Sources */,
 				0E3206AFC8212E285404133C /* TagPillView.swift in Sources */,
 				0BB19FF1B96D5CBA990754D8 /* TagRepository.swift in Sources */,

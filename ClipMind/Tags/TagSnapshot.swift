@@ -23,7 +23,13 @@ struct TagSnapshot: Equatable, Sendable
     /// 返回指定条目关联的标签列表。
     func tags(for clipID: UUID) -> [ClipTag]
     {
-        let tagsByID = Dictionary(uniqueKeysWithValues: allTags.map { ($0.id, $0) })
+        // 使用 uniquingKeysWith 防止重复键导致崩溃。
+        // 正常情况下 allTags 不应有重复 ID，但 UITEST 夹具注入路径可能
+        // 在数据库未完全清理时产生重复，此处防御性处理。
+        let tagsByID = Dictionary(
+            allTags.map { ($0.id, $0) },
+            uniquingKeysWith: { _, new in new }
+        )
         return tagStatesByClipID[clipID, default: .legacy].orderedTagIDs.compactMap
         {
             tagsByID[$0]

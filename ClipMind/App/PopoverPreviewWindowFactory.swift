@@ -3,9 +3,12 @@ import SwiftUI
 
 /// 菜单栏弹窗预览窗口工厂（F1.11 Phase 2）。
 ///
-/// 在 UITEST 模式下（`--UITEST_POPOVER_WINDOW`）创建独立 `NSPanel` 承载 `UnifiedPastePanelView`，
-/// 使 XCUITest 能稳定定位元素。使用 `NSPanel`（与 F1.9 快捷键面板一致的窗口类型），
-/// 避免 `NSWindow` 的 `.closable` styleMask 拦截 Esc 键导致 `onEscPressed` 不触发。
+/// 在 UITEST 模式下（`--UITEST_POPOVER_WINDOW`）创建独立 `NSWindow` 承载 `UnifiedPastePanelView`，
+/// 使 XCUITest 能稳定定位元素。
+///
+/// F1.14：窗口类型从 `NSPanel` 改为 `NSWindow`。SwiftUI `.popover()` 在 `NSPanel`
+/// 中无法正常显示（macOS 13 已知问题），改用 `NSWindow` 后 `.popover()` 可靠工作。
+/// `level = .floating` 保留浮动行为。
 @MainActor
 enum PopoverPreviewWindowFactory
 {
@@ -53,44 +56,81 @@ enum PopoverPreviewWindowFactory
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
 
-        // 关闭 SwiftUI WindowGroup 创建的主窗口，避免主窗口抢占 key window 状态
-        // 导致 XCUITest 的 click/typeKey 操作因「应用未在前台」失败。
-        // 主窗口在 applicationDidFinishLaunching 之后由 SwiftUI 创建，监听
-        // NSWindow.didBecomeKey 通知：任何其他窗口成为 key 时立即关闭并让 popover 重新成为 key。
-        // 使用 orderOut 而非 close，避免触发 NSApplication.terminate。
-        // 防护：仅当 popover 窗口仍然可见时才处理，避免 popover 关闭后监听器触发循环。
+        // 关闭 SwiftUI WindowGroup 主窗口。
+        // 主窗口在 `applicationDidFinishLaunching` 返回后由 SwiftUI 异步创建，
+        // 会在屏幕上可见并包含与 popover 窗口相同的 clip 行（数据库加载），
+        // 导致 XCUITest 按 accessibility identifier 查找元素时命中主窗口而非 popover 窗口。
         //
-        // F1.11 Phase 3 任务 8 修复：保存监听器 token，在 popover 窗口关闭时移除监听器，
-        // 避免 close 后延迟触发的 didBecomeKey 事件导致时序竞争（test02/test04 flaky 根因）。
-        //
-        // F1.14 修复：跳过 NSPanel 类型的窗口。SwiftUI `.popover()` 弹出的系统 popover
-        // 本身是 NSPanel，成为 key 时不应被 orderOut，否则标签选择菜单会被立即关闭。
+        // F1.14：原先用 `didBecomeKeyNotification` 观察器关闭主窗口，但 popover 窗口
+        // 已经是 key，主窗口永远不会成为 key，观察器不触发。改为在下一运行循环
+        // 直接遍历 `NSApp.windows` 关闭 SwiftUI `AppKitWindow`，确保 popover 窗口
+        // 是唯一可见且可交互的窗口。
+        closeSwiftUIMainWindow(popoverWindow: window)
+    }
+
+    /// 关闭 SwiftUI WindowGroup 创建的主窗口。
+    ///
+    /// 在下一运行循环遍历 `NSApp.windows`，关闭所有 `SwiftUI.AppKitWindow` 类型的
+    /// 窗口（即 WindowGroup 创建的主窗口）。这不影响 NSPanel、NSStatusBarWindow
+    /// 或后续 `.popover()` 弹出的标签选择器窗口。
+    ///
+    /// 使用 `DispatchQueue.main.async` 确保在 SwiftUI 创建主窗口后执行。
+    /// 同时安装 `didBecomeKey` 观察器作为后备：如果主窗口在 async 执行前成为 key
+    /// （例如系统激活策略导致），观察器会捕获并关闭它。
+    private static func closeSwiftUIMainWindow(popoverWindow: NSWindow)
+    {
+        // 后备观察器：如果主窗口在 async 块执行前成为 key，关闭它
         var keyWindowObserver: NSObjectProtocol?
         keyWindowObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.didBecomeKeyNotification,
             object: nil,
             queue: .main
-        ) { [weak window] note in
-            guard let becameKey = note.object as? NSWindow, becameKey !== window else { return }
-            // 仅当 popover 窗口仍然可见时才关闭其他窗口，避免 popover 关闭后触发循环
-            guard window?.isVisible == true else { return }
-            // 跳过系统 popover（F1.14 标签选择菜单）：
-            // - NSPanel 类型（SwiftUI .popover() 创建的 _NSPopoverWindow 通常是 NSPanel 子类）
-            // - 有 parent 的子窗口（sheet/attached window）
-            // 只关闭 SwiftUI WindowGroup 创建的主 NSWindow。
-            if becameKey is NSPanel || becameKey.parent != nil { return }
-            becameKey.orderOut(nil)
-            window?.makeKeyAndOrderFront(nil)
+        ) { [weak popoverWindow] note in
+            guard let becameKey = note.object as? NSWindow,
+                  becameKey !== popoverWindow,
+                  popoverWindow?.isVisible == true,
+                  !(becameKey is NSPanel),
+                  becameKey.parent == nil
+            else { return }
+
+            becameKey.close()
+            popoverWindow?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
+
+            if let observer = keyWindowObserver
+            {
+                NotificationCenter.default.removeObserver(observer)
+                keyWindowObserver = nil
+            }
         }
 
-        // 监听 popover 窗口关闭事件，移除 didBecomeKey 监听器。
-        // 无论是 Esc 键、底部工具栏按钮点击、还是双击粘贴触发 close，都会通过此监听器清理。
-        // 避免窗口关闭后仍有延迟的 didBecomeKey 事件触发监听器，导致主窗口被误 orderOut。
-        // willClose 监听器本身无需移除：窗口关闭后不会再触发 willClose 事件。
+        // 主要关闭路径：在下一运行循环关闭 SwiftUI AppKitWindow
+        DispatchQueue.main.async
+        {
+            for window in NSApp.windows where window !== popoverWindow
+            {
+                // 仅关闭 SwiftUI WindowGroup 创建的 AppKitWindow，
+                // 不影响 NSPanel（popover/标签选择器）、NSStatusBarWindow 等
+                if window.className.contains("AppKitWindow")
+                {
+                    window.close()
+                }
+            }
+            popoverWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+
+            // 主窗口已关闭，移除后备观察器
+            if let observer = keyWindowObserver
+            {
+                NotificationCenter.default.removeObserver(observer)
+                keyWindowObserver = nil
+            }
+        }
+
+        // popover 窗口关闭时移除观察器
         NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
-            object: window,
+            object: popoverWindow,
             queue: .main
         ) { _ in
             if let observer = keyWindowObserver
@@ -101,18 +141,27 @@ enum PopoverPreviewWindowFactory
         }
     }
 
-    /// 创建菜单栏弹窗预览使用的 NSPanel（与 F1.9 快捷键面板一致的窗口类型）。
-    private static func makeWindow() -> NSPanel
+    /// 创建菜单栏弹窗预览使用的 NSWindow。
+    ///
+    /// F1.14：从 `NSPanel` 改为 `NSWindow`。SwiftUI `.popover()` 在 `NSPanel` 中
+    /// 无法正常显示（macOS 13），`NSWindow` 不存在此问题。
+    /// `level = .floating` 保留浮动行为，`styleMask` 不含 `.closable`
+    /// 避免 Esc 键被窗口拦截。
+    ///
+    /// F1.14 修复：styleMask 加入 `.resizable`。SwiftUI `.popover()` 在 macOS 13 上
+    /// 要求宿主窗口具备 `.resizable` 才能正确计算 attachment frame 并展示弹出框；
+    /// 缺少 `.resizable` 时 popover 内容视图会创建但不会被定位到屏幕上，
+    /// 导致 XCUITest 无法定位 `tagPickerTitle`。
+    private static func makeWindow() -> NSWindow
     {
-        let window = NSPanel(
+        let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 360, height: 480),
-            styleMask: [.titled, .fullSizeContentView],
+            styleMask: [.titled, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.isFloatingPanel = true
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.hidesOnDeactivate = false
@@ -127,7 +176,7 @@ enum PopoverPreviewWindowFactory
     /// - 默认：不接入 PasteCoordinator，仅模拟「粘贴触发后关闭面板」信号。
     private static func configurePasteTrigger(
         viewModel: UnifiedPastePanelViewModel,
-        window: NSPanel,
+        window: NSWindow,
         suppressor: SelfWriteSuppressor?,
         clipToucher: ClipTouching?
     )

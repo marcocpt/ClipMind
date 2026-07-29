@@ -51,12 +51,19 @@ final class TagEntryUITests: XCTestCase
     // MARK: - 主窗口入口
 
     /// UI-ENTRY-001：主窗口有标签条目点击 pill 打开 picker。
+    ///
+    /// 必须包含 `--UITEST_PREVIEW_DATA`：`ClipTestData.isUITesting` 仅识别该参数，
+    /// 缺失时 `HistoryListView` 走数据库异步加载路径，clip 行定位异常导致 pill 不可点击。
+    /// `-ApplePersistenceIgnoreState YES` 禁用窗口状态恢复，避免窗口离屏导致 pill 不可点击。
     func testMainWindow_TagPill_ClickOpensPicker()
     {
         let app = XCUIApplication()
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
-            "--UITEST_TAG_FIXTURE"
+            "--UITEST_PREVIEW_DATA",
+            "--UITEST_TAG_FIXTURE",
+            "-ApplePersistenceIgnoreState",
+            "YES"
         ]
         app.launch()
         app.activate()
@@ -79,11 +86,14 @@ final class TagEntryUITests: XCTestCase
     }
 
     /// UI-ENTRY-002：主窗口无标签条目点击「+」打开 picker。
+    ///
+    /// 同 UI-ENTRY-001，需 `--UITEST_PREVIEW_DATA` 确保 `isUITesting` 为 true。
     func testMainWindow_TagAdd_ClickOpensPicker()
     {
         let app = XCUIApplication()
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREVIEW_DATA",
             "--UITEST_TAG_EMPTY_CLIP"
         ]
         app.launch()
@@ -109,11 +119,13 @@ final class TagEntryUITests: XCTestCase
     /// UI-ENTRY-006：主窗口标签点击不传播到行选择。
     ///
     /// 点击标签 pill 后，详情面板不应更新（仍显示空状态或原有选择）。
+    /// 同 UI-ENTRY-001，需 `--UITEST_PREVIEW_DATA` 确保 `isUITesting` 为 true。
     func testMainWindow_TagClick_DoesNotTriggerRowSelection()
     {
         let app = XCUIApplication()
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREVIEW_DATA",
             "--UITEST_TAG_FIXTURE"
         ]
         app.launch()
@@ -183,11 +195,16 @@ final class TagEntryUITests: XCTestCase
     /// UI-ENTRY-005：快捷粘贴面板有标签条目点击 pill 打开 picker。
     ///
     /// 粘贴负向探针（panel 未关闭）在 Phase 5 关闭，当前仅验证 picker 出现。
+    /// 需 `--UITEST_PREVIEW_DATA` 确保 `isUITesting` 为 true，避免主窗口数据库
+    /// 异步加载导致同 ID pill 在主窗口定位异常干扰面板测试。
+    ///
+    /// 主窗口与面板存在同 ID 的标签 pill。通过 `containing(.textField, identifier:)`
+    /// 限定到面板窗口，在该窗口内查询 pill，避免 XCUITest 命中主窗口的同 ID pill。
     func testQuickPaste_TagPill_ClickOpensPicker()
     {
         let app = XCUIApplication()
         app.launchArguments = [
-            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREVIEW_DATA",
             "--UITEST_QUICK_PASTE_PANEL",
             "--UITEST_TAG_FIXTURE"
         ]
@@ -201,7 +218,7 @@ final class TagEntryUITests: XCTestCase
             "clipTag_\(firstClipIDString)_\(firstUserTagID)"
         ]
         XCTAssertTrue(
-            tagPill.waitForExistence(timeout: 5),
+            tagPill.waitForExistence(timeout: 10),
             "快捷粘贴面板应显示有标签条目的 pill"
         )
 

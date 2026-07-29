@@ -119,10 +119,13 @@ extension EncryptedStore: TagRepository
 
     private func applyCreateAndAttach(tag: ClipTag, clipID: UUID) throws
     {
-        // 1. 添加到用户标签目录
+        // 1. 添加到用户标签目录（去重：如果已存在同 ID 的标签，跳过追加）
         var catalog = try loadPersistedCatalog()
-        catalog.userTags.append(tag)
-        try savePersistedCatalog(catalog)
+        if !catalog.userTags.contains(where: { $0.id == tag.id })
+        {
+            catalog.userTags.append(tag)
+            try savePersistedCatalog(catalog)
+        }
 
         // 2. 关联到条目
         try attachTagToClip(tagID: tag.id, clipID: clipID)

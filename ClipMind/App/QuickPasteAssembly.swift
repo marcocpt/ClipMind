@@ -156,8 +156,16 @@ extension AppDelegate
     }
 
     /// 加载剪贴项列表（快速粘贴面板数据源）。
+    ///
+    /// F1.14：UITEST 模式下（`--UITEST_PREVIEW_DATA`）使用 `ClipTestData.previewClips`
+    /// 而非数据库，与 `HistoryListView` 数据源保持一致。否则面板无条目，标签 pill
+    /// 不存在，UI 测试无法验证面板入口的标签交互。
     func loadClipsForQuickPaste() -> [ClipItem]
     {
+        if ClipTestData.isUITesting
+        {
+            return ClipTestData.previewClips
+        }
         do {
             let store = try EncryptedStore()
             return Array(try store.loadAll().prefix(50))
