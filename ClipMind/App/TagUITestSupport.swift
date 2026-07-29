@@ -130,33 +130,34 @@ enum TagUITestSupport
 
     // MARK: - 私有夹具方法
 
-    /// 为 `previewClips[0]` 创建 2 个用户标签（"工作"、"参考"）。
+    /// 创建 2 个用户标签（"工作"、"参考"）。
+    ///
+    /// "工作"关联到 `previewClips[0]`（code 类型），"参考"关联到 `previewClips[1]`（link 类型）。
+    /// 这样 `previewClips[0]` 的"参考"标签初始未选择，用于 `testPicker_Toggle_SelectAndDeselect`；
+    /// 两个标签都在 userTags 目录中，用于 `testPicker_Search_FiltersCandidates` 等候选列表测试。
     private static func seedStandardFixture(repository: TagRepository)
     {
-        let clipID = ClipTestData.previewClipIDs[0]
-        let tags: [ClipTag] = [
-            ClipTag(
-                id: .user(standardFixtureTagIDs[0]),
-                name: "工作",
-                color: .blue,
-                source: .user
-            ),
-            ClipTag(
-                id: .user(standardFixtureTagIDs[1]),
-                name: "参考",
-                color: .amber,
-                source: .user
-            )
-        ]
-        for tag in tags
+        let firstClipID = ClipTestData.previewClipIDs[0]
+        let secondClipID = ClipTestData.previewClipIDs[1]
+        let workTag = ClipTag(
+            id: .user(standardFixtureTagIDs[0]),
+            name: "工作",
+            color: .blue,
+            source: .user
+        )
+        let referenceTag = ClipTag(
+            id: .user(standardFixtureTagIDs[1]),
+            name: "参考",
+            color: .amber,
+            source: .user
+        )
+        do
         {
-            do
-            {
-                try repository.apply(.createAndAttach(tag: tag, clipID: clipID))
-            } catch
-            {
-                LogCategory.app.error("TagUITestSupport seedStandardFixture failed")
-            }
+            try repository.apply(.createAndAttach(tag: workTag, clipID: firstClipID))
+            try repository.apply(.createAndAttach(tag: referenceTag, clipID: secondClipID))
+        } catch
+        {
+            LogCategory.app.error("TagUITestSupport seedStandardFixture failed")
         }
     }
 

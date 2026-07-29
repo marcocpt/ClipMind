@@ -19,8 +19,6 @@ struct ClipRowView: View
     /// 共享标签状态。为 nil 时不显示标签条（任务 5 装配后所有入口都传入同一实例）。
     var tagStore: TagStore?
 
-    @State private var isTagPickerPresented = false
-
     var body: some View
     {
         VStack(alignment: .leading, spacing: 6)
@@ -31,25 +29,16 @@ struct ClipRowView: View
                 Spacer()
             }
             // 标签条作为独立命中区，与内容主动作隔离。
+            // 通过 TagStripContainer 用 @ObservedObject 观察 TagStore，
+            // 确保 snapshot 变化时标签条刷新（即使父视图未重新评估 body）。
             if let tagStore = tagStore
             {
-                ClipTagStripView(
+                TagStripContainer(
+                    tagStore: tagStore,
                     clipID: clip.id,
-                    tags: tagStore.tags(for: clip.id),
-                    onActivate:
-                    {
-                        onTagActivate?()
-                        isTagPickerPresented = true
-                    }
+                    contentType: clip.contentType,
+                    onTagActivate: { onTagActivate?() }
                 )
-                .popover(isPresented: $isTagPickerPresented, arrowEdge: .bottom)
-                {
-                    TagPickerView(
-                        clipID: clip.id,
-                        contentType: clip.contentType,
-                        store: tagStore
-                    )
-                }
             }
             // 内容区域：预览文本 + 来源/时间。
             VStack(alignment: .leading, spacing: 6)
@@ -123,5 +112,42 @@ struct ClipRowView: View
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
         return formatter.localizedString(for: clip.timestamp, relativeTo: Date())
+    }
+}
+
+/// 标签条容器：用 `@ObservedObject` 观察 `TagStore`，确保 `snapshot` 变化时
+/// `tags(for:)` 被重新调用，标签条和 picker 反映最新状态。
+///
+/// 独立于父视图的 diffing：即使 `ClipRowView` 的其他属性未变，`TagStore` 的
+/// `objectWillChange` 也会触发本视图 `body` 重新评估。这对菜单栏弹窗预览
+/// （通过 `UnifiedPastePanelViewModel.tagRevision` 间接观察）尤其重要。
+struct TagStripContainer: View
+{
+    @ObservedObject var tagStore: TagStore
+    let clipID: UUID
+    let contentType: ContentType
+    let onTagActivate: () -> Void
+
+    @State private var isTagPickerPresented = false
+
+    var body: some View
+    {
+        ClipTagStripView(
+            clipID: clipID,
+            tags: tagStore.tags(for: clipID),
+            onActivate:
+            {
+                onTagActivate()
+                isTagPickerPresented = true
+            }
+        )
+        .popover(isPresented: $isTagPickerPresented, arrowEdge: .bottom)
+        {
+            TagPickerView(
+                clipID: clipID,
+                contentType: contentType,
+                store: tagStore
+            )
+        }
     }
 }

@@ -11,6 +11,8 @@ final class TagPickerUITests: XCTestCase
 
     /// `previewClips[0]` 的稳定 UUID（code 类型）。
     private let firstClipIDString = "00000000-0000-4000-8000-000000000001"
+    /// `previewClips[1]` 的稳定 UUID（link 类型）。
+    private let secondClipIDString = "00000000-0000-4000-8000-000000000002"
     /// 第一个用户标签 ID（标准夹具 "工作"）。
     private let firstUserTagID = "user.00000000-0000-4000-8000-000000000101"
     /// 第二个用户标签 ID（标准夹具 "参考"）。
@@ -124,19 +126,17 @@ final class TagPickerUITests: XCTestCase
             "「参考」标签初始应未选择"
         )
 
-        // 点击选择
+        // 点击选择，等待异步排空完成
         referenceOption.click()
-        XCTAssertEqual(
-            referenceOption.value as? String,
-            "已选择",
+        XCTAssertTrue(
+            referenceOption.waitForValue("已选择", timeout: 5),
             "点击后「参考」标签应已选择"
         )
 
         // 再次点击取消
         referenceOption.click()
-        XCTAssertEqual(
-            referenceOption.value as? String,
-            "未选择",
+        XCTAssertTrue(
+            referenceOption.waitForValue("未选择", timeout: 5),
             "再次点击后「参考」标签应未选择"
         )
     }
@@ -228,19 +228,17 @@ final class TagPickerUITests: XCTestCase
             "系统标签初始应已选择"
         )
 
-        // 点击移除
+        // 点击移除，等待异步排空完成
         systemTagOption.click()
-        XCTAssertEqual(
-            systemTagOption.value as? String,
-            "未选择",
+        XCTAssertTrue(
+            systemTagOption.waitForValue("未选择", timeout: 5),
             "移除后系统标签应未选择"
         )
 
         // 再次点击恢复
         systemTagOption.click()
-        XCTAssertEqual(
-            systemTagOption.value as? String,
-            "已选择",
+        XCTAssertTrue(
+            systemTagOption.waitForValue("已选择", timeout: 5),
             "恢复后系统标签应已选择"
         )
     }
@@ -249,8 +247,8 @@ final class TagPickerUITests: XCTestCase
 
     /// UI-MENU-011：标签关联在应用重启后保持。
     ///
-    /// 第一次启动注入夹具（「工作」、「参考」），第二次启动不注入夹具，
-    /// 验证标签关联从第一次启动持久化到第二次。
+    /// 第一次启动注入夹具（「工作」关联到 `previewClips[0]`，「参考」关联到 `previewClips[1]`），
+    /// 第二次启动不注入夹具，验证标签关联从第一次启动持久化到第二次。
     func testPicker_Persistence_TagsSurviveRelaunch()
     {
         // 第一次启动：注入夹具
@@ -268,10 +266,10 @@ final class TagPickerUITests: XCTestCase
             "第一次启动应显示「工作」标签"
         )
 
-        let referencePill = app.buttons["clipTag_\(firstClipIDString)_\(secondUserTagID)"]
+        let referencePill = app.buttons["clipTag_\(secondClipIDString)_\(secondUserTagID)"]
         XCTAssertTrue(
-            referencePill.exists,
-            "第一次启动应显示「参考」标签"
+            referencePill.waitForExistence(timeout: 5),
+            "第一次启动应在第二条目显示「参考」标签"
         )
 
         app.terminate()
@@ -291,10 +289,10 @@ final class TagPickerUITests: XCTestCase
         )
 
         let referencePillAfterRelaunch = app.buttons[
-            "clipTag_\(firstClipIDString)_\(secondUserTagID)"
+            "clipTag_\(secondClipIDString)_\(secondUserTagID)"
         ]
         XCTAssertTrue(
-            referencePillAfterRelaunch.exists,
+            referencePillAfterRelaunch.waitForExistence(timeout: 5),
             "重启后「参考」标签应持久化"
         )
     }
@@ -314,5 +312,19 @@ private extension XCUIElement
         click()
         let deleteString = String(repeating: XCUIKeyboardKey.delete.rawValue, count: currentValue.count)
         typeText(deleteString)
+    }
+
+    /// 等待 `accessibilityValue` 变为指定值。
+    ///
+    /// `TagStore.perform` 是异步排空，click 后立即读取 value 可能仍是旧值。
+    /// 用 `NSPredicate` 轮询直到 value 匹配或超时。
+    @discardableResult
+    func waitForValue(_ expected: String, timeout: TimeInterval = 5) -> Bool
+    {
+        let predicate = NSPredicate { element, _ in
+            (element as? XCUIElement)?.value as? String == expected
+        }
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: self)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 }
