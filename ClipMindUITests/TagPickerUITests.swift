@@ -17,6 +17,8 @@ final class TagPickerUITests: XCTestCase
     private let secondUserTagID = "user.00000000-0000-4000-8000-000000000102"
     /// code 类型系统标签 ID。
     private let codeSystemTagID = "system.code"
+    /// 上限夹具第一个用户标签 ID（"标签1"）。
+    private let firstLimitTagID = "user.00000000-0000-4000-8000-000000000201"
 
     // MARK: - setUp / tearDown
 
@@ -190,9 +192,9 @@ final class TagPickerUITests: XCTestCase
         app.launch()
         app.activate()
 
-        // previewClips[0] 已有 5 个用户标签 + 1 个系统标签 = 6 个
-        // 但上限是 5 个（含系统标签），所以应显示满额提示
-        let tagPill = app.buttons["clipTag_\(firstClipIDString)_\(firstUserTagID)"]
+        // previewClips[0] 有 1 个系统标签 + 4 个用户标签 = 5 个（已达上限）
+        // 第 5 个用户标签创建失败（上限 5 含系统标签）
+        let tagPill = app.buttons["clipTag_\(firstClipIDString)_\(firstLimitTagID)"]
         XCTAssertTrue(
             tagPill.waitForExistence(timeout: 10),
             "应显示标签 pill"

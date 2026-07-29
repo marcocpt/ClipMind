@@ -51,7 +51,7 @@ struct ClipRowView: View
                     )
                 }
             }
-            // 内容主动作区域：单击/双击只挂在此 VStack，不包含标签条。
+            // 内容区域：预览文本 + 来源/时间。
             VStack(alignment: .leading, spacing: 6)
             {
                 Text(contentPreview)
@@ -69,20 +69,20 @@ struct ClipRowView: View
                         .foregroundColor(.secondary)
                 }
             }
-            .contentShape(Rectangle())
-            .onTapGesture(count: 2)
-            {
-                onDoubleClick?()
-            }
-            .onTapGesture(count: 1)
-            {
-                onSingleClick?()
-            }
         }
         .padding(12)
         .background(backgroundColor)
         .overlay(borderOverlay)
         .cornerRadius(12)
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2)
+        {
+            onDoubleClick?()
+        }
+        .onTapGesture(count: 1)
+        {
+            onSingleClick?()
+        }
     }
 
     private var backgroundColor: Color
