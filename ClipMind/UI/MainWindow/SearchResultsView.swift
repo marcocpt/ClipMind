@@ -13,6 +13,9 @@ struct SearchResultsView: View
     /// 是否激活了来源过滤（非「全部」状态）。
     var isSourceFilterActive: Bool = false
 
+    /// F1.14 共享标签状态。为 nil 时不显示标签条。
+    var tagStore: TagStore?
+
     var body: some View
     {
         if results.isEmpty
@@ -34,7 +37,7 @@ struct SearchResultsView: View
         } else {
             List(results)
             { clip in
-                ClipRowView(clip: clip)
+                ClipRowView(clip: clip, tagStore: tagStore)
                     .contentShape(Rectangle())
                     .onTapGesture { onSelect(clip) }
             }

@@ -6,6 +6,9 @@ struct HistoryListView: View
     let sourceFilter: Set<String>
     @StateObject private var clipStore = ClipStore()
 
+    /// F1.14 共享标签状态。为 nil 时不显示标签条（UI 测试或无标签场景）。
+    var tagStore: TagStore?
+
     private var clips: [ClipItem]
     {
         ClipTestData.isUITesting ? ClipTestData.previewClips : clipStore.clips
@@ -55,7 +58,11 @@ struct HistoryListView: View
             .accessibilityIdentifier("historyFilterEmptyState")
         } else {
             List(filteredClips) { clip in
-                ClipRowView(clip: clip, onSingleClick: { selectedClip = clip })
+                ClipRowView(
+                    clip: clip,
+                    onSingleClick: { selectedClip = clip },
+                    tagStore: tagStore
+                )
             }
             .accessibilityIdentifier("historyList")
         }

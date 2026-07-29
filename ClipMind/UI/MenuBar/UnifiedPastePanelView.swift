@@ -23,11 +23,24 @@ struct UnifiedPastePanelView: View
     /// 辅助功能标识符前缀（菜单栏弹窗用 `popover`，快捷键用 `quickPaste`，保持 F1.9 已有标识符不变）。
     private let accessibilityPrefix: String
 
-    init(viewModel: UnifiedPastePanelViewModel, showsBottomBar: Bool, accessibilityPrefix: String)
+    /// F1.14 共享标签状态。为 nil 时不显示标签条。
+    private let tagStore: TagStore?
+
+    init(
+        viewModel: UnifiedPastePanelViewModel,
+        showsBottomBar: Bool,
+        accessibilityPrefix: String,
+        tagStore: TagStore? = nil
+    )
     {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.showsBottomBar = showsBottomBar
         self.accessibilityPrefix = accessibilityPrefix
+        self.tagStore = tagStore
+        if let store = tagStore
+        {
+            viewModel.attachTagStore(store)
+        }
     }
 
     var body: some View
@@ -151,7 +164,8 @@ struct UnifiedPastePanelView: View
                                 clip: clip,
                                 isSelected: viewModel.isSelected(index: index),
                                 onSingleClick: { viewModel.selectIndex(index) },
-                                onDoubleClick: { viewModel.handleDoubleClick(clip: clip) }
+                                onDoubleClick: { viewModel.handleDoubleClick(clip: clip) },
+                                tagStore: tagStore
                             )
                             .accessibilityIdentifier(
                                 "\(accessibilityPrefix)Row_\(index)"

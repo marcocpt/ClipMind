@@ -33,14 +33,23 @@ final class StatusItemController: NSObject, PanelClosing
     /// 注入的粘贴协调器（双击 / 回车触发粘贴流程）。
     private var pasteCoordinator: PasteCoordinator?
 
+    /// F1.14 共享标签状态（由 AppDelegate 注入，菜单栏弹窗显示标签条）。
+    private var tagStore: TagStore?
+
     /// 注入数据源与粘贴协调器（由 AppDelegate 在 configureActivationPolicy 中调用）。
     /// - Parameters:
     ///   - encryptedStore: 剪贴板加密存储
     ///   - pasteCoordinator: 粘贴流程协调器
-    func setup(encryptedStore: EncryptedStore, pasteCoordinator: PasteCoordinator)
+    ///   - tagStore: F1.14 共享标签状态。为 nil 时不显示标签条。
+    func setup(
+        encryptedStore: EncryptedStore,
+        pasteCoordinator: PasteCoordinator,
+        tagStore: TagStore? = nil
+    )
     {
         self.encryptedStore = encryptedStore
         self.pasteCoordinator = pasteCoordinator
+        self.tagStore = tagStore
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem?.button
@@ -104,7 +113,8 @@ final class StatusItemController: NSObject, PanelClosing
         return UnifiedPastePanelView(
             viewModel: viewModel,
             showsBottomBar: true,
-            accessibilityPrefix: "popover"
+            accessibilityPrefix: "popover",
+            tagStore: tagStore
         )
     }
 

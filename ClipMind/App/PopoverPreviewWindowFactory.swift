@@ -19,7 +19,8 @@ enum PopoverPreviewWindowFactory
     static func show(
         clips: [ClipItem],
         suppressor: SelfWriteSuppressor? = nil,
-        clipToucher: ClipTouching? = nil
+        clipToucher: ClipTouching? = nil,
+        tagStore: TagStore? = nil
     )
     {
         let window = makeWindow()
@@ -45,7 +46,8 @@ enum PopoverPreviewWindowFactory
             rootView: UnifiedPastePanelView(
                 viewModel: viewModel,
                 showsBottomBar: true,
-                accessibilityPrefix: "popover"
+                accessibilityPrefix: "popover",
+                tagStore: tagStore
             )
         )
         window.makeKeyAndOrderFront(nil)

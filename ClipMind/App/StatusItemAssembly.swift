@@ -44,7 +44,8 @@ extension AppDelegate
 
         statusItemControllerInstance.setup(
             encryptedStore: store,
-            pasteCoordinator: popoverCoordinator
+            pasteCoordinator: popoverCoordinator,
+            tagStore: tagStore
         )
     }
 }

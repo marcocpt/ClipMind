@@ -7,6 +7,12 @@ struct MainWindow: View {
     @State private var isSearching = false
     @State private var sourceFilterSelection = SourceFilterSelection(allApps: [])
     @StateObject private var clipStore = ClipStore()
+    @ObservedObject private var tagStore: TagStore
+    @State private var isMigrationBannerDismissed = false
+
+    init(tagStore: TagStore) {
+        self._tagStore = ObservedObject(initialValue: tagStore)
+    }
 
     private var allClips: [ClipItem] {
         ClipTestData.isUITesting ? ClipTestData.previewClips : clipStore.clips
@@ -22,6 +28,7 @@ struct MainWindow: View {
             VStack(spacing: 0) {
                 searchPanel
                 Divider()
+                migrationBanner
                 contentArea
             }
             .frame(minWidth: LayoutConstants.sidebarMinWidth)
@@ -60,17 +67,62 @@ struct MainWindow: View {
         .padding(12)
     }
 
+    /// F1.14 标签迁移失败 banner：在不遮挡历史列表的顶部区域显示固定安全错误、
+    /// `tagMigrationRetryButton` 和关闭动作。重试调用 `tagStore.retry()`，
+    /// 关闭只隐藏本次提示而不篡改最近成功快照。
+    @ViewBuilder
+    private var migrationBanner: some View
+    {
+        if tagStore.failedOperation == .migration, !isMigrationBannerDismissed
+        {
+            HStack(spacing: 8)
+            {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.white)
+                Text(tagStore.errorMessage ?? "标签迁移失败，请重试")
+                    .foregroundColor(.white)
+                    .font(.caption)
+                    .lineLimit(1)
+                Spacer()
+                Button("重试")
+                {
+                    isMigrationBannerDismissed = false
+                    tagStore.retry()
+                }
+                .accessibilityIdentifier("tagMigrationRetryButton")
+                Button
+                {
+                    isMigrationBannerDismissed = true
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.white)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("关闭迁移提示")
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.orange)
+        }
+    }
+
     @ViewBuilder
     private var contentArea: some View {
         if isSearching {
             SearchResultsView(
                 results: filteredSearchResults,
-                isSourceFilterActive: !sourceFilterSelection.isAllSelected
-            ) { clip in
-                selectedClip = clip
-            }
+                onSelect: { clip in
+                    selectedClip = clip
+                },
+                isSourceFilterActive: !sourceFilterSelection.isAllSelected,
+                tagStore: tagStore
+            )
         } else {
-            HistoryListView(selectedClip: $selectedClip, sourceFilter: sourceFilterSelection.selectedSources)
+            HistoryListView(
+                selectedClip: $selectedClip,
+                sourceFilter: sourceFilterSelection.selectedSources,
+                tagStore: tagStore
+            )
         }
     }
 

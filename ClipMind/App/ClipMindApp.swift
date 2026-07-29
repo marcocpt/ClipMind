@@ -10,7 +10,7 @@ struct ClipMindApp: App {
         WindowGroup {
             Group {
                 if hasCompletedOnboarding {
-                    MainWindow()
+                    MainWindow(tagStore: appDelegate.tagStore)
                         .frame(
                             minWidth: LayoutConstants.appWindowMinWidth,
                             minHeight: LayoutConstants.appWindowMinHeight
@@ -51,6 +51,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// F1.14 标签后端：唯一 `TagServicing` 和迁移协调器。
     @MainActor lazy var tagBackend = TagBackendFactory.makeDefault()
+
+    /// F1.14 共享标签 UI 状态：主窗口、菜单栏弹窗、快捷粘贴面板共用同一实例。
+    ///
+    /// 基于 `tagBackend` 构造，不在 UI 层再次创建 `EncryptedStore` 或 `TagService`。
+    /// 初始化失败时仍持有 `UnavailableTagService` 后端，标签编辑显示安全错误并禁用。
+    @MainActor lazy var tagStore = TagStore(
+        service: tagBackend.service,
+        migrationCoordinator: tagBackend.migrationCoordinator
+    )
 
     /// F2.1 自动保存配置键列表（供 `--UITEST_RESET_AUTOSAVE_SETTINGS` 重置与单元测试共用）。
     /// 与 `AutoSaveSettingsStore` 使用的键保持一致。
@@ -120,28 +129,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         startTagMigration()
     }
 
-    /// F1.14：在首个界面装配完成后启动标签迁移。
+    /// F1.14：在首个界面装配后加载标签快照并启动可恢复迁移。
     ///
-    /// 使用继承取消语义的 `Task`（非 `Task.detached`），失败时只发布
-    /// `.clipTagMigrationNeedsRetry`，不崩溃。
+    /// 通过共享 `tagStore` 路由：先 `load()` 读取当前快照供 UI 渲染，再
+    /// `resumeMigration()` 启动迁移。迁移失败时 `tagStore.failedOperation`
+    /// 置为 `.migration`，由 `MainWindow` 的迁移重试 banner 展示安全错误，
+    /// 不再发送 `.clipTagMigrationNeedsRetry`。
     @MainActor
     private func startTagMigration()
     {
-        Task
-        {
-            do
-            {
-                try await tagBackend.migrationCoordinator.resume()
-            } catch {
-                LogCategory.storage.error(
-                    "Tag migration failed, needs retry: \(error.localizedDescription)"
-                )
-                NotificationCenter.default.post(
-                    name: .clipTagMigrationNeedsRetry,
-                    object: nil
-                )
-            }
-        }
+        tagStore.load()
+        tagStore.resumeMigration()
     }
 
     // F1.11 合并修复：UITest 启动参数处理方法（handleToastUITestTriggerIfNeeded /
@@ -352,7 +350,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         PopoverPreviewWindowFactory.show(
             clips: clips,
             suppressor: selfWriteSuppressor,
-            clipToucher: clipToucher
+            clipToucher: clipToucher,
+            tagStore: tagStore
         )
     }
 

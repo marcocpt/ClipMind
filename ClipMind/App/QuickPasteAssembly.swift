@@ -149,7 +149,8 @@ extension AppDelegate
         let view = UnifiedPastePanelView(
             viewModel: viewModel,
             showsBottomBar: true,
-            accessibilityPrefix: "quickPaste"
+            accessibilityPrefix: "quickPaste",
+            tagStore: tagStore
         )
         return NSHostingController(rootView: view)
     }

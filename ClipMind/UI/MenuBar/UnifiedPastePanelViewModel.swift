@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 /// 统一粘贴面板视图状态管理器（F1.11 Phase 1）。
@@ -48,6 +49,14 @@ final class UnifiedPastePanelViewModel: ObservableObject
     /// 是否显示来源筛选浮层。
     @Published var showFilterOverlay = false
 
+    /// F1.14 标签快照修订号：`TagStore.snapshot` 变化时递增，触发视图刷新标签条。
+    /// 标签变化只刷新标签条，不修改高亮索引。
+    @Published private(set) var tagRevision = 0
+
+    /// F1.14 共享标签状态引用（弱引用避免循环）。
+    private weak var tagStore: TagStore?
+    private var tagStoreCancellable: AnyCancellable?
+
     /// 去重排序的来源应用名称列表。
     var sourceApps: [String]
     {
@@ -76,6 +85,20 @@ final class UnifiedPastePanelViewModel: ObservableObject
         self.clips = clips
         selectedIndex = clips.isEmpty ? -1 : 0
         sourceFilterSelection = SourceFilterSelection(allApps: Set(clips.map(\.sourceAppName)))
+    }
+
+    /// F1.14：附加共享 `TagStore`，订阅其快照变化以刷新标签条。
+    ///
+    /// 标签变化由观察的 `TagStore.snapshot` 刷新标签条，不修改高亮索引。
+    /// - Parameter store: 共享标签状态。重复调用会替换之前的订阅。
+    func attachTagStore(_ store: TagStore)
+    {
+        tagStore = store
+        tagStoreCancellable = store.$snapshot
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.tagRevision &+= 1
+            }
     }
 
     // MARK: - 选中状态

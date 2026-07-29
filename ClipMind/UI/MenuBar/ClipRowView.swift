@@ -13,6 +13,14 @@ struct ClipRowView: View
     /// 双击回调（F1.9 快速粘贴面板使用，菜单栏 popover 不传即 nil）。
     var onDoubleClick: (() -> Void)?
 
+    /// 标签触发回调（F1.14 标签条点击时触发，与单击/双击主动作隔离）。
+    var onTagActivate: (() -> Void)?
+
+    /// 共享标签状态。为 nil 时不显示标签条（任务 5 装配后所有入口都传入同一实例）。
+    var tagStore: TagStore?
+
+    @State private var isTagPickerPresented = false
+
     var body: some View
     {
         VStack(alignment: .leading, spacing: 6)
@@ -22,34 +30,59 @@ struct ClipRowView: View
                 TypeTagView(contentType: clip.contentType)
                 Spacer()
             }
-            Text(contentPreview)
-                .font(.system(size: 13))
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-                .foregroundColor(.primary)
-            HStack(spacing: 8)
+            // 标签条作为独立命中区，与内容主动作隔离。
+            if let tagStore = tagStore
             {
-                Text(clip.sourceAppName)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-                Text(timeAgo)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
+                ClipTagStripView(
+                    clipID: clip.id,
+                    tags: tagStore.tags(for: clip.id),
+                    onActivate:
+                    {
+                        onTagActivate?()
+                        isTagPickerPresented = true
+                    }
+                )
+                .popover(isPresented: $isTagPickerPresented, arrowEdge: .bottom)
+                {
+                    TagPickerView(
+                        clipID: clip.id,
+                        contentType: clip.contentType,
+                        store: tagStore
+                    )
+                }
+            }
+            // 内容主动作区域：单击/双击只挂在此 VStack，不包含标签条。
+            VStack(alignment: .leading, spacing: 6)
+            {
+                Text(contentPreview)
+                    .font(.system(size: 13))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundColor(.primary)
+                HStack(spacing: 8)
+                {
+                    Text(clip.sourceAppName)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                    Text(timeAgo)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2)
+            {
+                onDoubleClick?()
+            }
+            .onTapGesture(count: 1)
+            {
+                onSingleClick?()
             }
         }
         .padding(12)
         .background(backgroundColor)
         .overlay(borderOverlay)
         .cornerRadius(12)
-        .contentShape(Rectangle())
-        .onTapGesture(count: 2)
-        {
-            onDoubleClick?()
-        }
-        .onTapGesture(count: 1)
-        {
-            onSingleClick?()
-        }
     }
 
     private var backgroundColor: Color
