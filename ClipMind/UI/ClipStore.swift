@@ -4,12 +4,12 @@ import Foundation
 /// UI 层剪贴历史仓库。
 ///
 /// 包装 EncryptedStore 的读取操作，并监听 ClipCaptureService.clipDidUpdateNotification
-/// 自动刷新 clips，供 SwiftUI 视图观察。
+/// 和 .clipTagsDidUpdate 自动刷新 clips，供 SwiftUI 视图观察。
 final class ClipStore: ObservableObject {
     @Published var clips: [ClipItem] = []
 
     private var store: EncryptedStore?
-    private var observer: NSObjectProtocol?
+    private var observers: [NSObjectProtocol] = []
 
     init(store: EncryptedStore? = nil) {
         if let store = store {
@@ -24,17 +24,29 @@ final class ClipStore: ObservableObject {
                 self.store = nil
             }
         }
-        observer = NotificationCenter.default.addObserver(
-            forName: ClipCaptureService.clipDidUpdateNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.loadClips()
-        }
+        let center = NotificationCenter.default
+        observers.append(
+            center.addObserver(
+                forName: ClipCaptureService.clipDidUpdateNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.loadClips()
+            }
+        )
+        observers.append(
+            center.addObserver(
+                forName: .clipTagsDidUpdate,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.loadClips()
+            }
+        )
     }
 
     deinit {
-        if let observer = observer {
+        for observer in observers {
             NotificationCenter.default.removeObserver(observer)
         }
     }

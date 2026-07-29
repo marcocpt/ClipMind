@@ -49,6 +49,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var quickPastePanelController: QuickPastePanelController?
     var pasteCoordinator: PasteCoordinator?
 
+    /// F1.14 标签后端：唯一 `TagServicing` 和迁移协调器。
+    @MainActor lazy var tagBackend = TagBackendFactory.makeDefault()
+
     /// F2.1 自动保存配置键列表（供 `--UITEST_RESET_AUTOSAVE_SETTINGS` 重置与单元测试共用）。
     /// 与 `AutoSaveSettingsStore` 使用的键保持一致。
     static let autoSaveSettingsKeys: [String] = [
@@ -113,6 +116,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         // F2.1.1 测试入口：通过 --UITEST_TOAST_TRIGGER 模拟保存成功通知
         handleToastUITestTriggerIfNeeded()
+        // F1.14：启动可恢复标签迁移
+        startTagMigration()
+    }
+
+    /// F1.14：在首个界面装配完成后启动标签迁移。
+    ///
+    /// 使用继承取消语义的 `Task`（非 `Task.detached`），失败时只发布
+    /// `.clipTagMigrationNeedsRetry`，不崩溃。
+    @MainActor
+    private func startTagMigration()
+    {
+        Task
+        {
+            do
+            {
+                try await tagBackend.migrationCoordinator.resume()
+            } catch {
+                LogCategory.storage.error(
+                    "Tag migration failed, needs retry: \(error.localizedDescription)"
+                )
+                NotificationCenter.default.post(
+                    name: .clipTagMigrationNeedsRetry,
+                    object: nil
+                )
+            }
+        }
     }
 
     // F1.11 合并修复：UITest 启动参数处理方法（handleToastUITestTriggerIfNeeded /
