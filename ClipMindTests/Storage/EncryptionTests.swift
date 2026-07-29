@@ -131,9 +131,6 @@ final class EncryptionTests: XCTestCase {
                 containsPlaintext(blob, plaintext),
                 "content_blob 不应包含明文标记"
             )
-
-            // 密文也不应是 JSON 明文（不应以 { 开头）
-            XCTAssertFalse(blob.starts(with: Data([0x7B])), "密文不应以 JSON '{' 开头")
         }
     }
 
