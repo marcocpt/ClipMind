@@ -187,15 +187,14 @@ struct UnifiedPastePanelView: View
                     }
                 }
                 // F1.14：暴露 searchFilteredClips.count 给 UI 测试。
-                // LazyVStack 懒加载导致 typeTag_ 计数只返回可见行，
-                // 用隐藏 Text 暴露准确数量，测试通过 accessibilityValue 读取。
-                .background(
-                    Text("\(searchFilteredClips.count)")
-                        .accessibilityIdentifier("\(accessibilityPrefix)ListCount")
-                        .accessibilityValue("\(searchFilteredClips.count)")
-                        .frame(width: 0, height: 0)
-                        .opacity(0)
-                )
+                // LazyVStack 懒加载导致 typeTag_ 计数只返回可见行。
+                // 注意：不能用 .background，SwiftUI 把 .background 视为装饰性内容，
+                // accessibility 树中不可见。必须与 ScrollView 同级放置。
+                Text("\(searchFilteredClips.count)")
+                    .accessibilityIdentifier("\(accessibilityPrefix)ListCount")
+                    .accessibilityValue("\(searchFilteredClips.count)")
+                    .frame(width: 0, height: 0)
+                    .opacity(0)
                 Text(viewModel.lastTriggeredClipIdForTesting ?? "")
                     .accessibilityIdentifier("\(accessibilityPrefix)TestTriggeredClipId")
                     .frame(width: 0, height: 0)

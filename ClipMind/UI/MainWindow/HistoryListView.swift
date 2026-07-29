@@ -61,27 +61,30 @@ struct HistoryListView: View
             // List 在 NavigationView 中会拦截子视图 Button 的 tap gesture，
             // 导致标签 pill 不可点击。ScrollView + LazyVStack 不存在此限制。
             // LazyVStack 懒加载导致 typeTag_ 计数只返回可见行，因此在
-            // ScrollView 外暴露 historyListCount（准确数量）供 UI 测试读取。
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(filteredClips) { clip in
-                        ClipRowView(
-                            clip: clip,
-                            onSingleClick: { selectedClip = clip },
-                            tagStore: tagStore
-                        )
-                        .accessibilityElement(children: .contain)
+            // ScrollView 同级暴露 historyListCount（准确数量）供 UI 测试读取。
+            // 注意：不能用 .background，SwiftUI 把 .background 视为装饰性内容，
+            // accessibility 树中不可见。必须用 ZStack 同级放置。
+            ZStack {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(filteredClips) { clip in
+                            ClipRowView(
+                                clip: clip,
+                                onSingleClick: { selectedClip = clip },
+                                tagStore: tagStore
+                            )
+                            .accessibilityElement(children: .contain)
+                        }
                     }
                 }
-            }
-            .accessibilityIdentifier("historyList")
-            .background(
+                .accessibilityIdentifier("historyList")
+
                 Text("\(filteredClips.count)")
                     .accessibilityIdentifier("historyListCount")
                     .accessibilityValue("\(filteredClips.count)")
                     .frame(width: 0, height: 0)
                     .opacity(0)
-            )
+            }
         }
     }
 }
