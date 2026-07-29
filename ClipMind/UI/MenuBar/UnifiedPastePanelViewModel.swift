@@ -42,10 +42,40 @@ final class UnifiedPastePanelViewModel: ObservableObject
     /// 由外部注入的剪贴项列表（不直接读取剪贴板存储）。
     let clips: [ClipItem]
 
+    /// 来源过滤选中状态。
+    @Published var sourceFilterSelection: SourceFilterSelection
+
+    /// 是否显示来源筛选浮层。
+    @Published var showFilterOverlay = false
+
+    /// 去重排序的来源应用名称列表。
+    var sourceApps: [String]
+    {
+        SourceAppExtractor.extract(from: clips)
+    }
+
+    /// 根据来源过滤选中状态过滤后的剪贴项列表。
+    var filteredClips: [ClipItem]
+    {
+        if sourceFilterSelection.isAllSelected
+        {
+            return clips
+        } else {
+            return clips.filter { sourceFilterSelection.selectedSources.contains($0.sourceAppName) }
+        }
+    }
+
+    /// 是否有来源过滤激活（非全部选中）。
+    var isSourceFilterActive: Bool
+    {
+        !sourceFilterSelection.isAllSelected
+    }
+
     init(clips: [ClipItem])
     {
         self.clips = clips
         selectedIndex = clips.isEmpty ? -1 : 0
+        sourceFilterSelection = SourceFilterSelection(allApps: Set(clips.map(\.sourceAppName)))
     }
 
     // MARK: - 选中状态
