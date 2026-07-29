@@ -13,6 +13,7 @@ struct ClipItem: Identifiable, Codable, Equatable {
     var todos: [TodoItem]?
     var embeddings: [Float]?
     var isSample: Bool = false
+    var tagState: ClipTagState = .legacy
 }
 
 // MARK: - 自定义 Codable 向后兼容
@@ -31,6 +32,7 @@ extension ClipItem {
         case todos
         case embeddings
         case isSample
+        case tagState
     }
 
     init(from decoder: Decoder) throws {
@@ -48,6 +50,8 @@ extension ClipItem {
         embeddings = try container.decodeIfPresent([Float].self, forKey: .embeddings)
         // 向后兼容：旧数据无 isSample 字段时默认 false
         isSample = try container.decodeIfPresent(Bool.self, forKey: .isSample) ?? false
+        // 向后兼容：旧数据无 tagState 字段时默认 legacy
+        tagState = try container.decodeIfPresent(ClipTagState.self, forKey: .tagState) ?? .legacy
     }
 }
 
@@ -74,7 +78,8 @@ extension ClipItem {
             rewrite: nil,
             todos: nil,
             embeddings: nil,
-            isSample: isSample
+            isSample: isSample,
+            tagState: .newItem(contentType: contentType)
         )
     }
 
@@ -98,7 +103,8 @@ extension ClipItem {
             rewrite: nil,
             todos: nil,
             embeddings: nil,
-            isSample: isSample
+            isSample: isSample,
+            tagState: .newItem(contentType: contentType)
         )
     }
 
@@ -122,7 +128,8 @@ extension ClipItem {
             rewrite: nil,
             todos: nil,
             embeddings: nil,
-            isSample: isSample
+            isSample: isSample,
+            tagState: .newItem(contentType: contentType)
         )
     }
 }

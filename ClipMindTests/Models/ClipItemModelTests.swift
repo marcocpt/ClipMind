@@ -181,6 +181,34 @@ final class ClipItemModelTests: XCTestCase {
         }
     }
 
+    // MARK: - TC-F1.14 工厂方法关联自身系统标签
+
+    func testFactoriesAssociateOwnSystemTag()
+    {
+        let text = ClipItem.makeText(
+            "value",
+            contentType: .code,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let image = ClipItem.makeImage(
+            Data([0x01]),
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+        let file = ClipItem.makeFilePath(
+            [URL(fileURLWithPath: "/tmp/a")],
+            contentType: .other,
+            sourceApp: "com.test",
+            sourceAppName: "Test"
+        )
+
+        XCTAssertEqual(text.tagState, .newItem(contentType: .code))
+        XCTAssertEqual(image.tagState, .newItem(contentType: .other))
+        XCTAssertEqual(file.tagState, .newItem(contentType: .other))
+    }
+
     // MARK: - AppSettings
 
     func testAppSettingsDefaults() {

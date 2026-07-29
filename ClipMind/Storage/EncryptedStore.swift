@@ -11,19 +11,19 @@ import SQLite
 /// - 加密范围：content_blob、embeddings_blob 字段加密，表结构为明文
 final class EncryptedStore {
     let dbPath: URL
-    private let database: Connection
+    let database: Connection
     private let key: SymmetricKey
 
     // MARK: - 表定义
 
-    private let clips = Table("clips")
-    private let idColumn = Expression<String>("id")
-    private let contentBlob = Expression<Data>("content_blob")
-    private let contentTypeColumn = Expression<String>("content_type")
-    private let timestampColumn = Expression<Double>("timestamp")
-    private let sourceAppColumn = Expression<String?>("source_app")
-    private let embeddingsBlob = Expression<Data?>("embeddings_blob")
-    private let isSampleColumn = Expression<Bool>("is_sample")
+    let clips = Table("clips")
+    let idColumn = Expression<String>("id")
+    let contentBlob = Expression<Data>("content_blob")
+    let contentTypeColumn = Expression<String>("content_type")
+    let timestampColumn = Expression<Double>("timestamp")
+    let sourceAppColumn = Expression<String?>("source_app")
+    let embeddingsBlob = Expression<Data?>("embeddings_blob")
+    let isSampleColumn = Expression<Bool>("is_sample")
 
     // MARK: - 初始化
 
@@ -83,25 +83,35 @@ final class EncryptedStore {
     }
 
     /// 更新已存储的 ClipItem：序列化为 JSON → AES-256-GCM 加密 → 写入 SQLite（INSERT OR REPLACE）
+    ///
+    /// 若该 id 已存在，按 ID 解密数据库中的最新 ClipItem，只用调用方替换非标签字段，
+    /// 强制保留最新 `tagState`，避免并发标签事务被旧快照覆盖。
     /// - Parameter item: 包含更新内容的 ClipItem，以 id 为主键匹配
     /// - Throws: 数据库写入错误、加密错误
     func update(_ item: ClipItem) throws {
-        let json = try encodeJSON(item)
+        var itemToWrite = item
+        if let existing = try loadClip(id: item.id)
+        {
+            // 保留数据库中的最新 tagState
+            itemToWrite.tagState = existing.tagState
+        }
+
+        let json = try encodeJSON(itemToWrite)
         let encryptedContent = try encrypt(json)
 
         let embeddingsData: Data?
-        if let embeddings = item.embeddings, !embeddings.isEmpty {
+        if let embeddings = itemToWrite.embeddings, !embeddings.isEmpty {
             let embJson = try encodeJSON(embeddings)
             embeddingsData = try encrypt(embJson)
         } else {
             embeddingsData = nil
         }
 
-        let id = item.id.uuidString
-        let contentType = item.contentType.rawValue
-        let timestamp = item.timestamp.timeIntervalSince1970
-        let sourceApp = item.sourceApp
-        let isSample = item.isSample
+        let id = itemToWrite.id.uuidString
+        let contentType = itemToWrite.contentType.rawValue
+        let timestamp = itemToWrite.timestamp.timeIntervalSince1970
+        let sourceApp = itemToWrite.sourceApp
+        let isSample = itemToWrite.isSample
 
         let insertOrReplace = clips.insert(or: .replace,
             idColumn <- id,
@@ -113,6 +123,24 @@ final class EncryptedStore {
             isSampleColumn <- isSample
         )
         try database.run(insertOrReplace)
+    }
+
+    /// 按 ID 加载单个 ClipItem（内部辅助，供标签事务和 update 使用）。
+    func loadClip(id: UUID) throws -> ClipItem?
+    {
+        let query = clips
+            .select(contentBlob, timestampColumn)
+            .filter(idColumn == id.uuidString)
+            .limit(1)
+        for row in try database.prepare(query)
+        {
+            let encrypted = row[contentBlob]
+            let json = try decrypt(encrypted)
+            var item = try decodeJSON(ClipItem.self, from: json)
+            item.timestamp = Date(timeIntervalSince1970: row[timestampColumn])
+            return item
+        }
+        return nil
     }
 
     /// 加载全部 ClipItem：从 SQLite 读取 → AES-256-GCM 解密 → 反序列化为 ClipItem
@@ -239,6 +267,12 @@ final class EncryptedStore {
         try database.run(clips.createIndex(contentTypeColumn, ifNotExists: true))
         try database.run(clips.createIndex(sourceAppColumn, ifNotExists: true))
 
+        // 标签目录表（key-value 加密 blob）
+        try database.run(TagStorageSchema.catalog.create(ifNotExists: true) { table in
+            table.column(TagStorageSchema.key, primaryKey: true)
+            table.column(TagStorageSchema.valueBlob)
+        })
+
         // 对已有表迁移（补充 is_sample 列）
         try migrateSchemaIfNeeded()
     }
@@ -267,7 +301,7 @@ final class EncryptedStore {
     // MARK: - 加密 / 解密
 
     /// AES-256-GCM 加密，返回 combined（nonce + ciphertext + tag）
-    private func encrypt(_ data: Data) throws -> Data {
+    func encrypt(_ data: Data) throws -> Data {
         let sealedBox = try AES.GCM.seal(data, using: key)
         guard let combined = sealedBox.combined else {
             throw EncryptedStoreError.encryptionFailed
@@ -276,7 +310,7 @@ final class EncryptedStore {
     }
 
     /// AES-256-GCM 解密
-    private func decrypt(_ data: Data) throws -> Data {
+    func decrypt(_ data: Data) throws -> Data {
         let sealedBox = try AES.GCM.SealedBox(combined: data)
         return try AES.GCM.open(sealedBox, using: key)
     }
@@ -295,11 +329,11 @@ final class EncryptedStore {
         return decoder
     }()
 
-    private func encodeJSON<T: Encodable>(_ value: T) throws -> Data {
+    func encodeJSON<T: Encodable>(_ value: T) throws -> Data {
         try EncryptedStore.encoder.encode(value)
     }
 
-    private func decodeJSON<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
+    func decodeJSON<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
         try EncryptedStore.decoder.decode(type, from: data)
     }
 

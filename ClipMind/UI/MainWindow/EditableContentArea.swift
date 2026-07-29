@@ -129,43 +129,58 @@ struct EditableContentArea: View
     }
 
     private func performSave() {
-        var updated = clip
-        switch clip.content {
-        case .text:
-            updated = ClipItem(
-                id: updated.id,
-                content: .text(editableText),
-                contentType: updated.contentType,
-                sourceApp: updated.sourceApp,
-                sourceAppName: updated.sourceAppName,
-                timestamp: updated.timestamp,
-                summary: updated.summary,
-                translation: updated.translation,
-                rewrite: updated.rewrite,
-                todos: updated.todos,
-                embeddings: updated.embeddings
-            )
-        case .filePath:
-            let paths = editableText.components(separatedBy: "\n")
-            updated = ClipItem(
-                id: updated.id,
-                content: .filePath(paths.map { URL(fileURLWithPath: $0) }),
-                contentType: updated.contentType,
-                sourceApp: updated.sourceApp,
-                sourceAppName: updated.sourceAppName,
-                timestamp: updated.timestamp,
-                summary: updated.summary,
-                translation: updated.translation,
-                rewrite: updated.rewrite,
-                todos: updated.todos,
-                embeddings: updated.embeddings
-            )
-        case .image:
+        guard let updated = EditableContentArea.rebuild(clip: clip, with: editableText) else
+        {
             return
         }
         onUpdateClip?(updated)
         onContentSaved?(updated)
         saveError = nil
+    }
+
+    /// 重建 ClipItem，保留当前 tagState，避免 .legacy 短暂状态。
+    ///
+    /// 图片类型返回 nil（不支持编辑）。
+    static func rebuild(clip: ClipItem, with text: String) -> ClipItem?
+    {
+        switch clip.content
+        {
+        case .text:
+            return ClipItem(
+                id: clip.id,
+                content: .text(text),
+                contentType: clip.contentType,
+                sourceApp: clip.sourceApp,
+                sourceAppName: clip.sourceAppName,
+                timestamp: clip.timestamp,
+                summary: clip.summary,
+                translation: clip.translation,
+                rewrite: clip.rewrite,
+                todos: clip.todos,
+                embeddings: clip.embeddings,
+                isSample: clip.isSample,
+                tagState: clip.tagState
+            )
+        case .filePath:
+            let paths = text.components(separatedBy: "\n")
+            return ClipItem(
+                id: clip.id,
+                content: .filePath(paths.map { URL(fileURLWithPath: $0) }),
+                contentType: clip.contentType,
+                sourceApp: clip.sourceApp,
+                sourceAppName: clip.sourceAppName,
+                timestamp: clip.timestamp,
+                summary: clip.summary,
+                translation: clip.translation,
+                rewrite: clip.rewrite,
+                todos: clip.todos,
+                embeddings: clip.embeddings,
+                isSample: clip.isSample,
+                tagState: clip.tagState
+            )
+        case .image:
+            return nil
+        }
     }
 
     // MARK: - Helpers

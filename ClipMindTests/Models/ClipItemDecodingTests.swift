@@ -114,4 +114,32 @@ final class ClipItemDecodingTests: XCTestCase {
 
         XCTAssertEqual(item.isSample, false)
     }
+
+    // MARK: - TC-F1.14 旧 JSON 无 tagState 字段默认 legacy
+
+    private func decodeLegacyFixtureWithoutTagState() throws -> ClipItem
+    {
+        let oldJSON: [String: Any] = [
+            "id": UUID().uuidString,
+            "content": ["type": "text", "value": "legacy"],
+            "contentType": "article",
+            "sourceApp": "com.test",
+            "sourceAppName": "Test",
+            "timestamp": "2026-07-14T10:00:00Z",
+            "summary": NSNull(),
+            "translation": NSNull(),
+            "rewrite": NSNull(),
+            "todos": NSNull(),
+            "embeddings": NSNull()
+        ]
+        let data = try JSONSerialization.data(withJSONObject: oldJSON)
+        return try decoder.decode(ClipItem.self, from: data)
+    }
+
+    func testLegacyPayloadDefaultsToPendingTagMigration() throws
+    {
+        let item = try decodeLegacyFixtureWithoutTagState()
+
+        XCTAssertEqual(item.tagState, .legacy)
+    }
 }
