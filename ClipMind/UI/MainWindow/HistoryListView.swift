@@ -57,10 +57,10 @@ struct HistoryListView: View
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .accessibilityIdentifier("historyFilterEmptyState")
         } else {
-            // F1.14：使用 ScrollView + LazyVStack 替代 List。
-            // List 在 NavigationView 中会拦截子视图的 tap gesture，导致标签 pill
-            // 的 Button/onTapGesture 无法触发。ScrollView + LazyVStack 不存在此限制，
-            // 与 UnifiedPastePanelView 保持一致。
+            // F1.14：使用 ScrollView + LazyVStack。
+            // List 在 NavigationView 中会拦截子视图 Button 的 tap gesture，
+            // 导致标签 pill 不可点击。ScrollView + LazyVStack 不存在此限制。
+            // SampleDataUITests 改用 typeTag_ 前缀计数（非 .cells）适配此结构。
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(filteredClips) { clip in

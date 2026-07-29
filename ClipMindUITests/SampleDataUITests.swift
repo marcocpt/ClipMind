@@ -18,6 +18,19 @@ final class SampleDataUITests: XCTestCase {
         super.tearDown()
     }
 
+    /// 计算历史列表中的条目数。
+    ///
+    /// F1.14：HistoryListView 从 List 改为 ScrollView+LazyVStack 后，
+    /// `.cells.count` 不再可用（List 专属的 accessibility cell 概念）。
+    /// 改用 `typeTag_` 前缀匹配：每个 ClipRowView 恰好有一个 TypeTagView，
+    /// 其 identifier 为 `typeTag_<contentType>`（如 typeTag_code、typeTag_text）。
+    private func clipCount(in app: XCUIApplication) -> Int {
+        let typeTags = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "typeTag_")
+        )
+        return typeTags.count
+    }
+
     /// 清除上一轮测试残留的数据库文件。
     ///
     /// EncryptedStore 默认路径为 ~/Library/Application Support/ClipMind/clipmind.db。
@@ -96,13 +109,13 @@ final class SampleDataUITests: XCTestCase {
         // 等待 cell 数量稳定（轮询直到 >= 10 或超时）
         let deadline = Date().addingTimeInterval(15)
         while Date() < deadline {
-            if historyList.cells.count >= 10 { break }
+            if clipCount(in: app) >= 10 { break }
             Thread.sleep(forTimeInterval: 0.5)
         }
 
         XCTAssertGreaterThanOrEqual(
-            historyList.cells.count, 10,
-            "首启后应显示至少 10 条示例，实际 \(historyList.cells.count)"
+            clipCount(in: app), 10,
+            "首启后应显示至少 10 条示例，实际 \(clipCount(in: app))"
         )
 
         // TC-F18-023: 验证类型标签可见
@@ -139,12 +152,12 @@ final class SampleDataUITests: XCTestCase {
         // 等待预置数据加载（13 示例 + 2 真实 = 15 条）
         let deadline = Date().addingTimeInterval(10)
         while Date() < deadline {
-            if historyList.cells.count >= 15 { break }
+            if clipCount(in: app) >= 15 { break }
             Thread.sleep(forTimeInterval: 0.5)
         }
         XCTAssertEqual(
-            historyList.cells.count, 15,
-            "预置后应有 15 条（13 示例 + 2 真实），实际 \(historyList.cells.count)"
+            clipCount(in: app), 15,
+            "预置后应有 15 条（13 示例 + 2 真实），实际 \(clipCount(in: app))"
         )
 
         // 打开设置面板
@@ -177,12 +190,12 @@ final class SampleDataUITests: XCTestCase {
         // 验证 cell 数量降为 2（仅剩真实数据）
         let deadlineAfter = Date().addingTimeInterval(10)
         while Date() < deadlineAfter {
-            if historyList.cells.count <= 2 { break }
+            if clipCount(in: app) <= 2 { break }
             Thread.sleep(forTimeInterval: 0.5)
         }
         XCTAssertEqual(
-            historyList.cells.count, 2,
-            "清除示例后应剩 2 条真实数据，实际 \(historyList.cells.count)"
+            clipCount(in: app), 2,
+            "清除示例后应剩 2 条真实数据，实际 \(clipCount(in: app))"
         )
     }
 
@@ -209,7 +222,7 @@ final class SampleDataUITests: XCTestCase {
         // 等待预置数据加载
         let deadlineLoad = Date().addingTimeInterval(10)
         while Date() < deadlineLoad {
-            if historyList.cells.count >= 15 { break }
+            if clipCount(in: app) >= 15 { break }
             Thread.sleep(forTimeInterval: 0.5)
         }
 
@@ -232,11 +245,11 @@ final class SampleDataUITests: XCTestCase {
         // 验证真实数据保留（cell 数量 == 2）
         let deadlineAfter = Date().addingTimeInterval(10)
         while Date() < deadlineAfter {
-            if historyList.cells.count <= 2 { break }
+            if clipCount(in: app) <= 2 { break }
             Thread.sleep(forTimeInterval: 0.5)
         }
         XCTAssertEqual(
-            historyList.cells.count, 2,
+            clipCount(in: app), 2,
             "清除后应保留 2 条真实数据"
         )
 
@@ -265,7 +278,7 @@ final class SampleDataUITests: XCTestCase {
         // 等待预置数据
         let deadlineLoad = Date().addingTimeInterval(10)
         while Date() < deadlineLoad {
-            if historyList.cells.count >= 15 { break }
+            if clipCount(in: app) >= 15 { break }
             Thread.sleep(forTimeInterval: 0.5)
         }
 
@@ -287,7 +300,7 @@ final class SampleDataUITests: XCTestCase {
 
         // 数据应不变
         XCTAssertEqual(
-            historyList.cells.count, 15,
+            clipCount(in: app), 15,
             "取消清除后数据应不变"
         )
     }

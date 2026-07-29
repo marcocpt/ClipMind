@@ -41,7 +41,6 @@ struct ClipRowView: View
                 )
             }
             // 内容区域：预览文本 + 来源/时间。
-            // tap gesture 仅覆盖内容区域，不覆盖标签条，避免拦截标签 pill 的 tap。
             VStack(alignment: .leading, spacing: 6)
             {
                 Text(contentPreview)
@@ -60,20 +59,23 @@ struct ClipRowView: View
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .onTapGesture(count: 2)
-            {
-                onDoubleClick?()
-            }
-            .onTapGesture(count: 1)
-            {
-                onSingleClick?()
-            }
         }
         .padding(12)
         .background(backgroundColor)
         .overlay(borderOverlay)
         .cornerRadius(12)
+        // F1.14：tap gesture 在外层 VStack，覆盖整行（含 padding）。
+        // 标签 pill 的 Button 优先级高于 onTapGesture，点击 pill 时只触发
+        // Button action，不会同时触发行级 tap。
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2)
+        {
+            onDoubleClick?()
+        }
+        .onTapGesture(count: 1)
+        {
+            onSingleClick?()
+        }
     }
 
     private var backgroundColor: Color
