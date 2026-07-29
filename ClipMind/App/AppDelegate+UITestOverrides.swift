@@ -38,6 +38,29 @@ extension AppDelegate
         applyOnboardingUITestOverrides()
         applySettingsUITestOverrides()
         applyHotkeyUITestOverrides()
+        // F1.14：标签 UI 测试夹具与 FailOnce 参数由 TagUITestSupport 在
+        // CLIPMIND_DEV 构建中处理，生产构建为空实现。
+        applyTagUITestOverrides()
+    }
+
+    /// F1.14 标签 UI 测试参数覆盖。
+    ///
+    /// `CLIPMIND_DEV` 构建中由 `TagUITestSupport` 解析启动参数并在
+    /// `TagBackendFactory.makeDefault()` 中注入夹具；生产构建为空实现。
+    private func applyTagUITestOverrides()
+    {
+        #if CLIPMIND_DEV
+        // TagUITestSupport 通过 CommandLine.arguments 静态属性解析参数，
+        // 实际夹具注入在 TagBackendFactory.makeDefault() 中执行。
+        // 此方法保留为扩展点，供未来需要在 AppDelegate 生命周期早期
+        // 预处理的标签 UITest 参数使用。
+        if TagUITestSupport.shouldSeedTagFixture
+            || TagUITestSupport.shouldSeedLimitFixture
+            || TagUITestSupport.shouldSeedEmptyClip
+        {
+            LogCategory.app.info("F1.14 tag UITest fixture requested")
+        }
+        #endif
     }
 
     /// 应用 onboarding 相关 UITest 启动参数

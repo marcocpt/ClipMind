@@ -1,0 +1,51 @@
+name: F1.14 Tag UI Smoke
+
+on:
+  push:
+    branches:
+      - "feature/**"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "ClipMind/**"
+      - "ClipMindUITests/**"
+      - "project.yml"
+      - ".github/workflows/tag-ui-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  tag-ui-smoke:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install swiftlint xcodegen xcbeautify
+      - run: xcodegen generate
+      - run: swiftlint lint --strict --reporter github-actions-logging
+      - name: Print exact SHA
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Run F1.14 UI smoke
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project ClipMind.xcodeproj \
+            -scheme ClipMind-Dev \
+            -configuration DebugDev \
+            -destination 'platform=macOS' \
+            -derivedDataPath build/TagUISmoke \
+            -resultBundlePath build/TagUISmoke.xcresult \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            -only-testing:ClipMindUITests/TagEntryUITests \
+            -only-testing:ClipMindUITests/TagPickerUITests \
+            | xcbeautify
+      - name: Upload xcresult
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tag-ui-smoke-${{ github.sha }}
+          path: build/TagUISmoke.xcresult
+          if-no-files-found: error

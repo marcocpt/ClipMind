@@ -16,6 +16,8 @@ enum TagBackendFactory
     /// 创建默认标签后端。
     ///
     /// 初始化失败时返回 `UnavailableTagService`，不创建第二个空数据库。
+    /// `CLIPMIND_DEV` 构建中，当 `--UITEST_TAG_FAIL_ONCE` 存在时包装 repository；
+    /// 当 `--UITEST_TAG_FIXTURE` / `--UITEST_TAG_LIMIT_FIXTURE` 存在时注入夹具数据。
     static func makeDefault() -> TagBackend
     {
         let store: EncryptedStore
@@ -36,8 +38,15 @@ enum TagBackendFactory
             )
         }
 
+        #if CLIPMIND_DEV
+        let repository: TagRepository = TagUITestSupport.wrapRepositoryIfNeeded(store)
+        TagUITestSupport.seedFixturesIfNeeded(store: store, repository: repository)
+        #else
+        let repository: TagRepository = store
+        #endif
+
         let logger = DefaultTagOperationLogger()
-        let service = TagService(repository: store, logger: logger)
+        let service = TagService(repository: repository, logger: logger)
         let coordinator = TagMigrationCoordinator(service: service)
         return TagBackend(
             service: service,
