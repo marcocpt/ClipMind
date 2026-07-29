@@ -1,9 +1,14 @@
+import Combine
 import SwiftUI
 
 /// 标签选择菜单的 ViewModel。
 ///
 /// 投影 `TagStore` 快照到当前条目的标签候选、勾选与创建状态。所有规则结果由
 /// `TagService` 最终裁决；ViewModel 的禁用态只作及时表达，不复制重名/来源权限。
+///
+/// 通过订阅 `store.objectWillChange` 并转发，确保 `store.snapshot` 变化时
+/// `TagPickerView` 的 body 重新评估（`accessibilityValue` 等派生属性随之刷新）。
+/// 否则 `@StateObject` 的 ViewModel 不会因 `store` 变化而通知 SwiftUI。
 @MainActor
 final class TagPickerViewModel: ObservableObject
 {
@@ -29,12 +34,22 @@ final class TagPickerViewModel: ObservableObject
     let contentType: ContentType
 
     private let store: TagStore
+    private var cancellables = Set<AnyCancellable>()
 
     init(clipID: UUID, contentType: ContentType, store: TagStore)
     {
         self.clipID = clipID
         self.contentType = contentType
         self.store = store
+
+        // 转发 store 的 objectWillChange：mutation 排空后 snapshot 更新，
+        // 需要触发 viewModel → view 刷新，否则 candidateRow 的 accessibilityValue
+        // 不会更新，XCUITest waitForValue 会超时。
+        store.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
 
     /// 候选标签 = 当前条目自身系统标签 + 全部用户标签。

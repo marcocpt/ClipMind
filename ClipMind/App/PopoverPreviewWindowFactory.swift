@@ -62,6 +62,9 @@ enum PopoverPreviewWindowFactory
         //
         // F1.11 Phase 3 任务 8 修复：保存监听器 token，在 popover 窗口关闭时移除监听器，
         // 避免 close 后延迟触发的 didBecomeKey 事件导致时序竞争（test02/test04 flaky 根因）。
+        //
+        // F1.14 修复：跳过 NSPanel 类型的窗口。SwiftUI `.popover()` 弹出的系统 popover
+        // 本身是 NSPanel，成为 key 时不应被 orderOut，否则标签选择菜单会被立即关闭。
         var keyWindowObserver: NSObjectProtocol?
         keyWindowObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.didBecomeKeyNotification,
@@ -71,6 +74,9 @@ enum PopoverPreviewWindowFactory
             guard let becameKey = note.object as? NSWindow, becameKey !== window else { return }
             // 仅当 popover 窗口仍然可见时才关闭其他窗口，避免 popover 关闭后触发循环
             guard window?.isVisible == true else { return }
+            // 跳过 NSPanel：系统 popover（F1.14 标签选择菜单）是 NSPanel，
+            // 不应被关闭。只关闭 SwiftUI WindowGroup 创建的主 NSWindow。
+            if becameKey is NSPanel { return }
             becameKey.orderOut(nil)
             window?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
