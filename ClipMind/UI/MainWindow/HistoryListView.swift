@@ -57,21 +57,12 @@ struct HistoryListView: View
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .accessibilityIdentifier("historyFilterEmptyState")
         } else {
-            // F1.14：使用 ScrollView + LazyVStack。
-            // List 在 NavigationView 中会拦截子视图 Button 的 tap gesture，
-            // 导致标签 pill 不可点击。ScrollView + LazyVStack 不存在此限制。
-            // SampleDataUITests 改用 typeTag_ 前缀计数（非 .cells）适配此结构。
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(filteredClips) { clip in
-                        ClipRowView(
-                            clip: clip,
-                            onSingleClick: { selectedClip = clip },
-                            tagStore: tagStore
-                        )
-                        .accessibilityElement(children: .contain)
-                    }
-                }
+            List(filteredClips) { clip in
+                ClipRowView(
+                    clip: clip,
+                    onSingleClick: { selectedClip = clip },
+                    tagStore: tagStore
+                )
             }
             .accessibilityIdentifier("historyList")
         }
