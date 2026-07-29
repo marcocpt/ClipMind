@@ -280,7 +280,11 @@ struct TagPickerView: View
                 }
             }
         }
-        .frame(maxHeight: 240)
+        // 固定高度（非 maxHeight）：NSPanel + NSHostingController 上下文中，
+        // 外层 VStack 只有 width 约束无 height 约束，maxHeight 会让 ScrollView
+        // 坍缩到 0，导致内部 Button 存在于 accessibility 树但无 hit point 不可点击。
+        // 固定 240pt 确保候选行可点击，与 title+search+padding 总高适配 360pt 面板。
+        .frame(height: 240)
     }
 
     private func candidateRow(_ tag: ClipTag) -> some View
