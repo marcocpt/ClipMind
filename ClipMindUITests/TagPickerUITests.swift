@@ -56,7 +56,11 @@ final class TagPickerUITests: XCTestCase
     private func launchAndOpenPicker(extraArgs: [String] = []) -> XCUIApplication
     {
         let app = XCUIApplication()
-        app.launchArguments = ["--UITEST_SHOW_MAIN_WINDOW", "--UITEST_TAG_FIXTURE"] + extraArgs
+        app.launchArguments = [
+            "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREVIEW_DATA",
+            "--UITEST_TAG_FIXTURE"
+        ] + extraArgs
         app.launch()
         app.activate()
 
@@ -187,6 +191,7 @@ final class TagPickerUITests: XCTestCase
         let app = XCUIApplication()
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREVIEW_DATA",
             "--UITEST_TAG_LIMIT_FIXTURE"
         ]
         app.launch()
@@ -255,6 +260,7 @@ final class TagPickerUITests: XCTestCase
         let app = XCUIApplication()
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
+            "--UITEST_PREVIEW_DATA",
             "--UITEST_TAG_FIXTURE"
         ]
         app.launch()
@@ -276,7 +282,7 @@ final class TagPickerUITests: XCTestCase
 
         // 第二次启动：不注入夹具，验证标签持久化
         // previewClips 已在第一次启动时写入 DB，不传 --UITEST_TAG_FIXTURE 避免重复注入
-        app.launchArguments = ["--UITEST_SHOW_MAIN_WINDOW"]
+        app.launchArguments = ["--UITEST_SHOW_MAIN_WINDOW", "--UITEST_PREVIEW_DATA"]
         app.launch()
         app.activate()
 

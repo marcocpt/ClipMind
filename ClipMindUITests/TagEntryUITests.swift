@@ -54,16 +54,13 @@ final class TagEntryUITests: XCTestCase
     ///
     /// 必须包含 `--UITEST_PREVIEW_DATA`：`ClipTestData.isUITesting` 仅识别该参数，
     /// 缺失时 `HistoryListView` 走数据库异步加载路径，clip 行定位异常导致 pill 不可点击。
-    /// `-ApplePersistenceIgnoreState YES` 禁用窗口状态恢复，避免窗口离屏导致 pill 不可点击。
     func testMainWindow_TagPill_ClickOpensPicker()
     {
         let app = XCUIApplication()
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
             "--UITEST_PREVIEW_DATA",
-            "--UITEST_TAG_FIXTURE",
-            "-ApplePersistenceIgnoreState",
-            "YES"
+            "--UITEST_TAG_FIXTURE"
         ]
         app.launch()
         app.activate()
