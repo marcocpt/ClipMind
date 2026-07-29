@@ -60,31 +60,27 @@ struct HistoryListView: View
             // F1.14：使用 ScrollView + LazyVStack。
             // List 在 NavigationView 中会拦截子视图 Button 的 tap gesture，
             // 导致标签 pill 不可点击。ScrollView + LazyVStack 不存在此限制。
-            // LazyVStack 懒加载导致 typeTag_ 计数只返回可见行，因此在
-            // ScrollView 同级暴露 historyListCount（准确数量）供 UI 测试读取。
-            // 注意：不能用 .background，SwiftUI 把 .background 视为装饰性内容，
-            // accessibility 树中不可见。必须用 ZStack 同级放置。
-            ZStack {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(filteredClips) { clip in
-                            ClipRowView(
-                                clip: clip,
-                                onSingleClick: { selectedClip = clip },
-                                tagStore: tagStore
-                            )
-                            .accessibilityElement(children: .contain)
-                        }
+            //
+            // LazyVStack 懒加载导致 typeTag_ 计数只返回可见行，因此把
+            // filteredClips.count 作为 ScrollView 自身的 accessibilityValue 暴露给 UI 测试。
+            // 之前用隐藏 Text（frame(0,0)+opacity(0)）承载 count，在 CI runner 上被
+            // accessibility tree 排除（本地能读到、CI 读到 0，环境差异不可靠）。
+            // 改为挂在 ScrollView 上避免依赖隐藏元素。
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(filteredClips) { clip in
+                        ClipRowView(
+                            clip: clip,
+                            onSingleClick: { selectedClip = clip },
+                            tagStore: tagStore
+                        )
+                        .accessibilityElement(children: .contain)
                     }
                 }
-                .accessibilityIdentifier("historyList")
-
-                Text("\(filteredClips.count)")
-                    .accessibilityIdentifier("historyListCount")
-                    .accessibilityValue("\(filteredClips.count)")
-                    .frame(width: 0, height: 0)
-                    .opacity(0)
             }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("historyList")
+            .accessibilityValue("\(filteredClips.count)")
         }
     }
 }

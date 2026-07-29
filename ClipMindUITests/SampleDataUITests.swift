@@ -21,12 +21,16 @@ final class SampleDataUITests: XCTestCase {
     /// 计算历史列表中的条目数。
     ///
     /// F1.14：HistoryListView 用 ScrollView+LazyVStack，LazyVStack 懒加载导致
-    /// typeTag_ 前缀计数只返回可见行。HistoryListView 暴露 historyListCount
-    /// 隐藏元素（filteredClips.count），通过 accessibilityValue 读取准确数量。
+    /// typeTag_ 前缀计数只返回可见行。HistoryListView 把 filteredClips.count 作为
+    /// ScrollView 自身的 accessibilityValue 暴露（identifier "historyList"），
+    /// 通过读取 historyList.value 获取准确数量。
+    ///
+    /// 之前用隐藏 Text 元素（frame(0,0)+opacity(0)）承载 count，在 CI runner 上被
+    /// accessibility tree 排除（本地能读到、CI 读到 0），改为挂 ScrollView 自身。
     private func clipCount(in app: XCUIApplication) -> Int {
-        let countElement = app.descendants(matching: .any)["historyListCount"].firstMatch
-        guard countElement.exists else { return 0 }
-        return Int(countElement.value as? String ?? "0") ?? 0
+        let historyList = app.descendants(matching: .any)["historyList"].firstMatch
+        guard historyList.exists else { return 0 }
+        return Int(historyList.value as? String ?? "0") ?? 0
     }
 
     /// 清除上一轮测试残留的数据库文件。
