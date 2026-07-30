@@ -237,10 +237,12 @@ final class TagFilterUITests: XCTestCase
     /// 在来源筛选菜单中取消选择指定来源。
     private func deselectSource(_ app: XCUIApplication, _ source: String)
     {
-        let picker = app.buttons["sourceFilterPicker"]
+        // SwiftUI Menu 在 XCUITest 中不一定是 Button，用 descendants 兜底查询
+        let picker = app.descendants(matching: .any)["sourceFilterPicker"].firstMatch
         XCTAssertTrue(picker.waitForExistence(timeout: 5), "来源筛选按钮应存在")
         picker.click()
 
+        // Menu 展开后菜单项按文本查找
         let menuItem = app.menuItems[source]
         XCTAssertTrue(
             menuItem.waitForExistence(timeout: 3),
