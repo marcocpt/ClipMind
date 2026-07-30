@@ -107,6 +107,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         {
             centerMainWindowForUITest()
         }
+        // F1.14：UITEST 触发面板失焦关闭。
+        // testPanelCloses_OnResignFocus 需要验证面板失焦后自动关闭，
+        // 但 SwiftUI WindowGroup 创建的主窗口在 CI 中不可靠可见。
+        // 通过创建临时窗口并抢夺 key 状态，触发面板 didResignKey → closePanel。
+        if CommandLine.arguments.contains("--UITEST_TRIGGER_PANEL_RESIGN")
+        {
+            triggerPanelResignKey()
+        }
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleOpenMainWindow),

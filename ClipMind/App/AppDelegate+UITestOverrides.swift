@@ -211,4 +211,32 @@ extension AppDelegate
             }
         }
     }
+
+    /// F1.14：UITEST 触发快速粘贴面板失焦关闭。
+    ///
+    /// `testPanelCloses_OnResignFocus` 需要验证面板失焦后自动关闭。
+    /// SwiftUI WindowGroup 创建的主窗口在 CI 中不可靠可见（异步创建时机不确定，
+    /// `orderFrontRegardless` 不保证 XCUITest 可检测）。
+    /// 通过在 3 秒延迟后创建临时窗口并 `makeKeyAndOrderFront`，可靠地抢夺面板
+    /// key 状态，触发 `didResignKey` → `closePanelInternal`。
+    ///
+    /// 3 秒延迟确保面板已完全显示（`searchField.waitForExistence` 通过后仍有余量）。
+    /// 临时窗口在 `closePanelInternal` 后自动关闭（通过 `applicationWillTerminate`
+    /// 或测试 `tearDown` 中的 `app.terminate`）。
+    @MainActor
+    func triggerPanelResignKey()
+    {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0)
+        {
+            let dummyWindow = NSWindow(
+                contentRect: NSRect(x: 50, y: 50, width: 100, height: 100),
+                styleMask: [.titled],
+                backing: .buffered,
+                defer: false
+            )
+            dummyWindow.title = "FocusTrigger"
+            dummyWindow.makeKeyAndOrderFront(nil)
+            LogCategory.app.info("UITEST trigger panel resign key: dummy window shown")
+        }
+    }
 }

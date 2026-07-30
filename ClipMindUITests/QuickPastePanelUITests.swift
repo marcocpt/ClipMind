@@ -103,44 +103,33 @@ final class QuickPastePanelUITests: XCTestCase
 
     /// F1.14 修复：原测试（133cdae）在 `wait(for:timeout:)` 后无断言，
     /// 即使面板未关闭也会通过（false positive）。本版本：
-    /// 1. 使用 `--UITEST_KEEP_MAIN_WINDOW_VISIBLE` 保留主窗口可见；
-    /// 2. 等待主窗口出现后点击触发面板 `didResignKey`；
-    /// 3. 在 `wait` 后增加 `XCTAssertFalse` 断言验证面板确实关闭。
+    /// 1. 使用 `--UITEST_TRIGGER_PANEL_RESIGN` 让 app 在 3s 后创建临时窗口
+    ///    抢夺 key 状态，触发面板 `didResignKey` → `closePanelInternal`；
+    /// 2. 在 `wait` 后增加 `XCTAssertFalse` 断言验证面板确实关闭。
     ///
-    /// 主窗口由 SwiftUI WindowGroup 异步创建，`centerMainWindowForUITest`
-    /// 在 0.5s 后将其定位到 (100, 100)。测试等待主窗口可见后再点击。
+    /// 不依赖主窗口点击：SwiftUI WindowGroup 创建的主窗口在 CI 中异步创建时机
+    /// 不确定，`orderFrontRegardless` 不保证 XCUITest 可检测。临时窗口
+    /// `makeKeyAndOrderFront` 可靠触发 `didResignKey`，测试行为等价。
     func testPanelCloses_OnResignFocus()
     {
         let app = XCUIApplication()
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
             "--UITEST_QUICK_PASTE_PANEL",
-            // F1.14：保留主窗口可见，本测试需要点击主窗口触发面板失焦。
-            // 其他 quick paste panel 测试不加此参数，主窗口被隐藏避免 pill ID 冲突。
-            "--UITEST_KEEP_MAIN_WINDOW_VISIBLE"
+            // F1.14：3s 后创建临时窗口抢夺 key，触发面板 didResignKey
+            "--UITEST_TRIGGER_PANEL_RESIGN"
         ]
         app.launch()
 
         let searchField = app.textFields["quickPasteSearchField"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 5), "面板应出现")
 
-        // 等待主窗口出现。主窗口由 SwiftUI WindowGroup 异步创建，
-        // centerMainWindowForUITest 在 0.5s 后将其定位到 (100, 100)。
-        // app.windows[0] 是面板（key window，floating level），
-        // app.windows[1] 是主窗口（普通 level）。
-        let mainWindow = app.windows.element(boundBy: 1)
-        XCTAssertTrue(
-            mainWindow.waitForExistence(timeout: 5),
-            "主窗口应在 5 秒内出现（--UITEST_KEEP_MAIN_WINDOW_VISIBLE）"
-        )
-        mainWindow.click()
-
-        // 等待面板关闭（失焦通知异步触发）
+        // 等待面板关闭（临时窗口在 3s 后创建并抢夺 key，didResignKey 异步触发）
         let panelClosedExpectation = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == NO"),
             object: searchField
         )
-        wait(for: [panelClosedExpectation], timeout: 3.0)
+        wait(for: [panelClosedExpectation], timeout: 6.0)
         // F1.14 修复：增加显式断言，避免 wait 超时后仍通过（false positive）
         XCTAssertFalse(searchField.exists, "面板失焦后应自动关闭")
     }
