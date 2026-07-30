@@ -308,17 +308,15 @@ final class TagFilterUITests: XCTestCase
 
     /// 验证指定 clip 是否在当前结果列表中显示。
     ///
-    /// 通过 `clipRow` 的 accessibilityValue（clip ID）判断，不依赖标签 pill 的存在。
-    /// 标签 pill 的显示受 TagStore snapshot 加载时序影响，不能作为筛选结果的可靠指标。
+    /// 通过唯一的 `clipRow_<clipID>` accessibilityIdentifier 判断，不依赖标签 pill 或
+    /// accessibilityValue（后者在 `.contain` 容器模式下不被 XCUITest 读取）。
     private func verifyClipDisplayed(
         _ app: XCUIApplication,
         clipID: String,
         displayed: Bool
     )
     {
-        let clipRow = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == %@ AND value == %@", "clipRow", clipID))
-            .firstMatch
+        let clipRow = app.descendants(matching: .any)["clipRow_\(clipID)"].firstMatch
         if displayed
         {
             XCTAssertTrue(
@@ -337,9 +335,7 @@ final class TagFilterUITests: XCTestCase
     /// 验证指定 clip 不在当前结果列表中（带超时等待 UI 更新）。
     private func verifyClipNotDisplayed(_ app: XCUIApplication, clipID: String)
     {
-        let clipRow = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == %@ AND value == %@", "clipRow", clipID))
-            .firstMatch
+        let clipRow = app.descendants(matching: .any)["clipRow_\(clipID)"].firstMatch
         // 等待 UI 更新后 clip 行消失
         let predicate = NSPredicate { _, _ in !clipRow.exists }
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: clipRow)

@@ -91,8 +91,7 @@ struct HistoryListView: View
                         tagStore: tagStore
                     )
                     .accessibilityElement(children: .contain)
-                    .accessibilityIdentifier("clipRow")
-                    .accessibilityValue(clip.id.uuidString)
+                    .accessibilityIdentifier("clipRow_\(clip.id.uuidString)")
                 }
             }
         }

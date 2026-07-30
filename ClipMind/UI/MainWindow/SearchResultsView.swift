@@ -84,8 +84,7 @@ struct SearchResultsView: View
                         .contentShape(Rectangle())
                         .onTapGesture { onSelect(clip) }
                         .accessibilityElement(children: .contain)
-                        .accessibilityIdentifier("clipRow")
-                        .accessibilityValue(clip.id.uuidString)
+                        .accessibilityIdentifier("clipRow_\(clip.id.uuidString)")
                 }
             }
         }
