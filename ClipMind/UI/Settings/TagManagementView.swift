@@ -183,6 +183,7 @@ struct TagManagementView: View
                 ForEach(SystemTagCatalog.all)
                 { tag in
                     systemTagRow(tag)
+                        .accessibilityElement(children: .contain)
                         .accessibilityIdentifier("systemTagRow_\(tag.id.rawValue)")
                 }
             }
@@ -199,6 +200,7 @@ struct TagManagementView: View
                 ForEach(store.snapshot.userTags)
                 { tag in
                     userTagRow(tag)
+                        .accessibilityElement(children: .contain)
                         .accessibilityIdentifier("userTagRow_\(tag.id.rawValue)")
                 }
             }
