@@ -214,6 +214,24 @@ final class TagFilterUITests: XCTestCase
             historyList.waitForExistence(timeout: 10),
             "主窗口应显示历史列表"
         )
+
+        // 等待 TagStore snapshot 加载完成：打开标签筛选 popover，
+        // 确认用户标签「重要」出现在候选列表中。
+        // snapshot 加载是异步的，historyList 出现不代表 snapshot 已就绪。
+        let tagFilterPicker = app.buttons["tagFilterPicker"]
+        XCTAssertTrue(
+            tagFilterPicker.waitForExistence(timeout: 5),
+            "标签筛选按钮应存在"
+        )
+        tagFilterPicker.click()
+        let importantOption = app.buttons["tagFilterOption_\(importantTagID)"]
+        XCTAssertTrue(
+            importantOption.waitForExistence(timeout: 10),
+            "TagStore snapshot 应加载完成，用户标签「重要」应出现在筛选候选中"
+        )
+        // 关闭 popover（再次点击 picker 或点击空白区域）
+        tagFilterPicker.click()
+
         return app
     }
 
@@ -288,40 +306,47 @@ final class TagFilterUITests: XCTestCase
         clearButton.click()
     }
 
-    /// 验证指定 clip 的"重要"标签 pill 是否显示。
+    /// 验证指定 clip 是否在当前结果列表中显示。
+    ///
+    /// 通过 `clipRow` 的 accessibilityValue（clip ID）判断，不依赖标签 pill 的存在。
+    /// 标签 pill 的显示受 TagStore snapshot 加载时序影响，不能作为筛选结果的可靠指标。
     private func verifyClipDisplayed(
         _ app: XCUIApplication,
         clipID: String,
         displayed: Bool
     )
     {
-        let importantPill = app.buttons["clipTag_\(clipID)_\(importantTagID)"]
+        let clipRow = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == %@ AND value == %@", "clipRow", clipID))
+            .firstMatch
         if displayed
         {
             XCTAssertTrue(
-                importantPill.waitForExistence(timeout: 10),
-                "clip \(clipID) 的「重要」标签 pill 应显示"
+                clipRow.waitForExistence(timeout: 10),
+                "clip \(clipID) 应在结果列表中显示"
             )
         } else
         {
             XCTAssertFalse(
-                importantPill.exists,
-                "clip \(clipID) 的「重要」标签 pill 不应显示"
+                clipRow.exists,
+                "clip \(clipID) 不应在结果列表中显示"
             )
         }
     }
 
-    /// 验证指定 clip 的"重要"标签 pill 不显示（带超时等待 UI 更新）。
+    /// 验证指定 clip 不在当前结果列表中（带超时等待 UI 更新）。
     private func verifyClipNotDisplayed(_ app: XCUIApplication, clipID: String)
     {
-        let importantPill = app.buttons["clipTag_\(clipID)_\(importantTagID)"]
-        // 等待 UI 更新后 pill 消失
-        let predicate = NSPredicate { _, _ in !importantPill.exists }
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: importantPill)
+        let clipRow = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == %@ AND value == %@", "clipRow", clipID))
+            .firstMatch
+        // 等待 UI 更新后 clip 行消失
+        let predicate = NSPredicate { _, _ in !clipRow.exists }
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: clipRow)
         let result = XCTWaiter().wait(for: [expectation], timeout: 10)
         XCTAssertTrue(
             result == .completed,
-            "clip \(clipID) 的「重要」标签 pill 应在筛选后消失"
+            "clip \(clipID) 应在筛选后从结果列表中消失"
         )
     }
 }
