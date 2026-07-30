@@ -152,7 +152,8 @@ struct MainWindow: View {
                 onSelect: { clip in
                     selectedClip = clip
                 },
-                tagStore: tagStore
+                tagStore: tagStore,
+                filterIntent: filterIntent
             )
         } else {
             HistoryListView(
