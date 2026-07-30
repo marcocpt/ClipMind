@@ -42,6 +42,7 @@ jobs:
             -only-testing:ClipMindUITests/TagEntryUITests \
             -only-testing:ClipMindUITests/TagPickerUITests \
             -only-testing:ClipMindUITests/TagFilterUITests \
+            -only-testing:ClipMindUITests/TagSettingsUITests \
             | xcbeautify
       - name: Upload xcresult
         if: always()
