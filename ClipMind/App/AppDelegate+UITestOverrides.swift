@@ -159,25 +159,49 @@ extension AppDelegate
     {
         let hasQuickPastePanel = CommandLine.arguments.contains("--UITEST_QUICK_PASTE_PANEL")
         let keepMainWindowVisible = CommandLine.arguments.contains("--UITEST_KEEP_MAIN_WINDOW_VISIBLE")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5)
+        // 使用重试循环查找主窗口：SwiftUI WindowGroup 异步创建主窗口，
+        // 创建时机不确定（可能在 0.5s 后才完成），固定延迟可能导致漏找。
+        // 每 0.2s 重试一次，最多 5s（25 次）。
+        centerMainWindowRetry(
+            hasQuickPastePanel: hasQuickPastePanel,
+            keepMainWindowVisible: keepMainWindowVisible,
+            remainingAttempts: 25
+        )
+    }
+
+    /// 重试查找并定位 SwiftUI 主窗口。
+    private func centerMainWindowRetry(
+        hasQuickPastePanel: Bool,
+        keepMainWindowVisible: Bool,
+        remainingAttempts: Int
+    )
+    {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2)
         {
-            // 通过类名识别 SwiftUI WindowGroup 创建的主窗口（AppKitWindow），
-            // 排除 NSPanel（快速粘贴面板、标签 picker）和 NSStatusBarWindow。
-            // 与 PopoverPreviewWindowFactory.closeSwiftUIMainWindow 使用相同的识别方式。
-            let mainWindows = NSApp.windows.filter { $0.className.contains("AppKitWindow") }
+            let mainWindows = NSApp.windows.filter
+            { $0.className.contains("AppKitWindow") }
+            if mainWindows.isEmpty && remainingAttempts > 1
+            {
+                self.centerMainWindowRetry(
+                    hasQuickPastePanel: hasQuickPastePanel,
+                    keepMainWindowVisible: keepMainWindowVisible,
+                    remainingAttempts: remainingAttempts - 1
+                )
+                return
+            }
             for window in mainWindows
             {
                 if hasQuickPastePanel && !keepMainWindowVisible
                 {
                     // 隐藏主窗口：避免同 ID pill 干扰面板测试。
-                    // 不调用 makeKeyAndOrderFront，避免面板 didResignKey 关闭。
                     window.setIsVisible(false)
                 } else if hasQuickPastePanel && keepMainWindowVisible
                 {
-                    // --UITEST_KEEP_MAIN_WINDOW_VISIBLE 时不隐藏主窗口，
-                    // 供 testPanelCloses_OnResignFocus 等需要点击主窗口触发失焦的测试使用。
-                    // 只移动位置到屏幕角落，不调用 makeKeyAndOrderFront 避免抢焦点。
+                    // --UITEST_KEEP_MAIN_WINDOW_VISIBLE 时保留主窗口可见。
+                    // 用 orderFrontRegardless 而非 makeKeyAndOrderFront：
+                    // 前者不会抢夺面板 key 状态，避免触发 didResignKey 关闭面板。
                     window.setFrameOrigin(NSPoint(x: 100, y: 100))
+                    window.orderFrontRegardless()
                 } else
                 {
                     window.setFrameOrigin(NSPoint(x: 100, y: 100))
