@@ -168,7 +168,7 @@ final class TagFilterUITests: XCTestCase
 
         // 验证活动 chip 已移除
         let importantChip = app.otherElements["activeTagFilter_\(importantTagID)"]
-        XCTAssertFalse(importantChip.exists, "清除后"重要"活动 chip 应移除")
+        XCTAssertFalse(importantChip.exists, "清除后「重要」活动 chip 应移除")
     }
 
     // MARK: - FLT-006b：空数据库显示历史空态
@@ -203,7 +203,7 @@ final class TagFilterUITests: XCTestCase
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
             "--UITEST_PREVIEW_DATA",
-            ClipTestData.tagFilterFixtureArg
+            "--UITEST_TAG_FILTER_FIXTURE"
         ]
         app.launch()
         app.activate()
@@ -298,13 +298,13 @@ final class TagFilterUITests: XCTestCase
         {
             XCTAssertTrue(
                 importantPill.waitForExistence(timeout: 10),
-                "clip \(clipID) 的"重要"标签 pill 应显示"
+                "clip \(clipID) 的「重要」标签 pill 应显示"
             )
         } else
         {
             XCTAssertFalse(
                 importantPill.exists,
-                "clip \(clipID) 的"重要"标签 pill 不应显示"
+                "clip \(clipID) 的「重要」标签 pill 不应显示"
             )
         }
     }
@@ -319,7 +319,7 @@ final class TagFilterUITests: XCTestCase
         let result = XCTWaiter().wait(for: [expectation], timeout: 10)
         XCTAssertTrue(
             result == .completed,
-            "clip \(clipID) 的"重要"标签 pill 应在筛选后消失"
+            "clip \(clipID) 的「重要」标签 pill 应在筛选后消失"
         )
     }
 }
