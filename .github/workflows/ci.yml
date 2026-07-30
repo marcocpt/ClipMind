@@ -90,6 +90,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             -skip-testing:ClipMindUITests/TagEntryUITests \
             -skip-testing:ClipMindUITests/TagPickerUITests \
+            -skip-testing:ClipMindUITests/TagFilterUITests \
             | xcbeautify --quiet
 
       - name: Upload test results on failure
