@@ -170,13 +170,20 @@ final class TagFilterUITests: XCTestCase
         searchQuery(app, "需求")
         selectOnlySource(app, "Pages")
 
+        // 打开 popover 选标签，然后直接在 popover 内点清除按钮
+        // （不关闭再重开，避免 isPopoverPresented 状态反同步）
         openTagFilterPopover(app)
         selectTagInFilter(app, importantTagID)
         selectTagInFilter(app, pendingTagID)
-        closeTagFilterPopover(app)
 
-        // 清除全部标签筛选
-        clearTagFilter(app)
+        // 清除全部标签筛选（popover 仍打开）
+        let clearButton = app.buttons["tagFilterClearButton"]
+        XCTAssertTrue(
+            clearButton.waitForExistence(timeout: 5),
+            "清除按钮应存在（需要先选中至少一个标签）"
+        )
+        clearButton.click()
+        closeTagFilterPopover(app)
 
         // 验证搜索和来源不变：tag-result-1、tag-result-2 显示
         verifyClipDisplayed(app, clipID: tagResult1ID, displayed: true)
@@ -325,15 +332,12 @@ final class TagFilterUITests: XCTestCase
         // 等待 popover 关闭动画完成
         Thread.sleep(forTimeInterval: 0.5)
 
-        // 如果 picker 点击未关闭 popover，尝试点击搜索框区域关闭
-        if hasTagFilterOption(app)
+        // 如果 picker 点击未关闭 popover，再次点击 picker
+        // （不使用 search field 点击，因为会反同步 isPopoverPresented 状态）
+        if hasTagFilterOption(app), picker.exists
         {
-            let searchField = app.textFields["mainSearchField"]
-            if searchField.exists
-            {
-                searchField.click()
-                Thread.sleep(forTimeInterval: 0.5)
-            }
+            picker.click()
+            Thread.sleep(forTimeInterval: 0.5)
         }
     }
 
