@@ -270,6 +270,9 @@ final class TagFilterUITests: XCTestCase
     }
 
     /// 在标签筛选 popover 中切换指定标签的选择状态。
+    ///
+    /// 操作完成后关闭 popover，避免 popover 覆盖 clipRow 导致后续
+    /// `verifyClipDisplayed` 无法定位元素。
     private func selectTagInFilter(_ app: XCUIApplication, _ tagID: String)
     {
         let picker = app.buttons["tagFilterPicker"]
@@ -286,6 +289,14 @@ final class TagFilterUITests: XCTestCase
             )
         }
         option.click()
+
+        // 关闭 popover，确保后续 clipRow 查找不被遮挡。
+        // 通过 popover 内的清除按钮是否存在判断 popover 是否仍打开。
+        let clearButton = app.buttons["tagFilterClearButton"]
+        if clearButton.exists
+        {
+            picker.click()
+        }
     }
 
     /// 清除全部标签筛选。
@@ -304,6 +315,12 @@ final class TagFilterUITests: XCTestCase
             )
         }
         clearButton.click()
+
+        // 关闭 popover（如果仍打开）
+        if app.buttons["tagFilterClearButton"].exists
+        {
+            picker.click()
+        }
     }
 
     /// 验证指定 clip 是否在当前结果列表中显示。
