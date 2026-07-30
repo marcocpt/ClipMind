@@ -322,21 +322,17 @@ final class TagFilterUITests: XCTestCase
             picker.click()
         }
 
-        // 等待 popover 关闭（选项消失）
-        let closePredicate = NSPredicate
-        { _, _ in
-            !self.hasTagFilterOption(app)
-        }
-        let expectation = XCTNSPredicateExpectation(predicate: closePredicate, object: nil)
-        let result = XCTWaiter().wait(for: [expectation], timeout: 5)
-        if result != .completed
+        // 等待 popover 关闭动画完成
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // 如果 picker 点击未关闭 popover，尝试点击搜索框区域关闭
+        if hasTagFilterOption(app)
         {
-            // picker 点击未关闭 popover，尝试点击搜索框区域关闭
             let searchField = app.textFields["mainSearchField"]
             if searchField.exists
             {
                 searchField.click()
-                Thread.sleep(forTimeInterval: 0.3)
+                Thread.sleep(forTimeInterval: 0.5)
             }
         }
     }
@@ -366,6 +362,9 @@ final class TagFilterUITests: XCTestCase
     /// 清除全部标签筛选。
     private func clearTagFilter(_ app: XCUIApplication)
     {
+        // 等待前一个 closeTagFilterPopover 动画完全结束
+        Thread.sleep(forTimeInterval: 0.3)
+
         openTagFilterPopover(app)
 
         let clearButton = app.buttons["tagFilterClearButton"]
