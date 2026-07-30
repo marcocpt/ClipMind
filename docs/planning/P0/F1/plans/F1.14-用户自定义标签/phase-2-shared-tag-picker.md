@@ -1,6 +1,6 @@
 # Phase 2：共享标签条与标签选择菜单
 
-> 最后更新：2026-07-29 | 版本：v1.0
+> 最后更新：2026-07-30 | 版本：v1.1
 
 **目标：** 在主窗口、菜单栏弹窗和快捷粘贴面板复用同一标签条与标签选择菜单，
 完成搜索、多选、创建、系统标签移除/恢复、上限和持久化失败回滚。
@@ -137,7 +137,7 @@ final class TagStore: ObservableObject
 
 不得把 `Task`、标签名或底层 `localizedDescription` 写日志。
 
-- [ ] **步骤 3：运行 GREEN**
+- [x] **步骤 3：运行 GREEN**
 
 运行 `ClipMindTests/TagPickerViewModelTests` 中 `TagStore` 测试组。预期：全部 PASS。
 
@@ -150,7 +150,7 @@ final class TagStore: ObservableObject
 - 修改：`ClipMind/UI/MenuBar/TypeTagView.swift`
 - 修改：`ClipMindTests/UI/ClipRowViewInteractionTests.swift`
 
-- [ ] **步骤 1：编写 RED 视觉契约测试**
+- [x] **步骤 1：编写 RED 视觉契约测试**
 
 纯值断言覆盖：
 
@@ -160,7 +160,7 @@ final class TagStore: ObservableObject
 - 空标签条暴露 `tagAdd_<clipID>`；
 - 标签触发 identifier 为 `clipTag_<clipID>_<tagID>`。
 
-- [ ] **步骤 2：实现 `TagPillView`**
+- [x] **步骤 2：实现 `TagPillView`**
 
 `ClipTagColor` 的 SwiftUI 映射只在此文件定义：
 
@@ -208,7 +208,7 @@ extension ClipTagColor
 `TagPillView` 接收 `ClipTag` 和 `isInteractive`，文本、圆角和字体保持原 `TypeTagView` 视觉；
 辅助功能名称为“名称，自动分类标签/用户标签，颜色名”。
 
-- [ ] **步骤 3：实现标签条**
+- [x] **步骤 3：实现标签条**
 
 ```swift
 struct ClipTagStripView: View
@@ -264,7 +264,7 @@ TagPillView(tag: SystemTagCatalog.tag(for: contentType), isInteractive: false)
 单行可横向访问；单个 pill 文字 `lineLimit(1)`、最大视觉宽度 96pt、尾部截断，但完整名称、
 来源和颜色仍保留在 accessibility label/value。不得让长名称扩大 row 命中区或挤掉主内容。
 
-- [ ] **步骤 4：运行 GREEN**
+- [x] **步骤 4：运行 GREEN**
 
 运行 `SystemTagCatalogTests` 与 `ClipRowViewInteractionTests`。预期：全部 PASS。
 
@@ -275,7 +275,7 @@ TagPillView(tag: SystemTagCatalog.tag(for: contentType), isInteractive: false)
 - 创建：`ClipMind/UI/Tags/TagPickerView.swift`
 - 扩充：`ClipMindTests/UI/TagPickerViewModelTests.swift`
 
-- [ ] **步骤 1：编写 RED picker 状态测试**
+- [x] **步骤 1：编写 RED picker 状态测试**
 
 覆盖：
 
@@ -288,7 +288,7 @@ TagPillView(tag: SystemTagCatalog.tag(for: contentType), isInteractive: false)
 - 系统标签移除后仍在候选中且未勾选；
 - error 状态显示安全文案，retry 调用 `TagStore.retry()`。
 
-- [ ] **步骤 2：实现 `TagPickerViewModel`**
+- [x] **步骤 2：实现 `TagPickerViewModel`**
 
 将可测试状态放在 `TagPickerView.swift`：
 
@@ -339,7 +339,7 @@ func retry()
 
 所有规则结果由 `TagService` 最终裁决；ViewModel 的禁用态只作及时表达，不复制重名/来源权限。
 
-- [ ] **步骤 3：实现 `TagPickerView`**
+- [x] **步骤 3：实现 `TagPickerView`**
 
 布局固定为：
 
@@ -362,7 +362,7 @@ func retry()
 颜色按钮 identifier 为 `tagColor_<rawValue>`，label 同时包含中文颜色名。
 禁止使用仅颜色或内部 layer 数量作为验证点。
 
-- [ ] **步骤 4：运行 GREEN**
+- [x] **步骤 4：运行 GREEN**
 
 运行 `TagPickerViewModelTests`。预期：全部 PASS。
 
@@ -373,12 +373,12 @@ func retry()
 - 修改：`ClipMind/UI/MenuBar/ClipRowView.swift`
 - 修改：`ClipMindTests/UI/ClipRowViewInteractionTests.swift`
 
-- [ ] **步骤 1：编写 RED 回调隔离测试**
+- [x] **步骤 1：编写 RED 回调隔离测试**
 
 新增可注入 `onTagActivate`，直接触发时断言 `onSingleClick`、`onDoubleClick` 未调用；
 主动作回调仍分别工作。
 
-- [ ] **步骤 2：重组 Row 命中区域**
+- [x] **步骤 2：重组 Row 命中区域**
 
 `ClipRowView` 新增：
 
@@ -417,7 +417,7 @@ VStack(alignment: .leading, spacing: 6)
 
 不得把 `.onTapGesture` 挂在同时包含 `ClipTagStripView` 的共同父容器。
 
-- [ ] **步骤 3：运行 GREEN**
+- [x] **步骤 3：运行 GREEN**
 
 运行 `ClipRowViewInteractionTests`。预期：标签、单击、双击三类回调互不传播。
 
@@ -436,7 +436,7 @@ VStack(alignment: .leading, spacing: 6)
 - 修改：`ClipMind/App/PopoverPreviewWindowFactory.swift`
 - 修改：`ClipMind/Utils/ClipTestData.swift`
 
-- [ ] **步骤 1：创建唯一生产 `TagStore`**
+- [x] **步骤 1：创建唯一生产 `TagStore`**
 
 复用 Phase 1 的唯一 `TagBackend`，不得在 UI 层再次创建 `EncryptedStore` 或 `TagService`。
 
@@ -464,7 +464,7 @@ StatusItem、QuickPaste、PopoverPreview 三个装配点也传同一实例。`se
 提示而不篡改最近成功快照。成功批次通过 `.clipTagsDidUpdate` 渐进刷新，
 不得等待全部迁移完成才发布 `mainWindowInteractive`。
 
-- [ ] **步骤 2：适配三个结果容器**
+- [x] **步骤 2：适配三个结果容器**
 
 所有 `ClipRowView` 调用点必须传同一个 `tagStore`。`UnifiedPastePanelViewModel.clips`
 保持条目 identity；标签变化由观察的 `TagStore.snapshot` 刷新标签条，不修改高亮索引。
@@ -476,7 +476,7 @@ StatusItem、QuickPaste、PopoverPreview 三个装配点也传同一实例。`se
 收到任一通知都取消旧 load 并重新读取快照。这样新捕获、迁移和其他连接完成的标签事务
 会进入共享 UI 状态。监听 token 在 `deinit` 移除，通知 payload 不携带内容或标签名。
 
-- [ ] **步骤 3：编译与现有交互回归**
+- [x] **步骤 3：编译与现有交互回归**
 
 运行：
 
@@ -490,7 +490,7 @@ ClipMindTests/QuickPastePanelControllerTests
 
 预期：全部 PASS；现有单击、双击、回车、Esc、方向键和来源筛选不变。
 
-- [ ] **步骤 4：提交共享 picker**
+- [x] **步骤 4：提交共享 picker**
 
 ```bash
 git add \
@@ -519,7 +519,7 @@ git commit -m "feat(tags): add shared tag picker"
 - 创建：`ClipMindUITests/TagPickerUITests.swift`
 - 修改：`ClipMind/App/AppDelegate+UITestOverrides.swift`
 
-- [ ] **步骤 1：先写当前 Phase 可通过的 UI 用例**
+- [x] **步骤 1：先写当前 Phase 可通过的 UI 用例**
 
 `TagEntryUITests` 先覆盖三个入口的 pill/“+”可点击、picker 出现、主窗口 row/detail 不误触；
 `TagPickerUITests` 先覆盖搜索、多选、创建、5 个上限、系统标签移除/恢复和持久化重启。
@@ -537,7 +537,7 @@ git commit -m "feat(tags): add shared tag picker"
 `.persistenceFailed`，不读取或记录 associated value。这样 Phase 2 picker 与 Phase 4
 Settings Smoke 都能在所属 Phase 验证失败回滚/retry；Phase 5 只组合这些能力形成跨入口证据。
 
-- [ ] **步骤 2：创建远程 Smoke workflow**
+- [x] **步骤 2：创建远程 Smoke workflow**
 
 workflow 支持无 paths 限制的 `feature/**` push、`workflow_dispatch` 和相关路径的
 `pull_request`，在 `macos-15` 上安装
@@ -611,7 +611,7 @@ SHA run。`workflow_dispatch` 只作为 workflow 已进入默认分支后的人�
 [workflow_dispatch](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch)
 必须存在于默认分支的约束。
 
-- [ ] **步骤 3：提交 Smoke**
+- [x] **步骤 3：提交 Smoke**
 
 ```bash
 git add \
@@ -639,3 +639,4 @@ git commit -m "test(tags): add initial tag UI smoke"
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
 | v1.0 | 2026-07-29 | 固定共享 TagStore、标签视觉、picker 状态、事件隔离和三入口装配。 |
+| v1.1 | 2026-07-30 | Phase 2 完成：所有任务复选框标记为已通过；CI（arm64 + 主 Scheme + F1.14 Tag UI Smoke）在提交 `f6b60d7` 全部 success。 |
