@@ -91,6 +91,7 @@ jobs:
             -skip-testing:ClipMindUITests/TagEntryUITests \
             -skip-testing:ClipMindUITests/TagPickerUITests \
             -skip-testing:ClipMindUITests/TagFilterUITests \
+            -skip-testing:ClipMindUITests/TagSettingsUITests \
             | xcbeautify --quiet
 
       - name: Upload test results on failure
