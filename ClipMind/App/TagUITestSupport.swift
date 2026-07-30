@@ -102,15 +102,20 @@ enum TagUITestSupport
             return
         }
 
-        // 先持久化 previewClips，确保 tag state 存在
+        // 先持久化 previewClips，确保 tag state 存在。
+        // 使用 update（INSERT OR REPLACE）而非 save（INSERT）：
+        // 本地多次运行时 clipmind.db 持久化，save 会因主键冲突失败。
+        // update 会保留数据库中已有的 tagState，但后续 repository.apply
+        // 会重建标签关联，因此不会影响夹具一致性。
+        // CI 每次全新环境，save 和 update 行为一致。
         for clip in ClipTestData.previewClips
         {
             do
             {
-                try store.save(clip)
+                try store.update(clip)
             } catch
             {
-                LogCategory.app.error("TagUITestSupport save clip failed")
+                LogCategory.app.error("TagUITestSupport update clip failed")
             }
         }
 
