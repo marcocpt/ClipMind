@@ -59,6 +59,7 @@
 		312A107703ABAB965B118998 /* ToastWindowManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FB0574C9E1D1892BE637DD /* ToastWindowManagerTests.swift */; };
 		33319B95DDEB5A6ACFE2D80B /* AutoSaveServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E461DDE09974986C3AD2A75E /* AutoSaveServiceTests.swift */; };
 		337C0DF6A6AD722BFAAC21FC /* PasteSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CEC35AFCA74149BE80878A /* PasteSimulator.swift */; };
+		3406EEE9AD747C90593EF84B /* TagSettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4FFB1826AAB5067E8F0308 /* TagSettingsUITests.swift */; };
 		34725E903C1B8089019363F4 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FDF4399A568AC5AAF38A6C /* AccessibilityService.swift */; };
 		35AD24337615B676829062E1 /* ClipStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D277A7DF480B061BF7734D /* ClipStore.swift */; };
 		3770140718DB91C3D2EF4D9E /* FileNameGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52C20924A7C188A9570C4DB /* FileNameGeneratorTests.swift */; };
@@ -86,6 +87,8 @@
 		4CD9065924321550E1A9AFF7 /* SearchServiceMultiSelectAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E6944989DC77A6D8DD068E /* SearchServiceMultiSelectAdapterTests.swift */; };
 		4E27DD31C6B1111820DA69F2 /* TagMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 682EC16C7EE01BEB2894EBB7 /* TagMigrationTests.swift */; };
 		4E611CC8F2B47C6C674EF77E /* Deduplicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56780EF1945B756B4C7124B2 /* Deduplicator.swift */; };
+		510C1786DBD89D9E32756237 /* TagPropagationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8684B675A2FFCD29C67BF810 /* TagPropagationTests.swift */; };
+		511B1EAE9BDC16FC31F7C0AA /* TagManagementViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BAEF4D25FFCBCBE04EAAAB2 /* TagManagementViewModelTests.swift */; };
 		522B53C190F10EAECD9B69C9 /* TagAssociationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96F0DB9F3080DE11199B3165 /* TagAssociationTests.swift */; };
 		53A7C14D78583095E3B72FDA /* PrivacySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10F7E9079BA9F0B75D03993 /* PrivacySettingsView.swift */; };
 		53F93E7EAA10241E4629847F /* TagNameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4461C7C441D587675B7129C /* TagNameValidator.swift */; };
@@ -230,6 +233,7 @@
 		D714F29FBF66D565C1EBCC16 /* ExtractTodoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A5135CC88FD9B92C87EE80 /* ExtractTodoTests.swift */; };
 		D73AE0349687B55E41B54AA9 /* ClipStoreUpdateClipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80A0DDD564A52428306ECAD1 /* ClipStoreUpdateClipTests.swift */; };
 		D87E8552AA7AB7ACF31E3343 /* UnifiedPastePanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AB24C916E3833C4C96E576E /* UnifiedPastePanelView.swift */; };
+		D8EF17982F3F953FE56A1FC5 /* TagManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D536F08459EDA615474F12C /* TagManagementView.swift */; };
 		D96F39B6A9EDDE7F77BABDF7 /* HotkeyTestConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E487819E65DB2C6B249C1F /* HotkeyTestConstants.swift */; };
 		D97F6F290EC621643D3B256B /* EncryptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63DEB7531FB7A28A9CCC7372 /* EncryptionTests.swift */; };
 		D9A3BB9628384CB4ECDB5A59 /* QuickPasteSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9E7FA092E24C88EA4535D7A /* QuickPasteSettingsTests.swift */; };
@@ -303,6 +307,7 @@
 		07F5C41835A8A2DABAC39032 /* ClipboardReplacerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardReplacerTests.swift; sourceTree = "<group>"; };
 		09E6944989DC77A6D8DD068E /* SearchServiceMultiSelectAdapterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchServiceMultiSelectAdapterTests.swift; sourceTree = "<group>"; };
 		0B4169A33A67333853E6EF53 /* PasteCoordinatorMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteCoordinatorMocks.swift; sourceTree = "<group>"; };
+		0E4FFB1826AAB5067E8F0308 /* TagSettingsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSettingsUITests.swift; sourceTree = "<group>"; };
 		0F027F3147207AB32C96D7A1 /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
 		1020A60C34DB25CD1A43561C /* BottomToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomToolbarView.swift; sourceTree = "<group>"; };
 		11A18DC1E3566CBF0A8F9AB9 /* QuickPastePanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPastePanelController.swift; sourceTree = "<group>"; };
@@ -311,7 +316,9 @@
 		18247593C6E868F87C5E18A0 /* QuickPasteSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPasteSettings.swift; sourceTree = "<group>"; };
 		186F4309CEBEE040FEBDE936 /* TagPillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagPillView.swift; sourceTree = "<group>"; };
 		1990CF4D8A5C0998F7B93535 /* APIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIProvider.swift; sourceTree = "<group>"; };
+		1BAEF4D25FFCBCBE04EAAAB2 /* TagManagementViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagManagementViewModelTests.swift; sourceTree = "<group>"; };
 		1C6FE61F3A08A7F523702CC7 /* PromptTemplates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptTemplates.swift; sourceTree = "<group>"; };
+		1D536F08459EDA615474F12C /* TagManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagManagementView.swift; sourceTree = "<group>"; };
 		1D77218BA5D4CAF126E88E05 /* TagPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagPickerView.swift; sourceTree = "<group>"; };
 		1E8BD33F9160DA5AD47D4159 /* SearchResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsView.swift; sourceTree = "<group>"; };
 		1F4AB1ADC00112E171B76630 /* HotkeyFormatterSpaceKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyFormatterSpaceKeyTests.swift; sourceTree = "<group>"; };
@@ -432,6 +439,7 @@
 		823A498B061B251B3B6CA366 /* AppDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetector.swift; sourceTree = "<group>"; };
 		82DB586EA79EA26685C80BF6 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		85D7BA4202854BE0C73D609C /* CleanupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanupServiceTests.swift; sourceTree = "<group>"; };
+		8684B675A2FFCD29C67BF810 /* TagPropagationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagPropagationTests.swift; sourceTree = "<group>"; };
 		8746040340A99D2E81DD6057 /* SampleDataSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataSearchTests.swift; sourceTree = "<group>"; };
 		8962BAEA39300C713197F8E7 /* PollingHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollingHelper.swift; sourceTree = "<group>"; };
 		8B176355F678A8067619BEFA /* AutoSaveSettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSaveSettingsStoreTests.swift; sourceTree = "<group>"; };
@@ -786,8 +794,10 @@
 				BC0D46A3002C619E3CB605C9 /* QuickPastePanelControllerTests.swift */,
 				EF59BCFA4CA2D2D8BCFA737F /* SettingsViewAutoSaveTabTests.swift */,
 				17C3813320B9D126E7BE7BAE /* StatusItemControllerTests.swift */,
+				1BAEF4D25FFCBCBE04EAAAB2 /* TagManagementViewModelTests.swift */,
 				E2C00EE3DD2711AF5D379738 /* TagPickerViewModelPickerTests.swift */,
 				E5861BF57AB87D4189FFCE27 /* TagPickerViewModelTests.swift */,
+				8684B675A2FFCD29C67BF810 /* TagPropagationTests.swift */,
 				ABC80CDD69C7269F9946F8B1 /* UnifiedPastePanelViewModelFilterTests.swift */,
 				D838FFB50BE4E0D6E7029C99 /* UnifiedPastePanelViewModelTests.swift */,
 			);
@@ -1047,6 +1057,7 @@
 				AE2479CD48BB0E45BFDCB903 /* TagEntryUITests.swift */,
 				9ADAB2326C20E4A3DC216995 /* TagFilterUITests.swift */,
 				16EF3944B8307E27D841B6AA /* TagPickerUITests.swift */,
+				0E4FFB1826AAB5067E8F0308 /* TagSettingsUITests.swift */,
 				E2C1DE5B43857891776ABAAC /* Toast */,
 			);
 			path = ClipMindUITests;
@@ -1247,6 +1258,7 @@
 				66FAEA1A8F6257627635F860 /* HotkeyRecorder.swift */,
 				C10F7E9079BA9F0B75D03993 /* PrivacySettingsView.swift */,
 				315A86B4F822D3E6EE87C09A /* SettingsView.swift */,
+				1D536F08459EDA615474F12C /* TagManagementView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1486,6 +1498,7 @@
 				7418E87D3AE590097FB0FEC5 /* TagBackendAssembly.swift in Sources */,
 				06B731951FB28CAB744FFF68 /* TagError.swift in Sources */,
 				5591BEE88958CEEC3265E813 /* TagFilterView.swift in Sources */,
+				D8EF17982F3F953FE56A1FC5 /* TagManagementView.swift in Sources */,
 				FEAE2AA87C5421CADECA748A /* TagMigrationCoordinator.swift in Sources */,
 				53F93E7EAA10241E4629847F /* TagNameValidator.swift in Sources */,
 				4BA45A7DE6B0F521B1086CFF /* TagOperationLogger.swift in Sources */,
@@ -1614,9 +1627,11 @@
 				DEDB8099405C4EF377714F05 /* SystemTagCatalogTests.swift in Sources */,
 				522B53C190F10EAECD9B69C9 /* TagAssociationTests.swift in Sources */,
 				200CBFB6FF0DC2497C53878B /* TagLogSanitizationTests.swift in Sources */,
+				511B1EAE9BDC16FC31F7C0AA /* TagManagementViewModelTests.swift in Sources */,
 				4E27DD31C6B1111820DA69F2 /* TagMigrationTests.swift in Sources */,
 				1622F992BCE3CCA25C2A8EDF /* TagPickerViewModelPickerTests.swift in Sources */,
 				7E5AC21B8F20EC0C14D87249 /* TagPickerViewModelTests.swift in Sources */,
+				510C1786DBD89D9E32756237 /* TagPropagationTests.swift in Sources */,
 				4C2AE33A7AB89A5E58651E7C /* TagServiceTests.swift in Sources */,
 				BD48CA5743B59EDB296276D6 /* TagTestHelpers.swift in Sources */,
 				7CBD26620156652A43AAAEE3 /* TestDatabaseHelper.swift in Sources */,
@@ -1659,6 +1674,7 @@
 				829B64BEC8B13F51B3433ACA /* TagEntryUITests.swift in Sources */,
 				B48FE1EEB3B8C705E0D95B6C /* TagFilterUITests.swift in Sources */,
 				AF83A5473CF0246B2F5AD6D8 /* TagPickerUITests.swift in Sources */,
+				3406EEE9AD747C90593EF84B /* TagSettingsUITests.swift in Sources */,
 				5E5CDD9A15CD693C5343C3A9 /* ToastAnimationUITests.swift in Sources */,
 				C209540F36EFA846651ADC20 /* ToastBasicUITests.swift in Sources */,
 				FD2B48DDC838F500D48FD0A6 /* ToastReplaceUITests.swift in Sources */,

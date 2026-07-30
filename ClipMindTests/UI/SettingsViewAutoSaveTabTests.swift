@@ -33,4 +33,22 @@ final class SettingsViewAutoSaveTabTests: XCTestCase
         let tab = SettingsView.tabFromArgument("--UITEST_INITIAL_TAB=unknown")
         XCTAssertEqual(tab, .apiKey, "未知参数应回退到 .apiKey tab（F1.x 既有行为）")
     }
+
+    // MARK: - TC-UT-TAG-01：SettingsTab 枚举包含 tags case
+
+    @MainActor
+    func testSettingsTabHasTagsCase() throws
+    {
+        let tab: SettingsTab = .tags
+        XCTAssertEqual(tab, .tags, "SettingsTab 应包含 .tags case")
+    }
+
+    // MARK: - TC-UT-TAG-02：--UITEST_INITIAL_TAB=tags 参数解析为 tags tab
+
+    @MainActor
+    func testTagsTabArgumentParsing() throws
+    {
+        let tab = SettingsView.tabFromArgument("--UITEST_INITIAL_TAB=tags")
+        XCTAssertEqual(tab, .tags, "tags 参数应解析为 .tags tab")
+    }
 }

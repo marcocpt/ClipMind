@@ -88,6 +88,16 @@ struct MainWindow: View {
                 sourceFilterSelection.selectedSources = preserved
             }
         }
+        .onChange(of: Set(tagStore.snapshot.allTags.map(\.id)))
+        { validTagIDs in
+            // F1.14 Phase 4 任务 3：标签删除后自动清理活动筛选。
+            // 重命名不改变 ID，因此不会清除活动条件；系统标签始终在 allTags 中。
+            // 仅在选中集合与有效集合差集非空时执行写入，避免不必要的 @State 抖动。
+            if !tagFilterSelection.selectedTagIDs.isSubset(of: validTagIDs)
+            {
+                tagFilterSelection.selectedTagIDs.formIntersection(validTagIDs)
+            }
+        }
     }
 
     private var searchPanel: some View {
@@ -199,7 +209,9 @@ struct MainWindow: View {
             defer: false
         )
         window.title = "ClipMind Settings"
-        window.contentViewController = NSHostingController(rootView: SettingsView())
+        window.contentViewController = NSHostingController(
+            rootView: SettingsView(tagStore: tagStore)
+        )
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }

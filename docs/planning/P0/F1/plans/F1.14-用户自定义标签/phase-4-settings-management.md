@@ -1,6 +1,6 @@
 # Phase 4：设置页全局标签管理
 
-> 最后更新：2026-07-29 | 版本：v1.0
+> 最后更新：2026-07-30 | 版本：v1.1
 
 **目标：** 设置页展示完整系统/用户标签目录；系统标签全局只读，用户标签以独立确认完成
 重命名和删除，取消或失败时保持最近成功状态。
@@ -22,7 +22,7 @@
 - 创建：`ClipMind/UI/Settings/TagManagementView.swift`
 - 扩充：`ClipMindTests/UI/TagPickerViewModelTests.swift`
 
-- [ ] **步骤 1：编写 RED 状态机测试**
+- [x] **步骤 1：编写 RED 状态机测试**
 
 为 `TagManagementViewModel` 覆盖：
 
@@ -35,7 +35,7 @@
 - service 失败回到 `.idle` 并由 `TagStore` 保持原快照；
 - service 成功后所有消费者按同一 tag ID 显示新名。
 
-- [ ] **步骤 2：实现 ViewModel**
+- [x] **步骤 2：实现 ViewModel**
 
 在 `TagManagementView.swift` 定义：
 
@@ -93,7 +93,7 @@ ViewModel 不自行 trim、fold 或遍历比较名称。
 - 修改：`ClipMind/App/ClipMindApp.swift`
 - 修改：`ClipMindTests/UI/SettingsViewAutoSaveTabTests.swift`
 
-- [ ] **步骤 1：实现目录分区**
+- [x] **步骤 1：实现目录分区**
 
 `TagManagementView` 使用两个 section：
 
@@ -125,7 +125,7 @@ renameTag_<tagID>
 deleteTag_<tagID>
 ```
 
-- [ ] **步骤 2：实现两阶段重命名**
+- [x] **步骤 2：实现两阶段重命名**
 
 编辑行显示 `TextField`、取消、提交。提交有效名称后关闭编辑行并弹独立确认 dialog：
 
@@ -136,7 +136,7 @@ deleteTag_<tagID>
 确认按钮调用 `viewModel.confirmRename()`；取消调用 `cancelRename()`。
 确认成功依靠 `TagStore.snapshot` 传播，不手工修改各入口字符串。
 
-- [ ] **步骤 3：实现删除二次确认**
+- [x] **步骤 3：实现删除二次确认**
 
 dialog 文案固定：
 
@@ -147,13 +147,13 @@ dialog 文案固定：
 取消不调用 service；确认调用 `.delete(tagID:)`。失败显示 `TagStore.errorMessage`
 和 `settingsTagRetryButton`，错误文本不得包含标签名。
 
-- [ ] **步骤 4：实现焦点恢复**
+- [x] **步骤 4：实现焦点恢复**
 
 ViewModel 记录触发 button 的 tag ID；取消或完成后使用 `@AccessibilityFocusState`
 把焦点返回对应 rename/delete button。dialog 初始焦点落在取消按钮，Tab 只遍历 dialog 控件，
 Escape 等同取消。
 
-- [ ] **步骤 5：新增 Settings Tab**
+- [x] **步骤 5：新增 Settings Tab**
 
 `SettingsTab` 增加 `.tags`，`tabFromArgument` 支持：
 
@@ -174,7 +174,7 @@ Label("标签", systemImage: "tag.fill")
 `MainWindow.showSettingsInStandaloneWindow()` 都使用传入的同一个 `tagStore` 并调用
 `SettingsView(tagStore:)`；禁止在任何设置窗口路径创建第二个 store 或数据库连接。
 
-- [ ] **步骤 6：运行 GREEN 与设置回归**
+- [x] **步骤 6：运行 GREEN 与设置回归**
 
 运行：
 
@@ -195,7 +195,7 @@ ClipMindUITests/SettingsUITests
 - 修改：`ClipMind/UI/MenuBar/UnifiedPastePanelView.swift`
 - 修改：`ClipMindTests/UI/CompositeClipFilterTests.swift`
 
-- [ ] **步骤 1：测试重命名传播**
+- [x] **步骤 1：测试重命名传播**
 
 用相同 tag ID 的旧/新 snapshot 断言：
 
@@ -203,7 +203,7 @@ ClipMindUITests/SettingsUITests
 - tag ID、颜色和关联顺序不变；
 - 活动筛选 chip 显示新名称，resultId 集合不变。
 
-- [ ] **步骤 2：测试删除传播**
+- [x] **步骤 2：测试删除传播**
 
 删除 mutation 后断言：
 
@@ -213,7 +213,7 @@ ClipMindUITests/SettingsUITests
 - 三入口、历史、搜索和设置都不显示目标；
 - 其他搜索与来源条件保持。
 
-- [ ] **步骤 3：实现筛选选择清理**
+- [x] **步骤 3：实现筛选选择清理**
 
 `MainWindow` 观察 `tagStore.snapshot.allTags.map(\.id)`：
 
@@ -224,7 +224,7 @@ tagFilterSelection.selectedTagIDs.formIntersection(validTagIDs)
 
 系统标签始终有效。重命名不改变 ID，因此不会清除活动条件。
 
-- [ ] **步骤 4：提交设置管理**
+- [x] **步骤 4：提交设置管理**
 
 ```bash
 git add \
@@ -245,18 +245,18 @@ git commit -m "feat(tags): add settings tag management"
 - 创建：`ClipMindUITests/TagSettingsUITests.swift`
 - 修改：`.github/workflows/tag-ui-smoke.yml`
 
-- [ ] **步骤 1：编写 SET-001～006 当前能力测试**
+- [x] **步骤 1：编写 SET-001～006 当前能力测试**
 
 通过 `--UITEST_INITIAL_TAB=tags` 驱动真实 Settings window，覆盖系统只读、用户 rename/delete
 两阶段确认、取消、空白/重名拒绝、stable ID 跨入口传播、失败回滚与 retry，以及 dialog
 键盘焦点恢复。测试只读取可访问性树，不读取数据库或 `TagStore.snapshot`。
 
-- [ ] **步骤 2：把测试加入 Smoke**
+- [x] **步骤 2：把测试加入 Smoke**
 
 workflow 新增 `TagSettingsUITests` 选择器。当前 SHA 远程成功后才可进入 Phase 5；
 Phase 5 仅扩充 fail-once 组合、跨入口负向证据和辅助功能覆盖。
 
-- [ ] **步骤 3：提交设置 Smoke**
+- [x] **步骤 3：提交设置 Smoke**
 
 ```bash
 git add \
@@ -281,3 +281,4 @@ git commit -m "test(tags): add settings tag UI smoke"
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
 | v1.0 | 2026-07-29 | 固定设置目录、两阶段重命名、删除确认、焦点和跨入口传播。 |
+| v1.1 | 2026-07-30 | 同步状态：15 个步骤已全部完成并勾选；任务 1+2 创建 TagManagementView/TagManagementViewModel + 14 个状态机测试；任务 3 实现 tagFilterSelection 清理 + TagPropagationTests 7 个传播测试；任务 4 创建 TagSettingsUITests + 加入 tag-ui-smoke.yml。本地 794 个单元测试全绿，build-for-testing 通过，lint 0 violation。 |

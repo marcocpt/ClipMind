@@ -2,7 +2,7 @@ import SwiftUI
 
 /// 设置面板主视图。
 ///
-/// 使用 TabView 分为 4 个分区：API Key / 隐私 / 通用 / 自动保存（F2.1）。
+/// 使用 TabView 分为 5 个分区：API Key / 隐私 / 通用 / 自动保存（F2.1）/ 标签（F1.14）。
 /// 对应设计规范 3.8 节设置配置流程和 UI-AC-15 设置面板入口。
 struct SettingsView: View
 {
@@ -14,6 +14,13 @@ struct SettingsView: View
         }
         return SettingsView.tabFromArgument(arg)
     }()
+
+    @ObservedObject private var tagStore: TagStore
+
+    init(tagStore: TagStore)
+    {
+        self.tagStore = tagStore
+    }
 
     var body: some View
     {
@@ -50,6 +57,14 @@ struct SettingsView: View
                         .accessibilityIdentifier("autoSaveTab")
                 }
                 .tag(SettingsTab.autoSave)
+
+            TagManagementView(store: tagStore)
+                .tabItem
+                {
+                    Label("标签", systemImage: "tag.fill")
+                        .accessibilityIdentifier("tagsTab")
+                }
+                .tag(SettingsTab.tags)
         }
         // 高度按内容调整：F2.1 AutoSaveSettingsView 有 7 个 section（含 TextField 改造后
         // 新增 hint caption2），总高度超过原 550pt，导致顶部内容被裁剪。
@@ -72,6 +87,8 @@ struct SettingsView: View
             return .general
         case "autosave":
             return .autoSave
+        case "tags":
+            return .tags
         default:
             return .apiKey
         }
@@ -85,4 +102,5 @@ enum SettingsTab: Hashable
     case privacy
     case general
     case autoSave
+    case tags
 }

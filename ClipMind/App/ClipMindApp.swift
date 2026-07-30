@@ -24,7 +24,7 @@ struct ClipMindApp: App {
         }
 
         Settings {
-            SettingsView()
+            SettingsView(tagStore: appDelegate.tagStore)
         }
     }
 }

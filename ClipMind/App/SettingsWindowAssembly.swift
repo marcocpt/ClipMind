@@ -15,7 +15,7 @@ extension AppDelegate
     /// 「Window ordered front from a non-active application」警告且设置窗口可能不置前。
     /// 参照 `handleOpenMainWindow` 的模式，先将激活策略切换为 `.regular` 并激活应用，
     /// 再触发 Settings 场景。
-    @objc func handleOpenSettings()
+    @MainActor @objc func handleOpenSettings()
     {
         if CommandLine.arguments.contains("--UITEST_SHOW_MAIN_WINDOW")
         {
@@ -29,6 +29,7 @@ extension AppDelegate
 
     /// 在独立 NSWindow 中显示设置视图（UI 测试模式专用）。
     /// 沿用 `MainWindow.showSettingsInStandaloneWindow` 的实现，确保窗口标题与标识符一致。
+    @MainActor
     private func showSettingsInStandaloneWindow()
     {
         for window in NSApp.windows where window.title == "ClipMind Settings"
@@ -44,7 +45,9 @@ extension AppDelegate
             defer: false
         )
         window.title = "ClipMind Settings"
-        window.contentViewController = NSHostingController(rootView: SettingsView())
+        window.contentViewController = NSHostingController(
+            rootView: SettingsView(tagStore: tagStore)
+        )
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
