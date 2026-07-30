@@ -41,6 +41,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             -only-testing:ClipMindUITests/TagEntryUITests \
             -only-testing:ClipMindUITests/TagPickerUITests \
+            -only-testing:ClipMindUITests/TagFilterUITests \
             | xcbeautify
       - name: Upload xcresult
         if: always()
