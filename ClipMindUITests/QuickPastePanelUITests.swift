@@ -101,6 +101,14 @@ final class QuickPastePanelUITests: XCTestCase
 
     // MARK: - TC-F1.9-9-01 面板失焦自动关闭
 
+    /// F1.14 修复：原测试（133cdae）在 `wait(for:timeout:)` 后无断言，
+    /// 即使面板未关闭也会通过（false positive）。本版本：
+    /// 1. 使用 `--UITEST_KEEP_MAIN_WINDOW_VISIBLE` 保留主窗口可见；
+    /// 2. 等待主窗口出现后点击触发面板 `didResignKey`；
+    /// 3. 在 `wait` 后增加 `XCTAssertFalse` 断言验证面板确实关闭。
+    ///
+    /// 主窗口由 SwiftUI WindowGroup 异步创建，`centerMainWindowForUITest`
+    /// 在 0.5s 后将其定位到 (100, 100)。测试等待主窗口可见后再点击。
     func testPanelCloses_OnResignFocus()
     {
         let app = XCUIApplication()
@@ -114,22 +122,27 @@ final class QuickPastePanelUITests: XCTestCase
         app.launch()
 
         let searchField = app.textFields["quickPasteSearchField"]
-        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5), "面板应出现")
 
-        // F1.14：主窗口保留可见（--UITEST_KEEP_MAIN_WINDOW_VISIBLE）。
-        // panel 是 key 窗口（z-order 高，windows[0]），主窗口是 windows[1]。
-        // 点击主窗口触发面板 didResignKey。
-        XCTAssertGreaterThanOrEqual(app.windows.count, 2, "应存在主窗口和面板")
+        // 等待主窗口出现。主窗口由 SwiftUI WindowGroup 异步创建，
+        // centerMainWindowForUITest 在 0.5s 后将其定位到 (100, 100)。
+        // app.windows[0] 是面板（key window，floating level），
+        // app.windows[1] 是主窗口（普通 level）。
         let mainWindow = app.windows.element(boundBy: 1)
-        XCTAssertTrue(mainWindow.exists, "主窗口应存在")
+        XCTAssertTrue(
+            mainWindow.waitForExistence(timeout: 5),
+            "主窗口应在 5 秒内出现（--UITEST_KEEP_MAIN_WINDOW_VISIBLE）"
+        )
         mainWindow.click()
 
         // 等待面板关闭（失焦通知异步触发）
-        let expectation = XCTNSPredicateExpectation(
+        let panelClosedExpectation = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == NO"),
             object: searchField
         )
-        wait(for: [expectation], timeout: 3.0)
+        wait(for: [panelClosedExpectation], timeout: 3.0)
+        // F1.14 修复：增加显式断言，避免 wait 超时后仍通过（false positive）
+        XCTAssertFalse(searchField.exists, "面板失焦后应自动关闭")
     }
 
     // MARK: - TC-F1.9-4-03 面板出现时默认高亮第一行

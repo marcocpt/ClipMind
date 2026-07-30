@@ -138,13 +138,15 @@ extension AppDelegate
         }
     }
 
-    /// F1.14：UITEST 模式下居中主窗口。
+    /// F1.14：UITEST 模式下定位主窗口。
     ///
     /// SwiftUI `WindowGroup` 会恢复上次保存的窗口位置，可能离屏（例如之前的测试
     /// 或手动操作把窗口拖到屏幕外），导致 XCUITest 无法点击标签 pill 等元素。
     ///
-    /// 在下一运行循环执行：SwiftUI 在 `applicationDidFinishLaunching` 返回后
-    /// 异步创建主窗口，`DispatchQueue.main.async` 确保窗口已存在。
+    /// 在 `applicationDidFinishLaunching` 返回后延迟执行：SwiftUI 异步创建主窗口，
+    /// `DispatchQueue.main.asyncAfter` 确保窗口已存在。通过窗口类名
+    /// （`AppKitWindow`）识别 SwiftUI 主窗口，而非依赖标题（SwiftUI 窗口标题
+    /// 在某些时机可能为空）。
     ///
     /// 若启动了 `--UITEST_QUICK_PASTE_PANEL`，隐藏主窗口：
     /// 1. 主窗口与面板存在同 ID 的标签 pill，隐藏后 XCUITest 只能命中面板 pill；
@@ -159,32 +161,26 @@ extension AppDelegate
         let keepMainWindowVisible = CommandLine.arguments.contains("--UITEST_KEEP_MAIN_WINDOW_VISIBLE")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5)
         {
-            let windows = NSApp.windows.filter { $0.title == "ClipMind" }
-            NSLog(
-                "[DIAG] centerMainWindow: found \(windows.count) window(s), "
-                    + "hasQuickPastePanel=\(hasQuickPastePanel), "
-                    + "keepMainWindowVisible=\(keepMainWindowVisible)"
-            )
-            for window in windows
+            // 通过类名识别 SwiftUI WindowGroup 创建的主窗口（AppKitWindow），
+            // 排除 NSPanel（快速粘贴面板、标签 picker）和 NSStatusBarWindow。
+            // 与 PopoverPreviewWindowFactory.closeSwiftUIMainWindow 使用相同的识别方式。
+            let mainWindows = NSApp.windows.filter { $0.className.contains("AppKitWindow") }
+            for window in mainWindows
             {
                 if hasQuickPastePanel && !keepMainWindowVisible
                 {
                     // 隐藏主窗口：避免同 ID pill 干扰面板测试。
                     // 不调用 makeKeyAndOrderFront，避免面板 didResignKey 关闭。
                     window.setIsVisible(false)
-                    NSLog("[DIAG] centerMainWindow: hidden main window for quick paste panel test")
                 } else if hasQuickPastePanel && keepMainWindowVisible
                 {
-                    // F1.14：--UITEST_KEEP_MAIN_WINDOW_VISIBLE 时不隐藏主窗口，
+                    // --UITEST_KEEP_MAIN_WINDOW_VISIBLE 时不隐藏主窗口，
                     // 供 testPanelCloses_OnResignFocus 等需要点击主窗口触发失焦的测试使用。
                     // 只移动位置到屏幕角落，不调用 makeKeyAndOrderFront 避免抢焦点。
                     window.setFrameOrigin(NSPoint(x: 100, y: 100))
-                    NSLog("[DIAG] centerMainWindow: kept main window visible for quick paste panel test")
                 } else
                 {
-                    NSLog("[DIAG] centerMainWindow: before center frame=\(window.frame)")
                     window.setFrameOrigin(NSPoint(x: 100, y: 100))
-                    NSLog("[DIAG] centerMainWindow: after setFrameOrigin frame=\(window.frame)")
                     window.makeKeyAndOrderFront(nil)
                     NSApp.activate(ignoringOtherApps: true)
                 }
