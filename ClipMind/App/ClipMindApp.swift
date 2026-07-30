@@ -335,45 +335,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyService = GlobalHotkeyService(hotkey: settings.hotkey)
     }
 
-    /// F1.14：UITEST 模式下居中主窗口。
-    ///
-    /// SwiftUI `WindowGroup` 会恢复上次保存的窗口位置，可能离屏（例如之前的测试
-    /// 或手动操作把窗口拖到屏幕外），导致 XCUITest 无法点击标签 pill 等元素。
-    ///
-    /// 在下一运行循环执行：SwiftUI 在 `applicationDidFinishLaunching` 返回后
-    /// 异步创建主窗口，`DispatchQueue.main.async` 确保窗口已存在。
-    ///
-    /// 若启动了 `--UITEST_QUICK_PASTE_PANEL`，隐藏主窗口：
-    /// 1. 主窗口与面板存在同 ID 的标签 pill，隐藏后 XCUITest 只能命中面板 pill；
-    /// 2. 不调用 `makeKeyAndOrderFront`，避免抢焦点导致快速粘贴面板 `didResignKey` 关闭。
-    @MainActor
-    private func centerMainWindowForUITest()
-    {
-        let hasQuickPastePanel = CommandLine.arguments.contains("--UITEST_QUICK_PASTE_PANEL")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5)
-        {
-            let windows = NSApp.windows.filter { $0.title == "ClipMind" }
-            NSLog("[DIAG] centerMainWindow: found \(windows.count) window(s), hasQuickPastePanel=\(hasQuickPastePanel)")
-            for window in windows
-            {
-                if hasQuickPastePanel
-                {
-                    // 隐藏主窗口：避免同 ID pill 干扰面板测试。
-                    // 不调用 makeKeyAndOrderFront，避免面板 didResignKey 关闭。
-                    window.setIsVisible(false)
-                    NSLog("[DIAG] centerMainWindow: hidden main window for quick paste panel test")
-                } else
-                {
-                    NSLog("[DIAG] centerMainWindow: before center frame=\(window.frame)")
-                    window.setFrameOrigin(NSPoint(x: 100, y: 100))
-                    NSLog("[DIAG] centerMainWindow: after setFrameOrigin frame=\(window.frame)")
-                    window.makeKeyAndOrderFront(nil)
-                    NSApp.activate(ignoringOtherApps: true)
-                }
-            }
-        }
-    }
-
     @MainActor
     private func showPopoverContentInWindow() {
         NSApp.setActivationPolicy(.regular)

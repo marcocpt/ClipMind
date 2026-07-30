@@ -106,15 +106,22 @@ final class QuickPastePanelUITests: XCTestCase
         let app = XCUIApplication()
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
-            "--UITEST_QUICK_PASTE_PANEL"
+            "--UITEST_QUICK_PASTE_PANEL",
+            // F1.14：保留主窗口可见，本测试需要点击主窗口触发面板失焦。
+            // 其他 quick paste panel 测试不加此参数，主窗口被隐藏避免 pill ID 冲突。
+            "--UITEST_KEEP_MAIN_WINDOW_VISIBLE"
         ]
         app.launch()
 
         let searchField = app.textFields["quickPasteSearchField"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 5))
 
-        // 点击主窗口（使面板失焦）
-        let mainWindow = app.windows.firstMatch
+        // F1.14：主窗口保留可见（--UITEST_KEEP_MAIN_WINDOW_VISIBLE）。
+        // panel 是 key 窗口（z-order 高，windows[0]），主窗口是 windows[1]。
+        // 点击主窗口触发面板 didResignKey。
+        XCTAssertGreaterThanOrEqual(app.windows.count, 2, "应存在主窗口和面板")
+        let mainWindow = app.windows.element(boundBy: 1)
+        XCTAssertTrue(mainWindow.exists, "主窗口应存在")
         mainWindow.click()
 
         // 等待面板关闭（失焦通知异步触发）
