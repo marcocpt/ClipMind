@@ -18,6 +18,7 @@ enum TagUITestSupport
     static let tagEmptyClipArg = "--UITEST_TAG_EMPTY_CLIP"
     static let tagLimitFixtureArg = "--UITEST_TAG_LIMIT_FIXTURE"
     static let tagFailOnceArg = "--UITEST_TAG_FAIL_ONCE"
+    static let tagFilterFixtureArg = ClipTestData.tagFilterFixtureArg
 
     // MARK: - 稳定夹具标签 ID
 
@@ -51,6 +52,11 @@ enum TagUITestSupport
     static var shouldSeedLimitFixture: Bool
     {
         CommandLine.arguments.contains(tagLimitFixtureArg)
+    }
+
+    static var shouldSeedTagFilterFixture: Bool
+    {
+        CommandLine.arguments.contains(tagFilterFixtureArg)
     }
 
     /// FailOnce 模式：指定闭集 operation 仅第一次抛 `.persistenceFailed`。
@@ -92,23 +98,31 @@ enum TagUITestSupport
 
     /// 根据启动参数注入标签夹具。在 `tagBackend` 构造后、`tagStore.load()` 前调用。
     ///
-    /// 先持久化 `previewClips` 到 `EncryptedStore`（确保 tag state 存在），
+    /// 先持久化夹具 ClipItem 到 `EncryptedStore`（确保 tag state 存在），
     /// 再通过 `repository.apply` 注入用户标签关联或移除系统标签。
     static func seedFixturesIfNeeded(store: EncryptedStore, repository: TagRepository)
     {
-        guard shouldSeedTagFixture || shouldSeedLimitFixture || shouldSeedEmptyClip
+        guard shouldSeedTagFixture
+            || shouldSeedLimitFixture
+            || shouldSeedEmptyClip
+            || shouldSeedTagFilterFixture
         else
         {
             return
         }
 
-        // 先持久化 previewClips，确保 tag state 存在。
+        // 标签筛选夹具使用独立的 4 条 ClipItem；其他夹具使用 previewClips。
+        let clipsToPersist = shouldSeedTagFilterFixture
+            ? ClipTestData.tagFilterFixtureClips
+            : ClipTestData.previewClips
+
+        // 先持久化夹具 clips，确保 tag state 存在。
         // 使用 update（INSERT OR REPLACE）而非 save（INSERT）：
         // 本地多次运行时 clipmind.db 持久化，save 会因主键冲突失败。
         // update 会保留数据库中已有的 tagState，但后续 repository.apply
         // 会重建标签关联，因此不会影响夹具一致性。
         // CI 每次全新环境，save 和 update 行为一致。
-        for clip in ClipTestData.previewClips
+        for clip in clipsToPersist
         {
             do
             {
@@ -119,6 +133,10 @@ enum TagUITestSupport
             }
         }
 
+        if shouldSeedTagFilterFixture
+        {
+            seedTagFilterFixture(repository: repository)
+        }
         if shouldSeedLimitFixture
         {
             seedLimitFixture(repository: repository)
@@ -200,6 +218,61 @@ enum TagUITestSupport
         } catch
         {
             LogCategory.app.error("TagUITestSupport seedEmptyClipFixture failed")
+        }
+    }
+
+    /// Phase 3 任务 4：注入标签筛选夹具。
+    ///
+    /// 创建 2 个用户标签（"重要"、"待处理"），按计划表格关联到 4 条夹具 ClipItem：
+    /// - tag-result-1: 重要、待处理
+    /// - tag-result-2: 重要
+    /// - tag-result-3: 重要、待处理
+    /// - tag-result-4: 重要、待处理
+    ///
+    /// 系统标签（REQ/CODE）由 `tagState: .newItem(contentType:)` 自动关联，
+    /// 无需额外注入。
+    private static func seedTagFilterFixture(repository: TagRepository)
+    {
+        let clipIDs = ClipTestData.tagFilterFixtureClipIDs
+        let tagIDs = ClipTestData.tagFilterFixtureUserTagIDs
+
+        let importantTag = ClipTag(
+            id: .user(tagIDs[0]),
+            name: "重要",
+            color: .rose,
+            source: .user
+        )
+        let pendingTag = ClipTag(
+            id: .user(tagIDs[1]),
+            name: "待处理",
+            color: .amber,
+            source: .user
+        )
+
+        // tag-result-1: 重要、待处理
+        // tag-result-2: 重要
+        // tag-result-3: 重要、待处理
+        // tag-result-4: 重要、待处理
+        let attachments: [(clipIndex: Int, tag: ClipTag)] = [
+            (0, importantTag),
+            (0, pendingTag),
+            (1, importantTag),
+            (2, importantTag),
+            (2, pendingTag),
+            (3, importantTag),
+            (3, pendingTag)
+        ]
+
+        for attachment in attachments
+        {
+            let clipID = clipIDs[attachment.clipIndex]
+            do
+            {
+                try repository.apply(.createAndAttach(tag: attachment.tag, clipID: clipID))
+            } catch
+            {
+                LogCategory.app.error("TagUITestSupport seedTagFilterFixture failed")
+            }
         }
     }
 }

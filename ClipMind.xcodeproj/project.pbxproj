@@ -22,6 +22,7 @@
 		0A803BB0394FFC30B093A27F /* PopoverPreviewWindowFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6109E9273AD6AC1C7AC17BC /* PopoverPreviewWindowFactory.swift */; };
 		0BB19FF1B96D5CBA990754D8 /* TagRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A3F30F54370746918FAE7D8 /* TagRepository.swift */; };
 		0D55538AF23C931B59612B39 /* AutoSaveSettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B176355F678A8067619BEFA /* AutoSaveSettingsStoreTests.swift */; };
+		0E236D2C158CC63B9F0FB0EC /* CompositeClipFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63BE9FA02A01C062529C9FA1 /* CompositeClipFilter.swift */; };
 		0E3206AFC8212E285404133C /* TagPillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 186F4309CEBEE040FEBDE936 /* TagPillView.swift */; };
 		12AE81885A942B8DC3D47234 /* PrivacyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97FB7A2ADAD846362DD54BD /* PrivacyUITests.swift */; };
 		14CFF8FDAD32D42527732C7D /* APIKeyConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0158AFEC98DEF7010FF07BA5 /* APIKeyConfigView.swift */; };
@@ -88,6 +89,7 @@
 		522B53C190F10EAECD9B69C9 /* TagAssociationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96F0DB9F3080DE11199B3165 /* TagAssociationTests.swift */; };
 		53A7C14D78583095E3B72FDA /* PrivacySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10F7E9079BA9F0B75D03993 /* PrivacySettingsView.swift */; };
 		53F93E7EAA10241E4629847F /* TagNameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4461C7C441D587675B7129C /* TagNameValidator.swift */; };
+		5591BEE88958CEEC3265E813 /* TagFilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA999149D1D646B8BFF16D50 /* TagFilterView.swift */; };
 		591D538D533DF346AA647A1A /* AppIconAssetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F45065D85CAD45C8E604E06A /* AppIconAssetTests.swift */; };
 		5AD99B75D6C26A3279E75DEB /* CaptureEventBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C604633C675BAF669C6866AA /* CaptureEventBuilderTests.swift */; };
 		5C97478A4125CE3ED845274B /* ClipboardReplacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F96B6D359544AA6478264C /* ClipboardReplacer.swift */; };
@@ -190,6 +192,7 @@
 		B3D67598786E5AEEA22E3669 /* SystemTagCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE760B5525D322A54EB11212 /* SystemTagCatalog.swift */; };
 		B4A8B7DD3E48D04312E91293 /* LayoutConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5872E9B5D6F6F8ACAF6BC5D8 /* LayoutConstants.swift */; };
 		B57809314C830BC64995C76B /* ClipTagStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3490C86C754A26C02F0B68C9 /* ClipTagStripView.swift */; };
+		B594B715E4D77225755A36C4 /* CompositeClipFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7766D33C24C7E93250618A /* CompositeClipFilterTests.swift */; };
 		B5E3A2486C046034773A990A /* TimerSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C06644430540D4210794AAD /* TimerSourceTests.swift */; };
 		B98BFF2606B3BD5E0C2CD533 /* DefaultBlacklistTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2EB6BA90539D3F2B3E68D1 /* DefaultBlacklistTests.swift */; };
 		BA7754C5642A7356E27B8C13 /* ClipMindUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37023D2FCB531B633F999B04 /* ClipMindUITests.swift */; };
@@ -347,6 +350,7 @@
 		3AFB70953AAE16C89101A34B /* ContentReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentReaderTests.swift; sourceTree = "<group>"; };
 		3B2099FE6AE1EA126EF0ED58 /* SourceFilterSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceFilterSelection.swift; sourceTree = "<group>"; };
 		3B43AF8EF3AD28DDE8EDEEC7 /* LoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerTests.swift; sourceTree = "<group>"; };
+		3B7766D33C24C7E93250618A /* CompositeClipFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositeClipFilterTests.swift; sourceTree = "<group>"; };
 		3BEE678A88FE1F8F029BB24A /* GlobalHotkeyServiceNewDefaultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyServiceNewDefaultTests.swift; sourceTree = "<group>"; };
 		3F608BEDCC6B2685431758BA /* ClipRowViewMultiLinePreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipRowViewMultiLinePreviewTests.swift; sourceTree = "<group>"; };
 		40EB26C58B1F517AE16B2EAF /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -388,6 +392,7 @@
 		5F251B7AE980808D43161B6B /* HotkeyRecorderResetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorderResetTests.swift; sourceTree = "<group>"; };
 		62D655CA286AD3A68F3B858E /* PasteboardWatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardWatcherTests.swift; sourceTree = "<group>"; };
 		63A1745737903CDF4CBD811E /* PopoverDoublePasteUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverDoublePasteUITests.swift; sourceTree = "<group>"; };
+		63BE9FA02A01C062529C9FA1 /* CompositeClipFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositeClipFilter.swift; sourceTree = "<group>"; };
 		63DEB7531FB7A28A9CCC7372 /* EncryptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptionTests.swift; sourceTree = "<group>"; };
 		6400A1E9423E685A8AF9244E /* AppSettingsHotkeyMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsHotkeyMigrationTests.swift; sourceTree = "<group>"; };
 		646831FF2C8CC5FD895C9DE1 /* AppDelegateAutoSaveAssemblyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegateAutoSaveAssemblyTests.swift; sourceTree = "<group>"; };
@@ -465,6 +470,7 @@
 		A9F978F6E9E7196579808518 /* SelfWriteSuppressorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfWriteSuppressorTests.swift; sourceTree = "<group>"; };
 		AA1EBBEC1A09C7A148590FE5 /* FilePathFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePathFormatter.swift; sourceTree = "<group>"; };
 		AA7938736139B32CDD1249E5 /* CaptureEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureEventTests.swift; sourceTree = "<group>"; };
+		AA999149D1D646B8BFF16D50 /* TagFilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagFilterView.swift; sourceTree = "<group>"; };
 		AB1676FD1002DFCF2481517E /* TranslateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateTests.swift; sourceTree = "<group>"; };
 		ABC80CDD69C7269F9946F8B1 /* UnifiedPastePanelViewModelFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedPastePanelViewModelFilterTests.swift; sourceTree = "<group>"; };
 		ABD5B39F7DAEF07E5F2DAB3F /* ClipTestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipTestData.swift; sourceTree = "<group>"; };
@@ -765,6 +771,7 @@
 				6FEC71FB7F792A4A1F5B587A /* ClipboardWriterTests.swift */,
 				ED13F78D795292DB7194F5E9 /* ClipRowViewInteractionTests.swift */,
 				80A0DDD564A52428306ECAD1 /* ClipStoreUpdateClipTests.swift */,
+				3B7766D33C24C7E93250618A /* CompositeClipFilterTests.swift */,
 				D3E881F0CDD7223BAB847A6C /* EditableContentAreaTests.swift */,
 				5F251B7AE980808D43161B6B /* HotkeyRecorderResetTests.swift */,
 				A52ED7BE1D5CC6EB2B264661 /* MainWindowLayoutTests.swift */,
@@ -930,6 +937,7 @@
 		BAA849BA839FB893A007C667 /* MainWindow */ = {
 			isa = PBXGroup;
 			children = (
+				63BE9FA02A01C062529C9FA1 /* CompositeClipFilter.swift */,
 				5C626C2E4480671EA68F3A65 /* DetailPanel.swift */,
 				9DC137C298E86A9928DD044F /* EditableContentArea.swift */,
 				69622D426196E6F573F69442 /* HistoryListView.swift */,
@@ -1118,6 +1126,7 @@
 			isa = PBXGroup;
 			children = (
 				3490C86C754A26C02F0B68C9 /* ClipTagStripView.swift */,
+				AA999149D1D646B8BFF16D50 /* TagFilterView.swift */,
 				2FE832470799EDED3ED25F8A /* TagPickerPresenter.swift */,
 				1D77218BA5D4CAF126E88E05 /* TagPickerView.swift */,
 				186F4309CEBEE040FEBDE936 /* TagPillView.swift */,
@@ -1409,6 +1418,7 @@
 				7A88502B5C53FE214F79FB50 /* ClipboardConsumerWatcher.swift in Sources */,
 				5C97478A4125CE3ED845274B /* ClipboardReplacer.swift in Sources */,
 				712F995435D0CE9E792F382E /* ClipboardWriter.swift in Sources */,
+				0E236D2C158CC63B9F0FB0EC /* CompositeClipFilter.swift in Sources */,
 				A897A8569930EF2CE18B5F95 /* ConflictResolver.swift in Sources */,
 				ABAE51DD59348A8C4375C0AF /* ContentReader.swift in Sources */,
 				E323B17597A465510DE54C29 /* ContentType.swift in Sources */,
@@ -1472,6 +1482,7 @@
 				B3D67598786E5AEEA22E3669 /* SystemTagCatalog.swift in Sources */,
 				7418E87D3AE590097FB0FEC5 /* TagBackendAssembly.swift in Sources */,
 				06B731951FB28CAB744FFF68 /* TagError.swift in Sources */,
+				5591BEE88958CEEC3265E813 /* TagFilterView.swift in Sources */,
 				FEAE2AA87C5421CADECA748A /* TagMigrationCoordinator.swift in Sources */,
 				53F93E7EAA10241E4629847F /* TagNameValidator.swift in Sources */,
 				4BA45A7DE6B0F521B1086CFF /* TagOperationLogger.swift in Sources */,
@@ -1534,6 +1545,7 @@
 				9897EE15D704D77465A077EE /* ClipboardConsumerWatcherTests.swift in Sources */,
 				6D28C09D266CACCA81D5B8B4 /* ClipboardReplacerTests.swift in Sources */,
 				EE9C51013CD5C7AFEE3BBA51 /* ClipboardWriterTests.swift in Sources */,
+				B594B715E4D77225755A36C4 /* CompositeClipFilterTests.swift in Sources */,
 				6902C6AB53A854784CF22D3E /* ConflictResolverTests.swift in Sources */,
 				16BE84E9768706E009A8DFCC /* ContentReaderTests.swift in Sources */,
 				875C04EEA8B97377577DF8CC /* ContentTypeTests.swift in Sources */,

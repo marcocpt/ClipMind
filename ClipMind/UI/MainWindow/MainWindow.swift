@@ -3,9 +3,9 @@ import SwiftUI
 struct MainWindow: View {
     @State private var selectedClip: ClipItem?
     @State private var searchText = ""
-    @State private var searchResults: [ClipItem] = []
-    @State private var isSearching = false
+    @State private var committedQuery = ""
     @State private var sourceFilterSelection = SourceFilterSelection(allApps: [])
+    @State private var tagFilterSelection = TagFilterSelection()
     @StateObject private var clipStore = ClipStore()
     @ObservedObject private var tagStore: TagStore
     @State private var isMigrationBannerDismissed = false
@@ -15,12 +15,39 @@ struct MainWindow: View {
     }
 
     private var allClips: [ClipItem] {
-        ClipTestData.isUITesting ? ClipTestData.previewClips : clipStore.clips
+        ClipTestData.isUITesting ? ClipTestData.activeFixtureClips : clipStore.clips
     }
 
     private var sourceApps: [String]
     {
         SourceAppExtractor.extract(from: allClips)
+    }
+
+    /// 是否处于搜索状态（已提交查询非空）。
+    private var isSearching: Bool
+    {
+        !committedQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// 完整筛选意图，收敛搜索、来源和标签条件。
+    private var filterIntent: ClipFilterIntent
+    {
+        ClipFilterIntent(
+            query: committedQuery,
+            selectedSourceApps: sourceFilterSelection.selectedSources,
+            allSourceApps: Set(sourceApps),
+            selectedTagIDs: tagFilterSelection.selectedTagIDs
+        )
+    }
+
+    /// 经 CompositeClipFilter 统一筛选后的结果，历史和搜索共用同一结果集。
+    private var filteredClips: [ClipItem]
+    {
+        CompositeClipFilter.filter(
+            allClips,
+            intent: filterIntent,
+            snapshot: tagStore.snapshot
+        )
     }
 
     var body: some View {
@@ -52,7 +79,14 @@ struct MainWindow: View {
             }
         }
         .onChange(of: sourceApps) { newApps in
-            sourceFilterSelection = SourceFilterSelection(allApps: Set(newApps))
+            // 保留仍存在的已选来源，只移除已不存在的来源
+            let newSet = Set(newApps)
+            let preserved = sourceFilterSelection.selectedSources.intersection(newSet)
+            sourceFilterSelection = SourceFilterSelection(allApps: newSet)
+            if !preserved.isEmpty
+            {
+                sourceFilterSelection.selectedSources = preserved
+            }
         }
     }
 
@@ -62,6 +96,10 @@ struct MainWindow: View {
             SourceFilter(
                 selection: $sourceFilterSelection,
                 availableApps: sourceApps
+            )
+            TagFilterView(
+                selection: $tagFilterSelection,
+                snapshot: tagStore.snapshot
             )
         }
         .padding(12)
@@ -110,47 +148,27 @@ struct MainWindow: View {
     private var contentArea: some View {
         if isSearching {
             SearchResultsView(
-                results: filteredSearchResults,
+                filteredClips: filteredClips,
                 onSelect: { clip in
                     selectedClip = clip
                 },
-                isSourceFilterActive: !sourceFilterSelection.isAllSelected,
                 tagStore: tagStore
             )
         } else {
             HistoryListView(
                 selectedClip: $selectedClip,
-                sourceFilter: sourceFilterSelection.selectedSources,
+                allClips: allClips,
+                filteredClips: filteredClips,
                 tagStore: tagStore
             )
         }
     }
 
-    /// 搜索结果按来源 App 过滤
-    private var filteredSearchResults: [ClipItem]
-    {
-        if sourceFilterSelection.isAllSelected
-        {
-            return searchResults
-        }
-        return searchResults.filter { sourceFilterSelection.selectedSources.contains($0.sourceAppName) }
-    }
-
-    /// 执行搜索（UI 测试模式下为文本匹配；生产环境后续接入 SearchService）
+    /// 提交搜索：trim 后写入 `committedQuery`，不直接修改结果。
+    /// 来源/标签变化基于同一 committed query 即时重算，但不会隐式提交正在输入的文字。
     private func performSearch(_ query: String) {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            isSearching = false
-            searchResults = []
-            return
-        }
-        isSearching = true
-        searchResults = allClips.filter { clip in
-            if case .text(let text) = clip.content {
-                return text.localizedCaseInsensitiveContains(trimmed)
-            }
-            return false
-        }
+        committedQuery = trimmed
     }
 
     /// 打开设置面板。

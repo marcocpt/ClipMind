@@ -64,6 +64,7 @@ extension AppDelegate
         if TagUITestSupport.shouldSeedTagFixture
             || TagUITestSupport.shouldSeedLimitFixture
             || TagUITestSupport.shouldSeedEmptyClip
+            || TagUITestSupport.shouldSeedTagFilterFixture
         {
             LogCategory.app.info("F1.14 tag UITest fixture requested")
         }

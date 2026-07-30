@@ -145,6 +145,102 @@ enum ClipTestData {
         )
     }
 
+    // MARK: - F1.14 Phase 3 标签筛选夹具
+
+    /// `--UITEST_TAG_FILTER_FIXTURE` 启动参数。
+    static let tagFilterFixtureArg = "--UITEST_TAG_FILTER_FIXTURE"
+
+    /// 标签筛选夹具使用的 4 条稳定 UUID。
+    /// 对应计划 phase-3 任务 4 表格中的 `tag-result-1`～`tag-result-4`。
+    static let tagFilterFixtureClipIDs: [UUID] = [
+        UUID(uuidString: "00000000-0000-4000-8000-000000000301")!,
+        UUID(uuidString: "00000000-0000-4000-8000-000000000302")!,
+        UUID(uuidString: "00000000-0000-4000-8000-000000000303")!,
+        UUID(uuidString: "00000000-0000-4000-8000-000000000304")!
+    ]
+
+    /// 标签筛选夹具使用的 2 个用户标签稳定 UUID。
+    static let tagFilterFixtureUserTagIDs: [UUID] = [
+        UUID(uuidString: "00000000-0000-4000-8000-000000000311")!,
+        UUID(uuidString: "00000000-0000-4000-8000-000000000312")!
+    ]
+
+    /// 标签筛选夹具：4 条固定 ClipItem，覆盖搜索、来源和标签交集场景。
+    ///
+    /// | 索引 | resultId | 内容 | 来源 | 标签 |
+    /// |------|----------|------|------|------|
+    /// | 0 | tag-result-1 | 含"需求" | Pages | REQ、重要、待处理 |
+    /// | 1 | tag-result-2 | 含"需求" | Pages | REQ、重要 |
+    /// | 2 | tag-result-3 | 含"需求" | Xcode | CODE、重要、待处理 |
+    /// | 3 | tag-result-4 | 不含查询 | Pages | REQ、重要、待处理 |
+    static let tagFilterFixtureClips: [ClipItem] = [
+        makeTagFilterClip(
+            id: tagFilterFixtureClipIDs[0],
+            text: "需求分析文档：用户登录流程",
+            contentType: .requirement,
+            sourceApp: "com.apple.Pages",
+            sourceAppName: "Pages"
+        ),
+        makeTagFilterClip(
+            id: tagFilterFixtureClipIDs[1],
+            text: "需求评审记录：性能指标",
+            contentType: .requirement,
+            sourceApp: "com.apple.Pages",
+            sourceAppName: "Pages"
+        ),
+        makeTagFilterClip(
+            id: tagFilterFixtureClipIDs[2],
+            text: "需求代码实现：Swift 版本",
+            contentType: .code,
+            sourceApp: "com.apple.Xcode",
+            sourceAppName: "Xcode"
+        ),
+        makeTagFilterClip(
+            id: tagFilterFixtureClipIDs[3],
+            text: "设计文档：系统架构",
+            contentType: .requirement,
+            sourceApp: "com.apple.Pages",
+            sourceAppName: "Pages"
+        )
+    ]
+
+    /// 当前 UI 测试模式激活的夹具数据。
+    ///
+    /// `--UITEST_TAG_FILTER_FIXTURE` 优先返回标签筛选夹具；
+    /// 否则返回 `previewClips`（11 种 ContentType 预览数据）。
+    static var activeFixtureClips: [ClipItem]
+    {
+        if CommandLine.arguments.contains(tagFilterFixtureArg)
+        {
+            return tagFilterFixtureClips
+        }
+        return previewClips
+    }
+
+    /// 创建标签筛选夹具 ClipItem（带稳定 UUID 和 `tagState: .newItem`）。
+    private static func makeTagFilterClip(
+        id: UUID,
+        text: String,
+        contentType: ContentType,
+        sourceApp: String,
+        sourceAppName: String
+    ) -> ClipItem {
+        ClipItem(
+            id: id,
+            content: .text(text),
+            contentType: contentType,
+            sourceApp: sourceApp,
+            sourceAppName: sourceAppName,
+            timestamp: Date(),
+            summary: nil,
+            translation: nil,
+            rewrite: nil,
+            todos: nil,
+            embeddings: nil,
+            tagState: .newItem(contentType: contentType)
+        )
+    }
+
     /// 判断当前是否为 UI 测试模式
     static var isUITesting: Bool {
         CommandLine.arguments.contains("--UITEST_PREVIEW_DATA")
