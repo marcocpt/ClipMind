@@ -71,11 +71,13 @@ final class TagFilterUITests: XCTestCase
         // 搜索"需求"（3 条匹配：tag-result-1/2/3）
         searchQuery(app, "需求")
 
-        // 来源筛选只选 Pages（排除 Xcode → 排除 tag-result-3）
-        deselectSource(app, "Xcode")
+        // 来源筛选只选 Pages（利用 solo 行为：全选状态下点击 Pages → 仅选 Pages）
+        selectOnlySource(app, "Pages")
 
         // 标签筛选选"重要"（tag-result-1/2 都有"重要"）
+        openTagFilterPopover(app)
         selectTagInFilter(app, importantTagID)
+        closeTagFilterPopover(app)
 
         // 验证结果：tag-result-1、tag-result-2 显示，tag-result-3/4 不显示
         verifyClipDisplayed(app, clipID: tagResult1ID, displayed: true)
@@ -92,9 +94,13 @@ final class TagFilterUITests: XCTestCase
         let app = launchWithFilterFixture()
 
         searchQuery(app, "需求")
-        deselectSource(app, "Xcode")
+        selectOnlySource(app, "Pages")
+
+        // 打开 popover 一次，连续选两个标签
+        openTagFilterPopover(app)
         selectTagInFilter(app, importantTagID)
         selectTagInFilter(app, pendingTagID)
+        closeTagFilterPopover(app)
 
         // 验证结果：tag-result-1 显示，tag-result-2 不显示
         verifyClipDisplayed(app, clipID: tagResult1ID, displayed: true)
@@ -109,10 +115,13 @@ final class TagFilterUITests: XCTestCase
         let app = launchWithFilterFixture()
 
         searchQuery(app, "需求")
-        deselectSource(app, "Xcode")
+        selectOnlySource(app, "Pages")
+
+        openTagFilterPopover(app)
         selectTagInFilter(app, importantTagID)
         selectTagInFilter(app, pendingTagID)
         selectTagInFilter(app, linkSystemTagID)
+        closeTagFilterPopover(app)
 
         // 验证筛选空态出现
         let emptyState = app.descendants(matching: .any)["searchFilterEmptyState"].firstMatch
@@ -130,17 +139,22 @@ final class TagFilterUITests: XCTestCase
         let app = launchWithFilterFixture()
 
         searchQuery(app, "需求")
-        deselectSource(app, "Xcode")
+        selectOnlySource(app, "Pages")
+
+        openTagFilterPopover(app)
         selectTagInFilter(app, importantTagID)
         selectTagInFilter(app, pendingTagID)
         selectTagInFilter(app, linkSystemTagID)
+        closeTagFilterPopover(app)
 
         // 确认空态
         let emptyState = app.descendants(matching: .any)["searchFilterEmptyState"].firstMatch
         XCTAssertTrue(emptyState.waitForExistence(timeout: 10))
 
-        // 移除 LINK 标签（再次点击取消）
+        // 移除 LINK 标签（再次点击取消选择）
+        openTagFilterPopover(app)
         selectTagInFilter(app, linkSystemTagID)
+        closeTagFilterPopover(app)
 
         // 验证 tag-result-1 恢复显示
         verifyClipDisplayed(app, clipID: tagResult1ID, displayed: true)
@@ -154,9 +168,12 @@ final class TagFilterUITests: XCTestCase
         let app = launchWithFilterFixture()
 
         searchQuery(app, "需求")
-        deselectSource(app, "Xcode")
+        selectOnlySource(app, "Pages")
+
+        openTagFilterPopover(app)
         selectTagInFilter(app, importantTagID)
         selectTagInFilter(app, pendingTagID)
+        closeTagFilterPopover(app)
 
         // 清除全部标签筛选
         clearTagFilter(app)
@@ -218,19 +235,13 @@ final class TagFilterUITests: XCTestCase
         // 等待 TagStore snapshot 加载完成：打开标签筛选 popover，
         // 确认用户标签「重要」出现在候选列表中。
         // snapshot 加载是异步的，historyList 出现不代表 snapshot 已就绪。
-        let tagFilterPicker = app.buttons["tagFilterPicker"]
-        XCTAssertTrue(
-            tagFilterPicker.waitForExistence(timeout: 5),
-            "标签筛选按钮应存在"
-        )
-        tagFilterPicker.click()
+        openTagFilterPopover(app)
         let importantOption = app.buttons["tagFilterOption_\(importantTagID)"]
         XCTAssertTrue(
             importantOption.waitForExistence(timeout: 10),
             "TagStore snapshot 应加载完成，用户标签「重要」应出现在筛选候选中"
         )
-        // 关闭 popover（再次点击 picker 或点击空白区域）
-        tagFilterPicker.click()
+        closeTagFilterPopover(app)
 
         return app
     }
@@ -252,8 +263,12 @@ final class TagFilterUITests: XCTestCase
         )
     }
 
-    /// 在来源筛选菜单中取消选择指定来源。
-    private func deselectSource(_ app: XCUIApplication, _ source: String)
+    /// 在来源筛选菜单中选择仅显示指定来源。
+    ///
+    /// `SourceFilterSelection.toggleSource` 在全选状态下点击某来源会 solo 到该来源
+    /// （`selectedSources = [app]`），因此点击想要保留的来源即可实现"仅显示该来源"。
+    /// 例如要排除 Xcode、只保留 Pages，调用 `selectOnlySource(app, "Pages")`。
+    private func selectOnlySource(_ app: XCUIApplication, _ source: String)
     {
         // SwiftUI Menu 在 XCUITest 中不一定是 Button，用 descendants 兜底查询
         let picker = app.descendants(matching: .any)["sourceFilterPicker"].firstMatch
@@ -269,64 +284,105 @@ final class TagFilterUITests: XCTestCase
         menuItem.click()
     }
 
+    // MARK: - 标签筛选 Popover 控制
+
+    /// 打开标签筛选 popover，等待标签选项出现。
+    /// 如果 popover 已打开则不重复点击。
+    private func openTagFilterPopover(_ app: XCUIApplication)
+    {
+        // 检查 popover 是否已打开（任意 tagFilterOption 存在）
+        if hasTagFilterOption(app) { return }
+
+        let picker = app.buttons["tagFilterPicker"]
+        XCTAssertTrue(
+            picker.waitForExistence(timeout: 5),
+            "标签筛选按钮应存在"
+        )
+        picker.click()
+
+        // 等待 popover 内容出现（任意 tagFilterOption）
+        let optionPredicate = NSPredicate(format: "identifier BEGINSWITH 'tagFilterOption_'")
+        let anyOption = app.buttons.matching(optionPredicate).firstMatch
+        XCTAssertTrue(
+            anyOption.waitForExistence(timeout: 5),
+            "标签筛选 popover 应打开并显示标签选项"
+        )
+    }
+
+    /// 关闭标签筛选 popover，等待标签选项消失。
+    /// 如果 popover 已关闭则不重复点击。
+    private func closeTagFilterPopover(_ app: XCUIApplication)
+    {
+        // 检查 popover 是否已关闭
+        if !hasTagFilterOption(app) { return }
+
+        let picker = app.buttons["tagFilterPicker"]
+        if picker.exists
+        {
+            picker.click()
+        }
+
+        // 等待 popover 关闭（选项消失）
+        let closePredicate = NSPredicate
+        { _, _ in
+            !self.hasTagFilterOption(app)
+        }
+        let expectation = XCTNSPredicateExpectation(predicate: closePredicate, object: nil)
+        let result = XCTWaiter().wait(for: [expectation], timeout: 5)
+        if result != .completed
+        {
+            // picker 点击未关闭 popover，尝试点击搜索框区域关闭
+            let searchField = app.textFields["mainSearchField"]
+            if searchField.exists
+            {
+                searchField.click()
+                Thread.sleep(forTimeInterval: 0.3)
+            }
+        }
+    }
+
+    /// 检查标签筛选 popover 是否已打开（至少一个 tagFilterOption 可见）。
+    private func hasTagFilterOption(_ app: XCUIApplication) -> Bool
+    {
+        let optionPredicate = NSPredicate(format: "identifier BEGINSWITH 'tagFilterOption_'")
+        return app.buttons.matching(optionPredicate).firstMatch.exists
+    }
+
     /// 在标签筛选 popover 中切换指定标签的选择状态。
     ///
-    /// 操作完成后关闭 popover，避免 popover 覆盖 clipRow 导致后续
-    /// `verifyClipDisplayed` 无法定位元素。
+    /// **调用前必须确保 popover 已打开**（通过 `openTagFilterPopover`）。
+    /// 本方法只负责查找选项并点击，不处理 popover 开关。
+    /// 连续选多个标签时保持 popover 打开，选完后统一调用 `closeTagFilterPopover`。
     private func selectTagInFilter(_ app: XCUIApplication, _ tagID: String)
     {
-        let picker = app.buttons["tagFilterPicker"]
-        XCTAssertTrue(picker.waitForExistence(timeout: 5), "标签筛选按钮应存在")
-
-        // 如果 popover 未打开，点击打开
         let option = app.buttons["tagFilterOption_\(tagID)"]
-        if !option.exists
-        {
-            picker.click()
-            XCTAssertTrue(
-                option.waitForExistence(timeout: 5),
-                "标签选项 \(tagID) 应存在"
-            )
-        }
+        XCTAssertTrue(
+            option.waitForExistence(timeout: 5),
+            "标签选项 \(tagID) 应存在（popover 应已打开）"
+        )
         option.click()
-
-        // 关闭 popover，确保后续 clipRow 查找不被遮挡。
-        // 通过 popover 内的清除按钮是否存在判断 popover 是否仍打开。
-        let clearButton = app.buttons["tagFilterClearButton"]
-        if clearButton.exists
-        {
-            picker.click()
-        }
     }
 
     /// 清除全部标签筛选。
     private func clearTagFilter(_ app: XCUIApplication)
     {
-        let picker = app.buttons["tagFilterPicker"]
-        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        openTagFilterPopover(app)
 
         let clearButton = app.buttons["tagFilterClearButton"]
-        if !clearButton.exists
-        {
-            picker.click()
-            XCTAssertTrue(
-                clearButton.waitForExistence(timeout: 5),
-                "清除按钮应存在"
-            )
-        }
+        XCTAssertTrue(
+            clearButton.waitForExistence(timeout: 5),
+            "清除按钮应存在（需要先选中至少一个标签）"
+        )
         clearButton.click()
 
-        // 关闭 popover（如果仍打开）
-        if app.buttons["tagFilterClearButton"].exists
-        {
-            picker.click()
-        }
+        closeTagFilterPopover(app)
     }
+
+    // MARK: - 结果验证
 
     /// 验证指定 clip 是否在当前结果列表中显示。
     ///
-    /// 通过唯一的 `clipRow_<clipID>` accessibilityIdentifier 判断，不依赖标签 pill 或
-    /// accessibilityValue（后者在 `.contain` 容器模式下不被 XCUITest 读取）。
+    /// 通过唯一的 `clipRow_<clipID>` accessibilityIdentifier 判断。
     private func verifyClipDisplayed(
         _ app: XCUIApplication,
         clipID: String,
