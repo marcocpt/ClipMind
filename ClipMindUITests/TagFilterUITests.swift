@@ -115,7 +115,7 @@ final class TagFilterUITests: XCTestCase
         selectTagInFilter(app, linkSystemTagID)
 
         // 验证筛选空态出现
-        let emptyState = app.otherElements["searchFilterEmptyState"]
+        let emptyState = app.descendants(matching: .any)["searchFilterEmptyState"].firstMatch
         XCTAssertTrue(
             emptyState.waitForExistence(timeout: 10),
             "选择无匹配标签应显示筛选空态"
@@ -136,7 +136,7 @@ final class TagFilterUITests: XCTestCase
         selectTagInFilter(app, linkSystemTagID)
 
         // 确认空态
-        let emptyState = app.otherElements["searchFilterEmptyState"]
+        let emptyState = app.descendants(matching: .any)["searchFilterEmptyState"].firstMatch
         XCTAssertTrue(emptyState.waitForExistence(timeout: 10))
 
         // 移除 LINK 标签（再次点击取消）
@@ -167,7 +167,7 @@ final class TagFilterUITests: XCTestCase
         verifyClipNotDisplayed(app, clipID: tagResult3ID)
 
         // 验证活动 chip 已移除
-        let importantChip = app.otherElements["activeTagFilter_\(importantTagID)"]
+        let importantChip = app.descendants(matching: .any)["activeTagFilter_\(importantTagID)"].firstMatch
         XCTAssertFalse(importantChip.exists, "清除后「重要」活动 chip 应移除")
     }
 
@@ -181,13 +181,13 @@ final class TagFilterUITests: XCTestCase
         app.launch()
         app.activate()
 
-        let emptyState = app.otherElements["historyEmptyState"]
+        let emptyState = app.descendants(matching: .any)["historyEmptyState"].firstMatch
         XCTAssertTrue(
             emptyState.waitForExistence(timeout: 10),
             "空数据库应显示历史空态"
         )
 
-        let filterEmptyState = app.otherElements["historyFilterEmptyState"]
+        let filterEmptyState = app.descendants(matching: .any)["historyFilterEmptyState"].firstMatch
         XCTAssertFalse(
             filterEmptyState.exists,
             "空数据库不应显示筛选空态"
@@ -209,7 +209,7 @@ final class TagFilterUITests: XCTestCase
         app.activate()
 
         // 等待历史列表出现（初始显示全部 4 条夹具）
-        let historyList = app.otherElements["historyList"]
+        let historyList = app.descendants(matching: .any)["historyList"].firstMatch
         XCTAssertTrue(
             historyList.waitForExistence(timeout: 10),
             "主窗口应显示历史列表"
@@ -227,7 +227,7 @@ final class TagFilterUITests: XCTestCase
         searchField.typeText("\r")
 
         // 等待搜索结果列表出现
-        let searchResults = app.otherElements["searchResultsList"]
+        let searchResults = app.descendants(matching: .any)["searchResultsList"].firstMatch
         XCTAssertTrue(
             searchResults.waitForExistence(timeout: 5),
             "搜索提交后应显示搜索结果列表"
