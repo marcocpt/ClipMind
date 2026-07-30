@@ -100,7 +100,7 @@ final class TagSettingsUITests: XCTestCase
         submitButton.click()
 
         // 独立确认 alert 出现，包含"重命名"按钮
-        let confirmButton = app.buttons["重命名"]
+        let confirmButton = app.sheets.buttons["重命名"]
         XCTAssertTrue(
             confirmButton.waitForExistence(timeout: 5),
             "应弹独立确认 dialog，包含「重命名」按钮"
@@ -133,7 +133,7 @@ final class TagSettingsUITests: XCTestCase
         deleteButton.click()
 
         // 独立确认 alert 出现，包含"删除"按钮
-        let confirmButton = app.buttons["删除"]
+        let confirmButton = app.sheets.buttons["删除"]
         XCTAssertTrue(
             confirmButton.waitForExistence(timeout: 5),
             "应弹独立确认 dialog，包含「删除」按钮"
@@ -190,7 +190,7 @@ final class TagSettingsUITests: XCTestCase
         deleteButton.click()
 
         // 取消确认
-        let cancelButton = app.buttons["取消"]
+        let cancelButton = app.sheets.buttons["取消"]
         XCTAssertTrue(
             cancelButton.waitForExistence(timeout: 5),
             "确认 dialog 应包含「取消」按钮"
@@ -233,7 +233,7 @@ final class TagSettingsUITests: XCTestCase
             "空白名称应显示校验错误"
         )
         XCTAssertFalse(
-            app.buttons["重命名"].exists,
+            app.sheets.buttons["重命名"].exists,
             "空白名称不应进入确认 dialog"
         )
     }
@@ -264,7 +264,7 @@ final class TagSettingsUITests: XCTestCase
             "重名应显示校验错误"
         )
         XCTAssertFalse(
-            app.buttons["重命名"].exists,
+            app.sheets.buttons["重命名"].exists,
             "重名不应进入确认 dialog"
         )
     }
@@ -290,7 +290,7 @@ final class TagSettingsUITests: XCTestCase
 
         app.buttons["submitRenameTag_\(firstUserTagID)"].click()
 
-        let confirmButton = app.buttons["重命名"]
+        let confirmButton = app.sheets.buttons["重命名"]
         XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
         confirmButton.click()
 
@@ -322,7 +322,7 @@ final class TagSettingsUITests: XCTestCase
 
         app.buttons["submitRenameTag_\(firstUserTagID)"].click()
 
-        let confirmButton = app.buttons["重命名"]
+        let confirmButton = app.sheets.buttons["重命名"]
         XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
         confirmButton.click()
 
@@ -356,7 +356,7 @@ final class TagSettingsUITests: XCTestCase
         XCTAssertTrue(deleteButton.waitForExistence(timeout: 10))
         deleteButton.click()
 
-        let confirmButton = app.buttons["删除"]
+        let confirmButton = app.sheets.buttons["删除"]
         XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
         confirmButton.click()
 
@@ -396,9 +396,9 @@ final class TagSettingsUITests: XCTestCase
         app.buttons["submitRenameTag_\(firstUserTagID)"].click()
 
         // 验证 dialog 按钮可交互
-        let cancelButton = app.buttons["取消"]
+        let cancelButton = app.sheets.buttons["取消"]
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 5))
-        let confirmButton = app.buttons["重命名"]
+        let confirmButton = app.sheets.buttons["重命名"]
         XCTAssertTrue(confirmButton.exists, "确认按钮应存在")
 
         // 取消 dialog
