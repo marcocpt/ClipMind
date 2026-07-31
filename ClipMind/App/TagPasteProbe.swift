@@ -97,9 +97,17 @@ final class TagPasteProbe: NSObject, NSTextFieldDelegate
     }
 
     /// 显示窗口并使接收文本框成为 first responder。
+    ///
+    /// 将面板定位到屏幕右上角（菜单栏下方），避免与主窗口（左下角 100,100）、
+    /// 快捷粘贴面板（屏幕中央）和菜单栏弹窗（状态栏附近）重叠导致 textField
+    /// 不可点击（XCUITest "is not hittable"）。
     func show()
     {
-        panel.center()
+        let screenFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        panel.setFrameOrigin(NSPoint(
+            x: screenFrame.maxX - panel.frame.width - 20,
+            y: screenFrame.maxY - panel.frame.height - 20
+        ))
         panel.makeKeyAndOrderFront(nil)
         panel.makeFirstResponder(textField)
     }

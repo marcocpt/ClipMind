@@ -39,8 +39,11 @@ enum TagBackendFactory
         }
 
         #if CLIPMIND_DEV
+        // 先通过原始 store 注入夹具，再包装 FailOnce decorator。
+        // 若先包装再注入，FailOnce 会拦截 seeding 的第一个 createAndAttach，
+        // 导致 fixture 标签（如「工作」pill）不存在，UI 测试无法启动。
+        TagUITestSupport.seedFixturesIfNeeded(store: store, repository: store)
         let repository: TagRepository = TagUITestSupport.wrapRepositoryIfNeeded(store)
-        TagUITestSupport.seedFixturesIfNeeded(store: store, repository: repository)
         #else
         let repository: TagRepository = store
         #endif

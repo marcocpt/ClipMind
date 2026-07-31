@@ -262,11 +262,13 @@ final class TagFilterUITests: XCTestCase
         verifyClipNotDisplayed(app, clipID: tagResult3ID)
         verifyClipNotDisplayed(app, clipID: tagResult4ID)
     }
+}
 
-    // MARK: - 辅助方法
-
+// MARK: - 辅助方法
+private extension TagFilterUITests
+{
     /// 启动带标签筛选夹具的主窗口。
-    private func launchWithFilterFixture() -> XCUIApplication
+    func launchWithFilterFixture() -> XCUIApplication
     {
         let app = XCUIApplication()
         app.launchArguments = [
@@ -328,25 +330,36 @@ final class TagFilterUITests: XCTestCase
     ///
     /// 保留来源和标签筛选，仅清空搜索文本，提交空查询使 `isSearching` 变为 false，
     /// 主窗口从 SearchResultsView 切换到 HistoryListView。
+    ///
+    /// 优先点击 `clearSearchButton`（X 按钮）：它直接调用 `clearSearch()` 设置
+    /// `text=""` 并立即 `onCommit("")`，不依赖 `onChange` 防抖时序，比逐字符
+    /// delete 更可靠。fallback 保留 delete + return 路径。
     private func clearSearchQuery(_ app: XCUIApplication)
     {
-        let searchField = app.textFields["mainSearchField"]
-        XCTAssertTrue(searchField.waitForExistence(timeout: 5), "搜索框应存在")
-        searchField.click()
-        if let current = searchField.value as? String, !current.isEmpty
+        let clearButton = app.buttons["clearSearchButton"]
+        if clearButton.waitForExistence(timeout: 3)
         {
-            let deleteString = String(
-                repeating: XCUIKeyboardKey.delete.rawValue,
-                count: current.count
-            )
-            searchField.typeText(deleteString)
+            clearButton.click()
+        } else {
+            // Fallback：手动 delete + return（clear 按钮不可见时）
+            let searchField = app.textFields["mainSearchField"]
+            XCTAssertTrue(searchField.waitForExistence(timeout: 5), "搜索框应存在")
+            searchField.click()
+            if let current = searchField.value as? String, !current.isEmpty
+            {
+                let deleteString = String(
+                    repeating: XCUIKeyboardKey.delete.rawValue,
+                    count: current.count
+                )
+                searchField.typeText(deleteString)
+            }
+            searchField.typeText("\r")
         }
-        searchField.typeText("\r")
 
         // 等待历史列表出现（容器切换：SearchResultsView → HistoryListView）
         let historyList = app.descendants(matching: .any)["historyList"].firstMatch
         XCTAssertTrue(
-            historyList.waitForExistence(timeout: 5),
+            historyList.waitForExistence(timeout: 10),
             "清空搜索后应切换到历史容器"
         )
     }

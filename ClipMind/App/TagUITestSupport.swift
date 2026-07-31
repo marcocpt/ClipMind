@@ -44,6 +44,16 @@ enum TagUITestSupport
         UUID(uuidString: "00000000-0000-4000-8000-000000000205")!
     ]
 
+    /// 上限夹具中未关联到 `previewClips[0]` 的候选标签稳定 UUID。
+    ///
+    /// 这 2 个标签关联到 `previewClips[1]`，在 `previewClips[0]` 的 picker 中
+    /// 显示为未选中候选，满足 `testPicker_Limit_UnselectedDisabled_NoDialog`
+    /// 对「满额时应存在未选择的候选」的断言。
+    static let limitFixtureUnselectedTagIDs: [UUID] = [
+        UUID(uuidString: "00000000-0000-4000-8000-000000000206")!,
+        UUID(uuidString: "00000000-0000-4000-8000-000000000207")!
+    ]
+
     // MARK: - 参数解析
 
     static var shouldSeedTagFixture: Bool
@@ -217,7 +227,13 @@ enum TagUITestSupport
         }
     }
 
-    /// 为 `previewClips[0]` 注入 5 个用户标签（上限测试）。
+    /// 为 `previewClips[0]` 注入 5 个用户标签（上限测试），并向 `previewClips[1]`
+    /// 注入 2 个额外用户标签作为未选中候选。
+    ///
+    /// 同时 detach clip[0] 的系统标签（`system.code`）：previewClips 自带
+    /// `tagState: .newItem(contentType:)`，保存后系统标签已关联，5 用户 + 1 系统 = 6，
+    /// 释放一个用户标签后仍为 5，`isAtLimit` 不变，上限提示不消失。detach 后
+    /// 恰好 5 个已选，释放一个 → 4，提示消失；系统标签仍在候选中（未选中）。
     private static func seedLimitFixture(repository: TagRepository)
     {
         let clipID = ClipTestData.previewClipIDs[0]
@@ -236,6 +252,33 @@ enum TagUITestSupport
             } catch
             {
                 LogCategory.app.error("TagUITestSupport seedLimitFixture[\(index)] failed")
+            }
+        }
+        // detach 系统标签，使 clip[0] 恰好 5 个已选用户标签，满足上限释放测试。
+        do
+        {
+            try repository.apply(.detach(tagID: .system(.code), clipID: clipID))
+        } catch
+        {
+            LogCategory.app.error("TagUITestSupport seedLimitFixture detach system tag failed")
+        }
+        // 2 个额外候选标签关联到 clip[1]，在 clip[0] 的 picker 中显示为未选中。
+        let unselectedClipID = ClipTestData.previewClipIDs[1]
+        let unselectedColors: [ClipTagColor] = [.emerald, .purple]
+        for index in 0..<limitFixtureUnselectedTagIDs.count
+        {
+            let tag = ClipTag(
+                id: .user(limitFixtureUnselectedTagIDs[index]),
+                name: "候选\(index + 1)",
+                color: unselectedColors[index],
+                source: .user
+            )
+            do
+            {
+                try repository.apply(.createAndAttach(tag: tag, clipID: unselectedClipID))
+            } catch
+            {
+                LogCategory.app.error("TagUITestSupport seedLimitFixture unselected[\(index)] failed")
             }
         }
     }
@@ -318,18 +361,24 @@ enum TagUITestSupport
     /// 使用 `save`（INSERT）而非 `update`：迁移夹具要求 tagState 必须是 `.legacy`，
     /// `update` 会保留数据库中已有的 tagState，破坏夹具一致性。CI 每次全新环境，
     /// `save` 不会冲突；本地重复运行时先清理数据库。
+    ///
+    /// 101 条 INSERT 包裹在单一事务中，避免 101 次独立 fsync 导致启动阶段
+    /// 主线程阻塞过长（CI 上曾触发 watchdog 终止，XCUITest 报 "no process ID"）。
     private static func seedMigrationFixture(store: EncryptedStore, repository: TagRepository)
     {
-        for clip in ClipTestData.tagMigrationFixtureClips
+        do
         {
-            do
+            try store.database.transaction
             {
-                try store.save(clip)
-            } catch
-            {
-                // 本地重复运行可能主键冲突，忽略；CI 全新环境不会触发。
-                LogCategory.app.error("TagUITestSupport seedMigrationFixture save failed")
+                for clip in ClipTestData.tagMigrationFixtureClips
+                {
+                    try store.save(clip)
+                }
             }
+        } catch
+        {
+            // 本地重复运行可能主键冲突，忽略；CI 全新环境不会触发。
+            LogCategory.app.error("TagUITestSupport seedMigrationFixture failed")
         }
     }
 }

@@ -24,6 +24,10 @@ jobs:
       - run: brew install swiftlint xcodegen xcbeautify
       - run: xcodegen generate
       - run: swiftlint lint --strict --reporter github-actions-logging
+      - name: Enable Full Keyboard Access
+        run: |
+          defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
+          echo "AppleKeyboardUIMode=$(defaults read NSGlobalDomain AppleKeyboardUIMode)"
       - name: Print exact SHA
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - name: Run F1.14 UI smoke

@@ -113,7 +113,7 @@ final class TagMigrationUITests: XCTestCase
 
     /// fail-once 后 `tagMigrationRetryButton` 与不含标签名/内容的安全错误可见。
     ///
-    /// `--UITEST_TAG_FAIL_ONCE=migrate` 使首次 `migrateNextBatch` 抛
+    /// `--UITEST_TAG_FAIL_ONCE migrate`（两个独立参数）使首次 `migrateNextBatch` 抛
     /// `TagError.persistenceFailed`，TagStore 记录 `.migration` 失败状态，
     /// MainWindow 显示 migrationBanner 包含重试按钮和安全错误文案。
     func testMigration_FailOnce_ShowsRetryButtonAndSafeError()
@@ -122,7 +122,8 @@ final class TagMigrationUITests: XCTestCase
         app.launchArguments = [
             "--UITEST_SHOW_MAIN_WINDOW",
             "--UITEST_TAG_MIGRATION_FIXTURE",
-            "--UITEST_TAG_FAIL_ONCE=migrate"
+            "--UITEST_TAG_FAIL_ONCE",
+            "migrate"
         ]
         app.launch()
         app.activate()
