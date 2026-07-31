@@ -298,6 +298,18 @@ final class EncryptedStore {
         }
     }
 
+    /// 执行 SQLite checkpoint（WAL 模式下将 WAL 写入主数据库）。
+    ///
+    /// 当前数据库默认使用 rollback journal（非 WAL），此方法为 no-op 兼容点，
+    /// 供 `SandboxUpgradeSeedSupport` 在 disposable 账号中关闭连接前调用，
+    /// 确保未来启用 WAL 时数据已落盘。
+    func checkpoint()
+    {
+        // PRAGMA wal_checkpoint(FULL) 在非 WAL 模式下返回 0 行，不抛错。
+        // 使用 try? 忽略潜在错误，checkpoint 失败不阻塞退出流程。
+        _ = try? database.run("PRAGMA wal_checkpoint(FULL)")
+    }
+
     // MARK: - 加密 / 解密
 
     /// AES-256-GCM 加密，返回 combined（nonce + ciphertext + tag）

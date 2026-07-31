@@ -8,7 +8,7 @@ import XCTest
 /// - 无标签条目点击「+」打开 picker
 /// - 主窗口标签点击不传播到行选择/详情
 ///
-/// 粘贴负向探针（UI-ENTRY-003/005）在 Phase 5 关闭，当前 Phase 仅验证 picker 出现。
+/// 粘贴探针测试（UI-ENTRY-003/005）在 `TagEntryPasteProbeUITests` 中覆盖。
 final class TagEntryUITests: XCTestCase
 {
     // MARK: - 稳定夹具常量
@@ -191,7 +191,7 @@ final class TagEntryUITests: XCTestCase
 
     /// UI-ENTRY-005：快捷粘贴面板有标签条目点击 pill 打开 picker。
     ///
-    /// 粘贴负向探针（panel 未关闭）在 Phase 5 关闭，当前仅验证 picker 出现。
+    /// 粘贴负向探针（panel 未关闭）在 `TagEntryPasteProbeUITests` 中覆盖。
     /// 需 `--UITEST_PREVIEW_DATA` 确保 `isUITesting` 为 true，避免主窗口数据库
     /// 异步加载导致同 ID pill 在主窗口定位异常干扰面板测试。
     ///

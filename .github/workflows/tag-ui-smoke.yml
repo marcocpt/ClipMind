@@ -40,9 +40,14 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             -only-testing:ClipMindUITests/TagEntryUITests \
+            -only-testing:ClipMindUITests/TagEntryPasteProbeUITests \
             -only-testing:ClipMindUITests/TagPickerUITests \
+            -only-testing:ClipMindUITests/TagPickerExtendedUITests \
             -only-testing:ClipMindUITests/TagFilterUITests \
             -only-testing:ClipMindUITests/TagSettingsUITests \
+            -only-testing:ClipMindUITests/TagSettingsExtendedUITests \
+            -only-testing:ClipMindUITests/TagMigrationUITests \
+            -only-testing:ClipMindUITests/TagAccessibilityUITests \
             | xcbeautify
       - name: Upload xcresult
         if: always()

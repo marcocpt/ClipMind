@@ -218,6 +218,51 @@ final class TagFilterUITests: XCTestCase
         )
     }
 
+    // MARK: - FLT-007：历史/搜索容器同 intent 时 resultId 集合相同
+
+    /// 历史/搜索容器应用同 intent 时 resultId 集合相同。
+    ///
+    /// 1. 搜索「需求」+ Pages + 「重要」→ 搜索容器显示 {tag-result-1, tag-result-2}；
+    /// 2. 清空搜索查询（保留来源+标签）→ 历史容器显示 {tag-result-1, tag-result-2, tag-result-4}，
+    ///    其中 tag-result-4 因不含「需求」在搜索态被排除，在历史态可见；
+    /// 3. 重新应用相同 intent（搜索「需求」）→ 搜索容器恢复 {tag-result-1, tag-result-2}。
+    ///
+    /// 这证明 CompositeClipFilter 对同一 intent 的计算在容器切换间保持一致，
+    /// 搜索/历史两个视图共用同一 `filteredClips` 来源。
+    func testFilter_SameIntent_SameResultIdSet_AcrossContainers()
+    {
+        let app = launchWithFilterFixture()
+
+        // === 第一阶段：搜索容器应用 intent ===
+        searchQuery(app, "需求")
+        selectOnlySource(app, "Pages")
+        openTagFilterPopover(app)
+        selectTagInFilter(app, importantTagID)
+        closeTagFilterPopover(app)
+
+        // 搜索容器结果：{tag-result-1, tag-result-2}
+        verifyClipDisplayed(app, clipID: tagResult1ID, displayed: true)
+        verifyClipDisplayed(app, clipID: tagResult2ID, displayed: true)
+        verifyClipNotDisplayed(app, clipID: tagResult3ID)
+        verifyClipNotDisplayed(app, clipID: tagResult4ID)
+
+        // === 第二阶段：切换到历史容器（清空搜索查询，保留来源+标签）===
+        clearSearchQuery(app)
+
+        // 历史容器结果（无搜索查询）：Pages + 「重要」
+        // tag-result-4（不含「需求」）在历史态可见
+        verifyClipDisplayed(app, clipID: tagResult4ID, displayed: true)
+
+        // === 第三阶段：重新应用相同 intent（搜索「需求」）===
+        searchQuery(app, "需求")
+
+        // 搜索容器结果应与第一阶段一致：{tag-result-1, tag-result-2}
+        verifyClipDisplayed(app, clipID: tagResult1ID, displayed: true)
+        verifyClipDisplayed(app, clipID: tagResult2ID, displayed: true)
+        verifyClipNotDisplayed(app, clipID: tagResult3ID)
+        verifyClipNotDisplayed(app, clipID: tagResult4ID)
+    }
+
     // MARK: - 辅助方法
 
     /// 启动带标签筛选夹具的主窗口。
@@ -259,6 +304,15 @@ final class TagFilterUITests: XCTestCase
         let searchField = app.textFields["mainSearchField"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 5), "搜索框应存在")
         searchField.click()
+        // 先清空已有内容，避免追加
+        if let current = searchField.value as? String, !current.isEmpty
+        {
+            let deleteString = String(
+                repeating: XCUIKeyboardKey.delete.rawValue,
+                count: current.count
+            )
+            searchField.typeText(deleteString)
+        }
         searchField.typeText(query)
         searchField.typeText("\r")
 
@@ -267,6 +321,33 @@ final class TagFilterUITests: XCTestCase
         XCTAssertTrue(
             searchResults.waitForExistence(timeout: 5),
             "搜索提交后应显示搜索结果列表"
+        )
+    }
+
+    /// 清空搜索查询并提交，切换到历史容器。
+    ///
+    /// 保留来源和标签筛选，仅清空搜索文本，提交空查询使 `isSearching` 变为 false，
+    /// 主窗口从 SearchResultsView 切换到 HistoryListView。
+    private func clearSearchQuery(_ app: XCUIApplication)
+    {
+        let searchField = app.textFields["mainSearchField"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5), "搜索框应存在")
+        searchField.click()
+        if let current = searchField.value as? String, !current.isEmpty
+        {
+            let deleteString = String(
+                repeating: XCUIKeyboardKey.delete.rawValue,
+                count: current.count
+            )
+            searchField.typeText(deleteString)
+        }
+        searchField.typeText("\r")
+
+        // 等待历史列表出现（容器切换：SearchResultsView → HistoryListView）
+        let historyList = app.descendants(matching: .any)["historyList"].firstMatch
+        XCTAssertTrue(
+            historyList.waitForExistence(timeout: 5),
+            "清空搜索后应切换到历史容器"
         )
     }
 
@@ -361,24 +442,6 @@ final class TagFilterUITests: XCTestCase
             "标签选项 \(tagID) 应存在（popover 应已打开）"
         )
         option.click()
-    }
-
-    /// 清除全部标签筛选。
-    private func clearTagFilter(_ app: XCUIApplication)
-    {
-        // 等待前一个 closeTagFilterPopover 动画完全结束
-        Thread.sleep(forTimeInterval: 0.3)
-
-        openTagFilterPopover(app)
-
-        let clearButton = app.buttons["tagFilterClearButton"]
-        XCTAssertTrue(
-            clearButton.waitForExistence(timeout: 5),
-            "清除按钮应存在（需要先选中至少一个标签）"
-        )
-        clearButton.click()
-
-        closeTagFilterPopover(app)
     }
 
     // MARK: - 结果验证

@@ -44,6 +44,12 @@ extension PasteSimulator: PasteSimulating {}
 /// - 不发送任意按键序列（NFR-003 安全性）
 /// - 响应用户双击操作触发单次粘贴（非批量自动化）
 /// - 使用公开 CGEvent API（CoreGraphics）
+///
+/// Phase 5 新增 probe 模式分支：
+/// 1. 有注入 `eventSender` 时走 mock（单元测试）；
+/// 2. 普通 `--UITEST_QUICK_PASTE_PANEL` 继续跳过；
+/// 3. probe 模式且 safety policy 为 true 时调用真实 `sendViaCGEvent()`；
+/// 4. probe 模式但安全条件失败时跳过并发布仅含固定结果码的可访问性失败状态。
 final class PasteSimulator
 {
     /// V 键的 keyCode（macOS 固定值）。
@@ -55,12 +61,25 @@ final class PasteSimulator
     /// UI 测试启动参数（任务 7 的 test hook）。
     private static let uiTestLaunchArg = "--UITEST_QUICK_PASTE_PANEL"
 
+    /// Phase 5：probe 模式失败标记键（供 XCUITest 读取安全失败状态）。
+    private static let probeSafetyFailedKey = "UITest_tagPasteProbeSafetyFailed"
+
     private let eventSender: PasteEventSending?
 
-    /// - Parameter eventSender: 按键事件发送器（测试注入 mock；生产用 nil 表示使用真实 CGEvent 实现）
-    init(eventSender: PasteEventSending? = nil)
+    /// Phase 5：粘贴事件安全策略。默认策略始终返回 false；
+    /// probe 模式下注入 `TagPasteProbeSafetyPolicy`。
+    private let safetyPolicy: PasteEventSafetyChecking
+
+    /// - Parameters:
+    ///   - eventSender: 按键事件发送器（测试注入 mock；生产用 nil 表示使用真实 CGEvent 实现）
+    ///   - safetyPolicy: 粘贴事件安全策略（默认 `DefaultPasteEventSafetyPolicy`）
+    init(
+        eventSender: PasteEventSending? = nil,
+        safetyPolicy: PasteEventSafetyChecking = DefaultPasteEventSafetyPolicy()
+    )
     {
         self.eventSender = eventSender
+        self.safetyPolicy = safetyPolicy
     }
 
     /// 模拟系统标准 Cmd+V 粘贴按键。
@@ -68,21 +87,42 @@ final class PasteSimulator
     /// 发送顺序：Cmd 按下 + V 按下 → V 释放 + Cmd 释放。
     /// 仅发送标准粘贴按键，不发送其他按键序列（TC-F1.9-SEC-03）。
     ///
-    /// UI 测试模式（`--UITEST_QUICK_PASTE_PANEL` 启动参数）下跳过 CGEvent 发送：
-    /// 面板关闭后前台应用不可预测（可能是 WPS Office/Finder 等），
-    /// 真实 Cmd+V 会激活该应用并干扰 XCUITest 元素查询。
-    /// 仅记录调用标记供 UI 测试验证。
+    /// 分支固定为：
+    /// 1. 有注入 `eventSender` 时走 mock（单元测试）；
+    /// 2. 普通 `--UITEST_QUICK_PASTE_PANEL` 继续跳过；
+    /// 3. probe 模式且 safety policy 为 true 时调用真实 `sendViaCGEvent()`；
+    /// 4. probe 模式但安全条件失败时跳过并发布仅含固定结果码的可访问性失败状态。
     func simulatePaste()
     {
         let isUITestMode = ProcessInfo.processInfo.arguments.contains(Self.uiTestLaunchArg)
+        let isProbeMode = TagUITestSupport.shouldEnablePasteProbe
 
+        // 分支 1：有注入 eventSender 时走 mock（单元测试）
         if let eventSender = eventSender
         {
             sendViaMock(eventSender)
             LogCategory.ui.info("Paste simulated: Cmd+V sent")
-        } else if isUITestMode {
+        }
+        // 分支 3：probe 模式且安全条件满足时发送真实 CGEvent
+        else if isProbeMode && safetyPolicy.isSafeToSendPasteEvent()
+        {
+            sendViaCGEvent()
+            LogCategory.ui.info("Paste simulated: probe mode, Cmd+V sent")
+        }
+        // 分支 4：probe 模式但安全条件失败时跳过并标记
+        else if isProbeMode
+        {
+            UserDefaults.standard.set(true, forKey: Self.probeSafetyFailedKey)
+            LogCategory.ui.info("Paste skipped: probe mode safety check failed")
+        }
+        // 分支 2：普通 UI 测试模式跳过 CGEvent
+        else if isUITestMode
+        {
             LogCategory.ui.info("Paste simulated (UI test mode): CGEvent skipped")
-        } else {
+        }
+        // 生产路径：发送真实 CGEvent
+        else
+        {
             sendViaCGEvent()
             LogCategory.ui.info("Paste simulated: Cmd+V sent")
         }

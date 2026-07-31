@@ -103,6 +103,9 @@ extension AppDelegate
     /// 避免双击粘贴后列表出现重复条目。
     ///
     /// F1.11 Bug 4：注入共享的 `clipToucher`，使快捷键面板双击粘贴后置顶被粘贴项。
+    ///
+    /// Phase 5：`--UITEST_TAG_PASTE_PROBE` 模式下注入 `TagPasteProbeSafetyPolicy`
+    /// 和共享 `TagPasteProbe`，使 `PasteSimulator` 在安全条件满足时发送真实 CGEvent。
     @MainActor
     private func makePasteCoordinator(
         permissionChecker: PastePermissionChecking,
@@ -111,12 +114,24 @@ extension AppDelegate
     ) -> PasteCoordinator
     {
         #if CLIPMIND_DEV
+        let simulator: PasteSimulator
+        if TagUITestSupport.shouldEnablePasteProbe
+        {
+            // Phase 5：probe 模式下创建共享 probe 和安全策略。
+            let probe = TagPasteProbe()
+            tagPasteProbe = probe
+            probe.show()
+            let policy = TagPasteProbeSafetyPolicy(probe: probe)
+            simulator = PasteSimulator(safetyPolicy: policy)
+        } else {
+            simulator = PasteSimulator()
+        }
         return PasteCoordinator(
             permissionChecker: permissionChecker,
             clipboardWriter: ClipboardWriter(suppressor: selfWriteSuppressor),
             panelCloser: panelController,
             overlayShower: overlayController,
-            pasteSimulator: PasteSimulator(),
+            pasteSimulator: simulator,
             clipToucher: clipToucher
         )
         #else

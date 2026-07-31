@@ -1,4 +1,5 @@
 #if CLIPMIND_DEV
+import AppKit
 import Foundation
 
 /// F1.14 UI 测试支持：仅在 `CLIPMIND_DEV` 编译条件下可用。
@@ -10,6 +11,9 @@ import Foundation
 /// - `--UITEST_TAG_EMPTY_CLIP`：确保 `previewClips[1]` 无任何标签，验证空标签条「+」。
 /// - `--UITEST_TAG_LIMIT_FIXTURE`：为 `previewClips[0]` 注入 5 个标签，验证上限。
 /// - `--UITEST_TAG_FAIL_ONCE=<operation>`：包装 repository 使指定 operation 第一次失败。
+/// - `--UITEST_TAG_MIGRATION_FIXTURE`：创建 100 条 legacy 数据和 1 个 removed disposition 条目。
+/// - `--UITEST_TAG_PASTE_PROBE`：启用粘贴探针接收窗口，验证标签点击不触发粘贴。
+/// - `--UITEST_UPGRADE_SEED_DEFAULT_PATH`：在 disposable 账号下向旧默认路径写入 upgrade fixture。
 enum TagUITestSupport
 {
     // MARK: - 启动参数常量
@@ -19,6 +23,9 @@ enum TagUITestSupport
     static let tagLimitFixtureArg = "--UITEST_TAG_LIMIT_FIXTURE"
     static let tagFailOnceArg = "--UITEST_TAG_FAIL_ONCE"
     static let tagFilterFixtureArg = ClipTestData.tagFilterFixtureArg
+    static let tagMigrationFixtureArg = "--UITEST_TAG_MIGRATION_FIXTURE"
+    static let tagPasteProbeArg = "--UITEST_TAG_PASTE_PROBE"
+    static let upgradeSeedDefaultPathArg = "--UITEST_UPGRADE_SEED_DEFAULT_PATH"
 
     // MARK: - 稳定夹具标签 ID
 
@@ -57,6 +64,24 @@ enum TagUITestSupport
     static var shouldSeedTagFilterFixture: Bool
     {
         CommandLine.arguments.contains(tagFilterFixtureArg)
+    }
+
+    /// Phase 5：迁移夹具（100 条 legacy + 1 个 removed disposition）。
+    static var shouldSeedMigrationFixture: Bool
+    {
+        CommandLine.arguments.contains(tagMigrationFixtureArg)
+    }
+
+    /// Phase 5：粘贴探针接收窗口。
+    static var shouldEnablePasteProbe: Bool
+    {
+        CommandLine.arguments.contains(tagPasteProbeArg)
+    }
+
+    /// Phase 5：向旧默认路径写入 upgrade fixture（仅 disposable 账号）。
+    static var shouldSeedUpgradeDefaultPath: Bool
+    {
+        CommandLine.arguments.contains(upgradeSeedDefaultPathArg)
     }
 
     /// FailOnce 模式：指定闭集 operation 仅第一次抛 `.persistenceFailed`。
@@ -106,8 +131,16 @@ enum TagUITestSupport
             || shouldSeedLimitFixture
             || shouldSeedEmptyClip
             || shouldSeedTagFilterFixture
+            || shouldSeedMigrationFixture
         else
         {
+            return
+        }
+
+        // 迁移夹具使用独立的 100 条 legacy ClipItem，不与 previewClips 混用。
+        if shouldSeedMigrationFixture
+        {
+            seedMigrationFixture(store: store, repository: repository)
             return
         }
 
@@ -272,6 +305,30 @@ enum TagUITestSupport
             } catch
             {
                 LogCategory.app.error("TagUITestSupport seedTagFilterFixture failed")
+            }
+        }
+    }
+
+    /// Phase 5：注入迁移夹具。
+    ///
+    /// 创建 100 条 legacy ClipItem（`tagState: .legacy`，待迁移）和 1 条 removed
+    /// disposition 条目。迁移启动后，100 条 legacy 条目根据 ContentType 关联自身
+    /// 系统标签；removed 条目不恢复系统标签，UI 显示「+」。
+    ///
+    /// 使用 `save`（INSERT）而非 `update`：迁移夹具要求 tagState 必须是 `.legacy`，
+    /// `update` 会保留数据库中已有的 tagState，破坏夹具一致性。CI 每次全新环境，
+    /// `save` 不会冲突；本地重复运行时先清理数据库。
+    private static func seedMigrationFixture(store: EncryptedStore, repository: TagRepository)
+    {
+        for clip in ClipTestData.tagMigrationFixtureClips
+        {
+            do
+            {
+                try store.save(clip)
+            } catch
+            {
+                // 本地重复运行可能主键冲突，忽略；CI 全新环境不会触发。
+                LogCategory.app.error("TagUITestSupport seedMigrationFixture save failed")
             }
         }
     }

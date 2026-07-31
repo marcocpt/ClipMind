@@ -49,6 +49,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var quickPastePanelController: QuickPastePanelController?
     var pasteCoordinator: PasteCoordinator?
 
+    #if CLIPMIND_DEV
+    /// F1.14 Phase 5：粘贴探针，仅在 `--UITEST_TAG_PASTE_PROBE` 模式下创建。
+    /// 供 XCUITest 读取 `pasteReceiverText`/`pasteEventCount` 验证标签点击不触发粘贴。
+    var tagPasteProbe: TagPasteProbe?
+    #endif
+
     /// F1.14 标签后端：唯一 `TagServicing` 和迁移协调器。
     @MainActor lazy var tagBackend = TagBackendFactory.makeDefault()
 

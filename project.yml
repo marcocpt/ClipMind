@@ -22,6 +22,9 @@ settings:
     DebugDev:
       ONLY_ACTIVE_ARCH: YES
       SWIFT_ACTIVE_COMPILATION_CONDITIONS: CLIPMIND_DEV
+    ReleaseDev:
+      ONLY_ACTIVE_ARCH: YES
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: CLIPMIND_DEV
 packages:
   SQLite.swift:
     url: https://github.com/stephencelis/SQLite.swift.git
@@ -30,6 +33,7 @@ configs:
   Debug: debug
   Release: release
   DebugDev: debug
+  ReleaseDev: release
 targets:
   ClipMind:
     type: application

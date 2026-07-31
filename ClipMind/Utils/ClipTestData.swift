@@ -245,4 +245,74 @@ enum ClipTestData {
     static var isUITesting: Bool {
         CommandLine.arguments.contains("--UITEST_PREVIEW_DATA")
     }
+
+    // MARK: - F1.14 Phase 5 迁移夹具
+
+    /// `--UITEST_TAG_MIGRATION_FIXTURE` 启动参数。
+    static let tagMigrationFixtureArg = "--UITEST_TAG_MIGRATION_FIXTURE"
+
+    /// 迁移夹具使用的 100 条 legacy ClipItem 稳定 UUID 前缀。
+    /// UUID 形如 `00000000-0000-4000-8000-0000000004xx`，xx = 01..100。
+    static let tagMigrationFixtureClipIDs: [UUID] = (1...100).map
+    { index in
+        UUID(uuidString: String(format: "00000000-0000-4000-8000-0000000004%02d", index))!
+    }
+
+    /// 迁移夹具中显式 removed disposition 条目的稳定 UUID。
+    /// 该条目系统标签被移除，迁移不恢复，应显示空标签条「+」。
+    static let tagMigrationRemovedClipID = UUID(uuidString: "00000000-0000-4000-8000-000000000501")!
+
+    /// 迁移夹具：100 条 legacy ClipItem + 1 条 removed disposition 条目。
+    ///
+    /// - 100 条 legacy：`tagState: .legacy`，迁移时根据 ContentType 关联自身系统标签。
+    /// - 1 条 removed：`tagState` 显式设置 `systemTagDisposition: .removed`，
+    ///   迁移不恢复系统标签，UI 应显示「+」。
+    ///
+    /// ContentType 按 `CaseIterable` 循环覆盖 11 种类型，确保迁移后 11 类系统标签都有样本。
+    static let tagMigrationFixtureClips: [ClipItem] = {
+        var clips: [ClipItem] = []
+        let contentTypes = ContentType.allCases
+        for index in 0..<100
+        {
+            let contentType = contentTypes[index % contentTypes.count]
+            clips.append(
+                ClipItem(
+                    id: tagMigrationFixtureClipIDs[index],
+                    content: .text("迁移夹具条目 \(index + 1) - \(contentType.rawValue)"),
+                    contentType: contentType,
+                    sourceApp: "com.apple.TestApp",
+                    sourceAppName: "TestApp",
+                    timestamp: Date(),
+                    summary: nil,
+                    translation: nil,
+                    rewrite: nil,
+                    todos: nil,
+                    embeddings: nil,
+                    tagState: .legacy
+                )
+            )
+        }
+        // removed disposition 条目：系统标签被移除，迁移不恢复。
+        clips.append(
+            ClipItem(
+                id: tagMigrationRemovedClipID,
+                content: .text("已移除系统标签的条目"),
+                contentType: .link,
+                sourceApp: "com.apple.TestApp",
+                sourceAppName: "TestApp",
+                timestamp: Date(),
+                summary: nil,
+                translation: nil,
+                rewrite: nil,
+                todos: nil,
+                embeddings: nil,
+                tagState: ClipTagState(
+                    orderedTagIDs: [],
+                    systemTagDisposition: .removed,
+                    migrationVersion: ClipTagState.currentMigrationVersion
+                )
+            )
+        )
+        return clips
+    }()
 }

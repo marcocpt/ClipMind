@@ -54,6 +54,12 @@ extension AppDelegate
     ///
     /// `CLIPMIND_DEV` 构建中由 `TagUITestSupport` 解析启动参数并在
     /// `TagBackendFactory.makeDefault()` 中注入夹具；生产构建为空实现。
+    ///
+    /// Phase 5 新增：
+    /// - `--UITEST_TAG_MIGRATION_FIXTURE`：迁移夹具，由 `TagUITestSupport` 注入。
+    /// - `--UITEST_TAG_PASTE_PROBE`：粘贴探针，由装配根注入 `TagPasteProbe`。
+    /// - `--UITEST_UPGRADE_SEED_DEFAULT_PATH`：Sandbox upgrade seed，由
+    ///   `SandboxUpgradeSeedSupport` 在 disposable 账号中处理后立即退出。
     private func applyTagUITestOverrides()
     {
         #if CLIPMIND_DEV
@@ -65,8 +71,19 @@ extension AppDelegate
             || TagUITestSupport.shouldSeedLimitFixture
             || TagUITestSupport.shouldSeedEmptyClip
             || TagUITestSupport.shouldSeedTagFilterFixture
+            || TagUITestSupport.shouldSeedMigrationFixture
         {
             LogCategory.app.info("F1.14 tag UITest fixture requested")
+        }
+        if TagUITestSupport.shouldEnablePasteProbe
+        {
+            LogCategory.app.info("F1.14 tag paste probe requested")
+        }
+        // Sandbox upgrade seed：条件满足时在 disposable 账号中写入旧默认路径后退出。
+        // 必须在 applicationDidFinishLaunching 之前处理，避免 SwiftUI 初始化污染状态。
+        if TagUITestSupport.shouldSeedUpgradeDefaultPath
+        {
+            SandboxUpgradeSeedSupport.seedDefaultPathAndExit()
         }
         #endif
     }
