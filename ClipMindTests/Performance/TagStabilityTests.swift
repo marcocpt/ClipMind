@@ -159,7 +159,7 @@ final class TagStabilityTests: XCTestCase
             combinedIDs.isSubset(of: clearedIDs),
             "组合筛选结果应是清空标签结果的子集"
         )
-        XCTAssertGreaterThan(
+        XCTAssertGreaterThanOrEqual(
             clearedIDs.count,
             combinedIDs.count,
             "清空标签后结果集应不小于组合筛选"
