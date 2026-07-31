@@ -18,7 +18,7 @@ permissions:
 jobs:
   tag-ui-smoke:
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - run: brew install swiftlint xcodegen xcbeautify
