@@ -201,7 +201,7 @@ final class TagSettingsExtendedUITests: XCTestCase
         let confirmButton = app.sheets.buttons["重命名"]
         XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
 
-        app.typeKey(XCUIKeyboardKey.escape.rawValue)
+        app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
 
         XCTAssertTrue(
             waitForElementGone(confirmButton, timeout: 5),
@@ -227,7 +227,7 @@ final class TagSettingsExtendedUITests: XCTestCase
         let confirmButton = app.sheets.buttons["删除"]
         XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
 
-        app.typeKey(XCUIKeyboardKey.escape.rawValue)
+        app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
 
         XCTAssertTrue(
             waitForElementGone(confirmButton, timeout: 5),

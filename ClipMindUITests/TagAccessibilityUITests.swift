@@ -1,6 +1,15 @@
 import AppKit
 import XCTest
 
+/// XCUITest 不直接暴露键盘焦点属性，通过 accessibility 属性查询。
+private extension XCUIElement
+{
+    var hasKeyboardFocus: Bool
+    {
+        (value(forKey: "hasKeyboardFocus") as? Bool) ?? false
+    }
+}
+
 /// F1.14 Phase 5 任务 6 步骤 1：标签辅助功能键盘测试。
 ///
 /// 仅用键盘遍历并激活：
@@ -26,6 +35,13 @@ final class TagAccessibilityUITests: XCTestCase
     private let importantTagID = "user.00000000-0000-4000-8000-000000000311"
 
     private let maxTabs = 40
+
+    /// 11 个 `ClipTagColor` 的 rawValue，与 `ClipMind/Models/ClipTag.swift` 一致。
+    /// UITests target 不 `@testable import ClipMind`，硬编码避免访问 internal 类型。
+    private let tagColorRawValues: [String] = [
+        "violet", "cyan", "rose", "blue", "amber",
+        "emerald", "purple", "orange", "teal", "slate", "gray"
+    ]
 
     // MARK: - setUp / tearDown
 
@@ -75,7 +91,7 @@ final class TagAccessibilityUITests: XCTestCase
                 tabUntilFocus(app, on: pill),
                 "\(entry.name) pill 应可通过键盘获得焦点"
             )
-            app.typeKey(XCUIKeyboardKey.space.rawValue)
+            app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
             let pickerTitle = app.staticTexts["tagPickerTitle"]
             XCTAssertTrue(
@@ -98,7 +114,7 @@ final class TagAccessibilityUITests: XCTestCase
         XCTAssertTrue(addButton.waitForExistence(timeout: 10), "「+」按钮应存在")
 
         XCTAssertTrue(tabUntilFocus(app, on: addButton), "「+」应可通过键盘获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
         let pickerTitle = app.staticTexts["tagPickerTitle"]
         XCTAssertTrue(pickerTitle.waitForExistence(timeout: 5), "键盘激活「+」应打开 picker")
@@ -114,7 +130,7 @@ final class TagAccessibilityUITests: XCTestCase
         let pill = app.buttons["clipTag_\(firstClipIDString)_\(firstUserTagID)"]
         XCTAssertTrue(pill.waitForExistence(timeout: 10))
         XCTAssertTrue(tabUntilFocus(app, on: pill), "pill 应可获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
         // 搜索框可键盘聚焦并输入
         let searchField = app.textFields["tagPickerSearch"]
@@ -127,7 +143,7 @@ final class TagAccessibilityUITests: XCTestCase
         XCTAssertTrue(referenceOption.waitForExistence(timeout: 3), "搜索后候选应出现")
         XCTAssertTrue(tabUntilFocus(app, on: referenceOption), "标签选项应可获得焦点")
         let valueBefore = referenceOption.value as? String
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
         let toggled = NSPredicate { element, _ in
             (element as? XCUIElement)?.value as? String != valueBefore
         }
@@ -146,24 +162,24 @@ final class TagAccessibilityUITests: XCTestCase
         let createEntry = app.buttons["tagCreateEntry"]
         XCTAssertTrue(createEntry.waitForExistence(timeout: 3))
         XCTAssertTrue(tabUntilFocus(app, on: createEntry), "创建入口应可获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
         // 11 色按钮存在且可聚焦
         let nameField = app.textFields["tagCreateNameField"]
         XCTAssertTrue(nameField.waitForExistence(timeout: 3))
         nameField.click()
         nameField.typeText("键盘标签")
-        for color in ClipTagColor.allCases
+        for colorRawValue in tagColorRawValues
         {
-            let colorButton = app.buttons["tagColor_\(color.rawValue)"]
-            XCTAssertTrue(colorButton.exists, "颜色按钮 \(color.rawValue) 应存在")
+            let colorButton = app.buttons["tagColor_\(colorRawValue)"]
+            XCTAssertTrue(colorButton.exists, "颜色按钮 \(colorRawValue) 应存在")
         }
 
         // 取消按钮可键盘激活，回到浏览状态
         let cancelButton = app.buttons["tagCreateCancel"]
         XCTAssertTrue(cancelButton.exists, "取消按钮应存在")
         XCTAssertTrue(tabUntilFocus(app, on: cancelButton), "取消按钮应可获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
         XCTAssertTrue(
             app.staticTexts["tagPickerTitle"].waitForExistence(timeout: 3),
             "取消创建应回到浏览状态"
@@ -184,16 +200,16 @@ final class TagAccessibilityUITests: XCTestCase
         let filterPicker = app.buttons["tagFilterPicker"]
         XCTAssertTrue(filterPicker.waitForExistence(timeout: 5))
         XCTAssertTrue(tabUntilFocus(app, on: filterPicker), "筛选按钮应可获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
         // 候选可键盘切换
         let option = app.buttons["tagFilterOption_\(importantTagID)"]
         XCTAssertTrue(option.waitForExistence(timeout: 5), "筛选候选应出现")
         XCTAssertTrue(tabUntilFocus(app, on: option), "筛选候选应可获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
         // 关闭 popover
-        app.typeKey(XCUIKeyboardKey.escape.rawValue)
+        app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
 
         // 活动 chip 出现
         let activeChip = app.descendants(matching: .any)["activeTagFilter_\(importantTagID)"].firstMatch
@@ -203,7 +219,7 @@ final class TagAccessibilityUITests: XCTestCase
         let deleteButton = activeChip.buttons.firstMatch
         XCTAssertTrue(deleteButton.waitForExistence(timeout: 3), "chip 删除按钮应存在")
         XCTAssertTrue(tabUntilFocus(app, on: deleteButton), "chip 删除按钮应可获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
         let chipRemoved = NSPredicate { _, _ in !activeChip.exists }
         let chipRemovedExpectation = XCTNSPredicateExpectation(
@@ -232,12 +248,12 @@ final class TagAccessibilityUITests: XCTestCase
         let settingsButton = app.buttons["settingsButton"].firstMatch
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 10))
         XCTAssertTrue(tabUntilFocus(app, on: settingsButton), "设置按钮应可获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
         let renameButton = app.buttons["renameTag_\(firstUserTagID)"]
         XCTAssertTrue(renameButton.waitForExistence(timeout: 15), "重命名按钮应存在")
         XCTAssertTrue(tabUntilFocus(app, on: renameButton), "重命名按钮应可获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
         // 编辑名称
         let nameField = app.textFields["renameTagField_\(firstUserTagID)"]
@@ -250,13 +266,13 @@ final class TagAccessibilityUITests: XCTestCase
         let submitButton = app.buttons["submitRenameTag_\(firstUserTagID)"]
         XCTAssertTrue(submitButton.exists)
         XCTAssertTrue(tabUntilFocus(app, on: submitButton), "提交按钮应可获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
         // 确认 dialog 出现并可键盘操作
         let cancelButton = app.sheets.buttons["取消"]
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 5), "确认 dialog 应出现")
         XCTAssertTrue(tabUntilFocus(app, on: cancelButton), "dialog 取消按钮应可获得焦点")
-        app.typeKey(XCUIKeyboardKey.space.rawValue)
+        app.typeKey(XCUIKeyboardKey.space, modifierFlags: [])
 
         // dialog 关闭后焦点返回触发控件
         XCTAssertTrue(
@@ -264,7 +280,7 @@ final class TagAccessibilityUITests: XCTestCase
             "取消 dialog 后重命名按钮应仍存在"
         )
         XCTAssertTrue(
-            renameButton.hasFocus,
+            renameButton.hasKeyboardFocus,
             "取消 dialog 后焦点应返回重命名按钮"
         )
     }
@@ -286,13 +302,13 @@ final class TagAccessibilityUITests: XCTestCase
     @discardableResult
     private func tabUntilFocus(_ app: XCUIApplication, on element: XCUIElement) -> Bool
     {
-        if element.hasFocus { return true }
+        if element.hasKeyboardFocus { return true }
         for _ in 0..<maxTabs
         {
-            app.typeKey(XCUIKeyboardKey.tab.rawValue)
-            if element.hasFocus { return true }
+            app.typeKey(XCUIKeyboardKey.tab, modifierFlags: [])
+            if element.hasKeyboardFocus { return true }
         }
-        return element.hasFocus
+        return element.hasKeyboardFocus
     }
 
     /// 清空文本输入框内容。
