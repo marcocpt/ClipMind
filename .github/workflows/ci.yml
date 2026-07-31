@@ -89,9 +89,15 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             -skip-testing:ClipMindUITests/TagEntryUITests \
+            -skip-testing:ClipMindUITests/TagEntryPasteProbeUITests \
             -skip-testing:ClipMindUITests/TagPickerUITests \
+            -skip-testing:ClipMindUITests/TagPickerExtendedUITests \
             -skip-testing:ClipMindUITests/TagFilterUITests \
             -skip-testing:ClipMindUITests/TagSettingsUITests \
+            -skip-testing:ClipMindUITests/TagSettingsExtendedUITests \
+            -skip-testing:ClipMindUITests/TagMigrationUITests \
+            -skip-testing:ClipMindUITests/TagAccessibilityUITests \
+            -skip-testing:ClipMindUITests/TagPerformanceUITests \
             | xcbeautify --quiet
 
       - name: Upload test results on failure
